@@ -1,0 +1,53 @@
+{
+  "name": "LWH Driver Toolkit",
+  "short_name": "LWH Driver",
+  "description": "HOS tracking, trip fuel cost, load securement, docs, and weather for Logistics Warehouse drivers.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c8102e",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "HOS Countdown",
+      "short_name": "HOS",
+      "description": "Track your driving and on-duty windows",
+      "url": "./index.html?view=hos",
+      "icons": [{ "src": "./icons/shortcut-lookup.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Trip Fuel Cost",
+      "short_name": "Fuel Cost",
+      "description": "Estimate a trip's fuel cost",
+      "url": "./index.html?view=fuelcost",
+      "icons": [{ "src": "./icons/shortcut-picklist.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Calculators & Tools",
+      "short_name": "Tools",
+      "description": "Calculators, QR/barcode generator, and more",
+      "url": "./index.html?view=utilities",
+      "icons": [{ "src": "./icons/shortcut-tools.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Trailer Checklist",
+      "short_name": "Trailer",
+      "description": "Pre-trip trailer checklist",
+      "url": "./index.html?view=trailer",
+      "icons": [{ "src": "./icons/shortcut-bol.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
