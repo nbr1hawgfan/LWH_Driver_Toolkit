@@ -239,6 +239,7 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
    ========================================================================= */
 .print-area{display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start}
 #dvirPrintArea{display:block;margin-top:16px}
+#tiPrintArea{display:block;margin-top:16px}
 .label-page{background:#fff;color:#000;border:1px dashed #aaa;page-break-after:always;break-after:page;position:relative;overflow:hidden}
 .rack-label{width:6in;height:4in;padding:.22in .28in}
 .rack-title{border:6px solid #000;text-align:center;font-weight:900;line-height:.95;font-size:1.08in;padding:.12in .1in;margin:0 auto;width:92%;white-space:nowrap;overflow:hidden;text-overflow:clip}
