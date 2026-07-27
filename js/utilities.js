@@ -12,7 +12,7 @@
     tabs.addEventListener('click',e=>{
       const b=e.target.closest('[data-util]'); if(!b) return;
       tabs.querySelectorAll('.seg').forEach(s=>s.classList.toggle('active',s===b));
-      ['convert','pallet','notepad','message','trailercube','datecalc','loancalc','costperfoot','sqftcalc','rackcap','standards','casecalc','axleweight','margincalc','freightclass','timer','tip','spinner','pwgen','health','revenue','distance','translate'].forEach(name=>{
+      ['convert','notepad','message','datecalc','loancalc','axleweight','timer','tip','spinner','pwgen','health','translate'].forEach(name=>{
         const panel=el('util'+name.charAt(0).toUpperCase()+name.slice(1));
         if(panel) panel.hidden=(name!==b.dataset.util);
       });
@@ -2060,5 +2060,5 @@
   }
 
   window.LWHUtilities={stopScannerCamera};
-  window.addEventListener('load',()=>{ initTabs(); initClearActiveTool(); initCalc(); initConvert(); initPallet(); initNotepad(); initScanner(); initGenerate(); initScanCode(); initMessage(); initTrailerCube(); initDateCalc(); initLoanCalc(); initCostPerFoot(); initSqftCalc(); initRackCap(); initStandardsCalc(); initCaseCalc(); initAxleWeight(); initMarginCalc(); initFreightClass(); initTimer(); initTipCalc(); initSpinner(); initPasswordGen(); initHealth(); initRevenue(); initTranslate(); });
+  window.addEventListener('load',()=>{ initTabs(); initClearActiveTool(); initCalc(); initConvert(); initNotepad(); initScanner(); initGenerate(); initScanCode(); initMessage(); initDateCalc(); initLoanCalc(); initAxleWeight(); initTimer(); initTipCalc(); initSpinner(); initPasswordGen(); initHealth(); initTranslate(); });
 })();

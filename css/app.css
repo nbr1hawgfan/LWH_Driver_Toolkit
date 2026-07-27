@@ -85,6 +85,12 @@ button.ghost:hover{background:var(--brand-tint)}
 .pl-remark-row button{margin-left:auto}
 .dt-entry{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
 .dt-entry b{color:var(--brand)}
+.dvir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.dvir-item{border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;text-align:center;font-weight:600;font-size:13.5px;cursor:pointer;background:#fff;user-select:none}
+.dvir-item.defect{background:var(--bad);border-color:var(--bad);color:#fff}
+.dvir-defect-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.dvir-defect-row b{color:var(--bad);min-width:140px}
+.dvir-defect-row input{flex:1}
 .quickcall-card{min-height:100px;justify-content:center}
 .quickcall-card b{font-size:19px}
 .quickcall-card span{font-size:16px;font-weight:700;color:var(--brand)}
@@ -232,6 +238,7 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
    Zebra printing. Copied forward unchanged from the previous stylesheet.
    ========================================================================= */
 .print-area{display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start}
+#dvirPrintArea{display:block;margin-top:16px}
 .label-page{background:#fff;color:#000;border:1px dashed #aaa;page-break-after:always;break-after:page;position:relative;overflow:hidden}
 .rack-label{width:6in;height:4in;padding:.22in .28in}
 .rack-title{border:6px solid #000;text-align:center;font-weight:900;line-height:.95;font-size:1.08in;padding:.12in .1in;margin:0 auto;width:92%;white-space:nowrap;overflow:hidden;text-overflow:clip}
