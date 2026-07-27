@@ -112,8 +112,6 @@ function applySettings(){
   if(window.setTagline) setTagline.value=LWHStorage.get('companyTagline','');
   if(window.setUserName) setUserName.value=LWHStorage.get('userName','');
   if(window.setUsageLogUrl) setUsageLogUrl.value=LWHStorage.get('usageLogUrl','')||USAGE_LOG_URL_DEFAULT;
-  if(window.setCustomerLookupUrl){ const custUrl=LWHStorage.get('customerLookupUrl','')||LWHInventory.CUSTOMER_DEFAULT_URL; setCustomerLookupUrl.value=custUrl; if(window.custCurrentUrl) custCurrentUrl.textContent=custUrl; }
-  if(window.LWHInventory && LWHInventory.loadCustomerLabelsToSettings) LWHInventory.loadCustomerLabelsToSettings();
   calX.value=LWHStorage.get('calX',0); calY.value=LWHStorage.get('calY',0); calScale.value=LWHStorage.get('calScale',100);
   statPrints.textContent=LWHStorage.get('printJobs',0); statLookups.textContent=LWHStorage.get('lookupCount',0); statVisitors.textContent=(LWHStorage.get('visitorLog',[])||[]).length;
 }
@@ -338,17 +336,6 @@ window.addEventListener('load',()=>{
   promptForNameIfNeeded();
   pingUsage();
   setTimeout(()=>{ loadManagersFromUrl(); },500);
-  LWHInventory.loadCached();
-  // Auto-load the one master-sheet source so the team never has to remember
-  // to hit Load / Refresh Data before searching or printing receiving.
-  setTimeout(async()=>{
-    try{
-      await LWHInventory.loadCustomerFromUrl();
-    }catch(e){
-      if(window.custLookupStatus) custLookupStatus.textContent='Auto-load failed: '+e.message+' — open Settings to check the source, or use Load / Refresh Data.';
-      console.error(e);
-    }
-  },300);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').then(()=>pwaStatus.textContent='Service worker registered. App is installable from HTTPS/GitHub Pages.').catch(err=>pwaStatus.textContent='Service worker error: '+err.message)}else{pwaStatus.textContent='Service workers not supported in this browser.'}
   applyIncomingUrlParams();
 });
