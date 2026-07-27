@@ -38,6 +38,7 @@
   <script defer src="./js/labels.js"></script>
   <script defer src="./js/distance.js"></script>
   <script defer src="./js/trailerinspect.js"></script>
+  <script defer src="./js/timesheet.js"></script>
   <script defer src="./js/hos.js"></script>
   <script defer src="./js/fuelcost.js"></script>
   <script defer src="./js/loadsecure.js"></script>
@@ -52,7 +53,7 @@
 </head>
 <body>
   <header class="app-header no-print">
-    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.7.0</div></div></div>
+    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.8.0</div></div></div>
     <div class="header-actions"><button id="navToggle" class="ghost" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="installBtn" class="ghost" hidden>Install App</button><button onclick="window.print()">Print</button></div>
   </header>
 
@@ -73,6 +74,7 @@
       <button class="nav-btn" data-view="dvir"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg>DVIR Inspection</button>
       <button class="nav-btn" data-view="utilities"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/><path d="M3 13h18"/></svg>Calculators &amp; Tools</button>
       <button class="nav-btn" data-view="docscan"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Doc Scanner</button>
+      <button class="nav-btn" data-view="timesheet"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg>Weekly Timesheet</button>
       <button class="nav-btn" data-view="trailerinspect"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/><path d="M9 12l2 2 4-4"/></svg>Trailer Inspection</button>
       <button class="nav-btn" data-view="contact"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c0-1.7 1.5-3 3-3s3 1.3 3 3M14 9h4M14 13h4"/></svg>Contact QR</button>
       <button class="nav-btn" data-view="generate"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg>Generate Code</button>
@@ -103,9 +105,10 @@
         <button class="module-card" data-view="radar"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg></div><b>Weather Radar</b><span>Animated precipitation radar for your current route area.</span></button>
         <button class="module-card" data-view="paperlog"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg></div><b>Paper Log Grid</b><span>Backup Record of Duty Status if your ELD malfunctions.</span></button>
         <button class="module-card" data-view="detention"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><b>Detention Tracker</b><span>Log arrival/departure and estimate detention time.</span></button>
-        <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Paper backup vehicle inspection report for when Samsara e-DVIR is down.</span></button>
+        <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Backup only — use Samsara e-DVIR first. Paper form for when it's down.</span></button>
         <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Auto-detects and straightens paperwork as you scan, extract text, and share or download as a PDF — multi-page.</span></button>
-        <button class="module-card" data-view="trailerinspect"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Trailer Inspection</b><span>Paper backup trailer inspection report — handy for a trailer swap or when the usual app's down.</span></button>
+        <button class="module-card" data-view="timesheet"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg></div><b>Weekly Timesheet</b><span>Paper timesheet — driver, location, hours per day, Sun–Sat.</span></button>
+        <button class="module-card" data-view="trailerinspect"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Trailer Inspection</b><span>Backup only — for a trailer swap or when the usual app's down.</span></button>
         <button class="module-card" data-view="utilities"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/><path d="M3 13h18"/></svg></div><b>Calculators &amp; Tools</b><span>Unit converter, notepad, Quick Message, date calc, age calc, loan calc, distance planner, and more.</span></button>
         <button class="module-card" data-view="contact"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c0-1.7 1.5-3 3-3s3 1.3 3 3M14 9h4M14 13h4"/></svg></div><b>Contact QR</b><span>Shareable QR / vCard for dispatch, safety, or customer contacts.</span></button>
         <button class="module-card" data-view="generate"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg></div><b>Generate Code</b><span>Turn any text or number into a QR code or barcode.</span></button>
@@ -121,10 +124,30 @@
 
 
 
+    <section id="timesheet" class="view">
+      <div class="card">
+        <h2 style="margin-top:0">Weekly Timesheet</h2>
+        <p class="hint">For anyone logging hours on paper instead of Samsara — spotter/yard drivers, or a backup for anyone else. Pick the Sunday that starts your work week, fill in hours per day, then export or print. Totals automatically.</p>
+
+        <div class="grid-3">
+          <label>Driver Name<input id="tsDriver" /></label>
+          <label>Location<input id="tsLocation" placeholder="e.g. WHSE10 Yard" /></label>
+          <label>Week Starting (Sunday)<input id="tsWeekStart" type="date" /></label>
+        </div>
+        <div class="actions" style="margin-top:-6px"><button type="button" id="tsPrevWeek" class="ghost">‹ Prev Week</button><button type="button" id="tsNextWeek" class="ghost">Next Week ›</button></div>
+
+        <div id="tsDaysWrap" style="margin-top:16px"></div>
+
+        <div class="card" style="margin-top:12px;text-align:center;background:var(--bg)"><div class="hint">Total Hours This Week</div><div id="tsTotal" style="font-size:2.2em;font-weight:900;color:var(--brand)">0</div></div>
+
+        <div class="actions" style="margin-top:16px"><button type="button" id="tsExportPdf">Export PDF</button><button type="button" id="tsPrint" class="ghost">Print</button><button type="button" id="tsClear" class="ghost">Clear This Week</button></div>
+      </div>
+    </section>
+
     <section id="trailerinspect" class="view">
       <div class="card">
         <h2 style="margin-top:0">Trailer Inspection Report</h2>
-        <p class="hint">Paper backup trailer inspection — useful for a trailer swap, or any time your usual inspection app isn't available. Not synced anywhere; export or print a copy for your records.</p>
+        <div class="backup-notice"><span class="backup-notice-icon">⚠</span><span><b>Backup only.</b><span>Use your usual trailer inspection process first — this is just useful for a trailer swap, or any time your usual app isn't available. Not synced anywhere; export or print a copy for your records.</span></span></div>
 
         <div class="grid-3">
           <label>Date<input id="tiDate" type="date" /></label>
@@ -215,7 +238,7 @@
     <section id="paperlog" class="view no-print">
       <div class="card">
         <h2 style="margin-top:0">Paper Log Grid</h2>
-        <p class="hint">A manual backup Record of Duty Status for when your ELD malfunctions (49 CFR §395.8 / §395.34). Fill this out for the current 24-hour period, and be ready to reconstruct the previous 7 days from memory/receipts if asked. This stays on your device only — it is not an ELD and is not submitted anywhere automatically.</p>
+        <div class="backup-notice"><span class="backup-notice-icon">⚠</span><span><b>Backup only — use your ELD first.</b><span>This is a manual backup Record of Duty Status for when your ELD malfunctions (49 CFR §395.8 / §395.34). Fill this out for the current 24-hour period, and be ready to reconstruct the previous 7 days from memory/receipts if asked. This stays on your device only — it is not an ELD and is not submitted anywhere automatically.</span></span></div>
         <div class="grid-3" style="margin-top:14px">
           <label>Log date<input id="plDate" type="date" /></label>
           <label>Driver name<input id="plDriver" /></label>
@@ -282,7 +305,7 @@
     <section id="dvir" class="view">
       <div class="card">
         <h2 style="margin-top:0">DVIR — Vehicle Inspection Report</h2>
-        <p class="hint">Paper backup for your Driver Vehicle Inspection Report, for when Samsara/e-DVIR is down or unavailable. Follows the standard FMCSA §396.11/§396.13 inspection categories. Stored on this device only — export or print a copy for your paperwork; this does not sync to Samsara.</p>
+        <div class="backup-notice"><span class="backup-notice-icon">⚠</span><span><b>Backup only — use Samsara e-DVIR first.</b><span>Only use this paper form when Samsara/e-DVIR is down or unavailable. Follows the standard FMCSA §396.11/§396.13 inspection categories. Stored on this device only — export or print a copy for your paperwork; this does not sync to Samsara.</span></span></div>
 
         <div class="segmented" id="dvirTypePicker">
           <button type="button" class="seg active" data-dvirtype="pretrip">Pre-Trip</button>
@@ -679,7 +702,7 @@
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Managers</h2><p class="hint">Feeds the Send To list in Warehouse Tools → Quick Message. A default list is already baked in and auto-loads on every install — no sharing a link required. Loading from a sheet here is completely separate from the Master Lookup sheet — this one is just two plain columns: Name, Email.</p><label>Google Sheet CSV URL<input id="mgrSourceUrl" placeholder="Published CSV link — columns: Name, Email" /></label><div class="actions"><button id="mgrLoadBtn" type="button">Load / Refresh from Sheet</button><button id="mgrResetBtn" type="button" class="ghost">Reset to Default</button></div><div id="mgrSourceStatus" class="hint">Not loaded yet.</div><div id="mgrList" style="margin-top:12px"></div><div class="actions"><button id="mgrAddBtn" type="button" class="ghost">Add Manager Manually</button></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Shortcuts shown on the Home screen — e.g. your PTO Request or Trailer Inspection apps. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.7.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Trailer Inspection Report, Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.8.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Trailer Inspection Report, Weekly Timesheet, Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">

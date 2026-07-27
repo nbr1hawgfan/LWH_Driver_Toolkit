@@ -91,6 +91,10 @@ button.ghost:hover{background:var(--brand-tint)}
 .dvir-defect-row{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
 .dvir-defect-row b{color:var(--bad);min-width:140px}
 .dvir-defect-row input{flex:1}
+.backup-notice{background:#fff3cd;border:2px solid #e0a800;color:#4a3800;border-radius:var(--radius-sm);padding:12px 14px;font-weight:700;font-size:14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.backup-notice .backup-notice-icon{font-size:1.3em;line-height:1}
+.backup-notice b{display:block;font-size:1.05em;margin-bottom:2px}
+.backup-notice span{font-weight:500;display:block}
 .quickcall-card{min-height:100px;justify-content:center}
 .quickcall-card b{font-size:19px}
 .quickcall-card span{font-size:16px;font-weight:700;color:var(--brand)}
@@ -240,6 +244,7 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .print-area{display:flex;flex-wrap:wrap;gap:16px;align-content:flex-start}
 #dvirPrintArea{display:block;margin-top:16px}
 #tiPrintArea{display:block;margin-top:16px}
+#tsPrintArea{display:block;margin-top:16px}
 .label-page{background:#fff;color:#000;border:1px dashed #aaa;page-break-after:always;break-after:page;position:relative;overflow:hidden}
 .rack-label{width:6in;height:4in;padding:.22in .28in}
 .rack-title{border:6px solid #000;text-align:center;font-weight:900;line-height:.95;font-size:1.08in;padding:.12in .1in;margin:0 auto;width:92%;white-space:nowrap;overflow:hidden;text-overflow:clip}
