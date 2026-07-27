@@ -108,7 +108,7 @@ function applySettings(){
   setColor.value=color;
   if(window.setWeatherLoc) setWeatherLoc.value=LWHStorage.get('weatherLoc','');
   if(window.setReadAloud) setReadAloud.checked=LWHStorage.get('readAloudEnabled',true);
-  const logo=LWHStorage.get('companyLogo',''); if(logo){brandLogoBox.hidden=false; brandLogoBox.style.backgroundImage=`url(${logo})`;} else {brandLogoBox.hidden=true;}
+  const logo=LWHStorage.get('companyLogo','')||'./icons/company-logo.png'; brandLogoBox.style.backgroundImage=`url(${logo})`;
   if(window.setTagline) setTagline.value=LWHStorage.get('companyTagline','');
   if(window.setUserName) setUserName.value=LWHStorage.get('userName','');
   if(window.setUsageLogUrl) setUsageLogUrl.value=LWHStorage.get('usageLogUrl','')||USAGE_LOG_URL_DEFAULT;
