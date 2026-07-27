@@ -1,4 +1,4 @@
-# LWH Driver Toolkit v1.3.1
+# LWH Driver Toolkit v1.3.2
 
 A driver-facing companion to the LWH Warehouse Toolkit, built for Logistics Warehouse drivers. Forked from the Warehouse Toolkit with inventory/transaction/warehouse-print tools removed, and driver-specific tools (HOS Countdown, Trip Fuel Cost, Load Securement reference) and an expanded weather section added.
 

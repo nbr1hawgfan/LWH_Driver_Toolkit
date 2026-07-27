@@ -1,4 +1,4 @@
-const CACHE_NAME='lwh-driver-toolkit-v1-3-1';
+const CACHE_NAME='lwh-driver-toolkit-v1-3-2';
 const ASSETS=['./','./index.html','./manifest.json','./css/app.css','./css/print.css','./js/storage.js','./js/qr.js','./js/barcode.js','./js/ui.js','./js/labels.js','./js/distance.js','./js/trailer.js','./js/scanner.js','./js/doc-auto-detect.js','./js/hos.js','./js/fuelcost.js','./js/loadsecure.js','./js/radar.js','./js/paperlog.js','./js/detention.js','./js/utilities.js','./js/app.js','./icons/icon-192.png','./icons/icon-512.png','./icons/favicon.png','./icons/shortcut-lookup.png','./icons/shortcut-picklist.png','./icons/shortcut-tools.png','./icons/shortcut-bol.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

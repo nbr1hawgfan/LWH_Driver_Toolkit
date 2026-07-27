@@ -84,7 +84,7 @@
   function calcBack(){ calc.cur=calc.cur.length>1?calc.cur.slice(0,-1):'0'; calcRender(); }
   function calcPercent(){ calc.cur=String(round(parseFloat(calc.cur||'0')/100,8)); calcRender(); }
   function initCalc(){
-    const grid=document.querySelector('#utilCalc .calc-grid'); if(!grid) return;
+    const grid=document.querySelector('#calc .calc-grid'); if(!grid) return;
     grid.addEventListener('click',e=>{
       const b=e.target.closest('[data-calc]'); if(!b) return;
       const v=b.dataset.calc;
