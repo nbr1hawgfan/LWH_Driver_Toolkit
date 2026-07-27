@@ -85,6 +85,9 @@ button.ghost:hover{background:var(--brand-tint)}
 .pl-remark-row button{margin-left:auto}
 .dt-entry{padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
 .dt-entry b{color:var(--brand)}
+.quickcall-card{min-height:100px;justify-content:center}
+.quickcall-card b{font-size:19px}
+.quickcall-card span{font-size:16px;font-weight:700;color:var(--brand)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
 .stats div{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px}
 .stats b{display:block;font-size:26px;color:var(--brand);font-weight:800}
