@@ -2,6 +2,9 @@
   function el(id){ return document.getElementById(id); }
   const DAY_LABELS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+  const SUBMIT_URL='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/timesheet-submit';
+  const LOOKUP_URL='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/timesheet-lookup';
+
   function todayStr(){ return new Date().toISOString().slice(0,10); }
 
   // Snap any date to the Sunday on/before it.
@@ -21,11 +24,78 @@
   }
 
   let weekStart=sundayOf(todayStr());
+  let syncTimer=null;
+  let pendingSync=false;
 
   function key(){ return `timesheet:${weekStart}`; }
   function defaultData(){ return { driver:'', location:'', hours:[0,0,0,0,0,0,0] }; }
   function loadData(){ return LWHStorage.get(key(), defaultData()); }
   function saveData(d){ LWHStorage.set(key(), d); }
+  function isBlank(d){ return !d.driver && !d.location && d.hours.every(h=>!h); }
+
+  function setSyncStatus(text, isError){
+    const s=el('tsSyncStatus'); if(!s) return;
+    s.textContent=text;
+    s.style.color=isError?'var(--bad)':'var(--muted)';
+  }
+
+  function scheduleSync(){
+    pendingSync=true;
+    clearTimeout(syncTimer);
+    setSyncStatus('Saving locally…');
+    syncTimer=setTimeout(runSync,1500);
+  }
+
+  async function runSync(){
+    const data=loadData();
+    if(!data.driver.trim()){ setSyncStatus('Enter your name to sync to the office.'); return; }
+    if(!navigator.onLine){ setSyncStatus('Offline — saved on this device, will sync when you have signal.'); return; }
+    setSyncStatus('Syncing…');
+    try{
+      const res=await fetch(SUBMIT_URL,{
+        method:'POST', mode:'cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({driver_name:data.driver, location:data.location, week_start:weekStart, hours:data.hours})
+      });
+      if(!res.ok){ const body=await res.json().catch(()=>({})); throw new Error(body.error||('HTTP '+res.status)); }
+      pendingSync=false;
+      setSyncStatus('Synced to office ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
+    }catch(e){
+      setSyncStatus('Sync failed — saved on this device, will retry ('+e.message+')', true);
+      console.error('Timesheet sync failed',e);
+    }
+  }
+
+  // If this driver+week has nothing entered locally yet, check whether a
+  // synced copy already exists (e.g. they're on a different phone) and
+  // pull it down rather than showing a blank form.
+  async function tryRecall(){
+    const data=loadData();
+    const driver=el('tsDriver').value.trim();
+    if(!driver || !isBlank(data)) return;
+    if(!navigator.onLine) return;
+    try{
+      const res=await fetch(LOOKUP_URL,{
+        method:'POST', mode:'cors',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({driver_name:driver, week_start:weekStart})
+      });
+      if(!res.ok) return;
+      const body=await res.json();
+      if(!body.found) return;
+      const r=body.record;
+      const recalled={
+        driver:r.driver_name||driver, location:r.location||'',
+        hours:[r.sun_hours,r.mon_hours,r.tue_hours,r.wed_hours,r.thu_hours,r.fri_hours,r.sat_hours].map(h=>parseFloat(h)||0)
+      };
+      saveData(recalled);
+      renderAll();
+      LWHUI.toast('Loaded this week from the office server');
+      setSyncStatus('Synced to office ✓ (recalled from server)');
+    }catch(e){
+      console.error('Timesheet recall failed',e);
+    }
+  }
 
   function renderDays(data){
     const wrap=el('tsDaysWrap'); if(!wrap) return;
@@ -50,23 +120,27 @@
     el('tsWeekStart').value=weekStart;
     renderDays(data);
     renderTotal(data);
+    setSyncStatus(data.driver.trim()?'Not yet synced this session.':'Enter your name to sync to the office.');
   }
 
   function updateField(mutator){
     const data=loadData();
     mutator(data);
     saveData(data);
+    scheduleSync();
   }
 
   function initFields(){
     el('tsDriver').addEventListener('input',()=>updateField(d=>{ d.driver=el('tsDriver').value; }));
+    el('tsDriver').addEventListener('change',tryRecall);
     el('tsLocation').addEventListener('input',()=>updateField(d=>{ d.location=el('tsLocation').value; }));
     el('tsWeekStart').addEventListener('change',()=>{
       weekStart=sundayOf(el('tsWeekStart').value||todayStr());
       renderAll();
+      tryRecall();
     });
-    el('tsPrevWeek').onclick=()=>{ weekStart=addDays(weekStart,-7); renderAll(); };
-    el('tsNextWeek').onclick=()=>{ weekStart=addDays(weekStart,7); renderAll(); };
+    el('tsPrevWeek').onclick=()=>{ weekStart=addDays(weekStart,-7); renderAll(); tryRecall(); };
+    el('tsNextWeek').onclick=()=>{ weekStart=addDays(weekStart,7); renderAll(); tryRecall(); };
 
     el('tsDaysWrap').addEventListener('input',e=>{
       const input=e.target.closest('[data-day]'); if(!input) return;
@@ -80,7 +154,10 @@
       const d=loadData();
       saveData({driver:d.driver,location:d.location,hours:[0,0,0,0,0,0,0]});
       renderAll();
+      scheduleSync();
     };
+
+    window.addEventListener('online',()=>{ if(pendingSync) runSync(); });
   }
 
   function buildPrintHtml(data){
