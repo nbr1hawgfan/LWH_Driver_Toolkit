@@ -245,6 +245,8 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 #dvirPrintArea{display:block;margin-top:16px}
 #tiPrintArea{display:block;margin-top:16px}
 #tsPrintArea{display:block;margin-top:16px}
+#stPrintTable{display:block;margin-top:16px}
+#stPrintTable:empty{display:none}
 .label-page{background:#fff;color:#000;border:1px dashed #aaa;page-break-after:always;break-after:page;position:relative;overflow:hidden}
 .rack-label{width:6in;height:4in;padding:.22in .28in}
 .rack-title{border:6px solid #000;text-align:center;font-weight:900;line-height:.95;font-size:1.08in;padding:.12in .1in;margin:0 auto;width:92%;white-space:nowrap;overflow:hidden;text-overflow:clip}
@@ -400,6 +402,10 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .pls-table{width:100%;border-collapse:collapse;font-size:12px}
 .pls-table th,.pls-table td{border:1px solid var(--brand);padding:6px 8px;vertical-align:top}
 .pls-table th{background:var(--brand-tint);color:var(--brand-dark);text-align:left}
+.txn-print-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+.txn-print-table th,.txn-print-table td{border:1px solid #999;padding:4px 6px;text-align:left;white-space:nowrap}
+.txn-print-table th{background:#f0f0f0;font-weight:700}
+.txn-print-table tr:nth-child(even) td{background:#fafafa}
 .pls-bay{font-weight:900;width:110px}
 .pls-baytotal{font-weight:900;text-align:right;width:110px;white-space:nowrap}
 .pls-item-total{text-align:right;font-weight:900;font-size:12px;padding:4px 2px;border:1px solid var(--brand);border-top:0}

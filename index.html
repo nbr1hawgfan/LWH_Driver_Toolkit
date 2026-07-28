@@ -39,6 +39,7 @@
   <script defer src="./js/distance.js"></script>
   <script defer src="./js/trailerinspect.js"></script>
   <script defer src="./js/timesheet.js"></script>
+  <script defer src="./js/spottertimesheets.js"></script>
   <script defer src="./js/hos.js"></script>
   <script defer src="./js/fuelcost.js"></script>
   <script defer src="./js/loadsecure.js"></script>
@@ -53,7 +54,7 @@
 </head>
 <body>
   <header class="app-header no-print">
-    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.9.0</div></div></div>
+    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.10.0</div></div></div>
     <div class="header-actions"><button id="navToggle" class="ghost" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="installBtn" class="ghost" hidden>Install App</button><button onclick="window.print()">Print</button></div>
   </header>
 
@@ -79,6 +80,8 @@
       <button class="nav-btn" data-view="contact"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c0-1.7 1.5-3 3-3s3 1.3 3 3M14 9h4M14 13h4"/></svg>Contact QR</button>
       <button class="nav-btn" data-view="generate"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg>Generate Code</button>
       <button class="nav-btn" data-view="scancode"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><path d="M4 12h16"/></svg>Scan Code</button>
+      <div class="nav-section-label">Dispatch</div>
+      <button class="nav-btn" data-view="spotterTimesheets"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg>All Timesheets</button>
       <div class="nav-section-label">Links</div>
       <a class="nav-btn" href="https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>PTO Request</a>
       <a class="nav-btn" href="https://script.google.com/macros/s/AKfycbyTZ4y30FAUEqoSBZR2luzCrwWWGtitmrDEAmILm1NTywV78yveXPxYSI5tBLI6QyFO/exec" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/></svg>Trailer Inspection</a>
@@ -114,6 +117,11 @@
         <button class="module-card" data-view="generate"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg></div><b>Generate Code</b><span>Turn any text or number into a QR code or barcode.</span></button>
         <button class="module-card" data-view="scancode"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3"/><path d="M4 12h16"/></svg></div><b>Scan Code</b><span>Quick camera scan of any barcode or QR — copy, add to notes, email, or open a link straight from the result.</span></button>
         <button class="module-card" data-view="settings"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.4-2-3.4-2.3.8a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.8-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3l-2 1.4 2 3.4 2.3-.8a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.8 2-3.4z"/></svg></div><b>Settings</b><span>Logo, colors, calibration, and weather location.</span></button>
+      </div>
+
+      <h3 style="margin-top:22px">Dispatch</h3>
+      <div class="module-grid">
+        <button class="module-card" data-view="spotterTimesheets"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg></div><b>All Timesheets</b><span>Search and print any driver's synced weekly hours.</span></button>
       </div>
 
       <div id="quickLinksHome" class="card no-print" style="margin-top:22px">
@@ -385,6 +393,22 @@
           <div class="actions" style="justify-content:center;margin-top:10px"><button type="button" id="scCopyBtn" class="ghost">Copy</button><button type="button" id="scNotesBtn" class="ghost">Add to Notes</button><button type="button" id="scEmailBtn" class="ghost">Email</button></div>
         </div>
       </div>
+    </section>
+
+    <section id="spotterTimesheets" class="view">
+      <div class="tool-layout wide">
+        <form class="panel no-print" id="spotterTimesheetsForm" onsubmit="return false">
+          <h2>All Timesheets</h2>
+          <p class="hint">Weekly hours synced from every driver's Weekly Timesheet tool. Search by driver name, location, or week (YYYY-MM-DD of the Sunday).</p>
+          <label>Search<input id="stSearch" placeholder="Driver name, location, or week start date..." autocomplete="off" /></label>
+          <div class="grid-2"><button type="button" id="stSearchBtn">Search</button><button type="button" id="stLoadBtn" class="ghost">Load / Refresh Data</button></div>
+          <button type="button" id="stClearBtn" class="ghost" style="margin-top:8px;width:100%">Clear</button>
+          <div class="grid-2" style="margin-top:8px"><button type="button" id="stCsvBtn" class="ghost">Export CSV</button><button type="button" id="stPrintBtn" class="ghost">Print Table</button></div>
+          <div id="stStatus" class="hint">Timesheets not loaded yet — searching will load them automatically.</div>
+        </form>
+        <div><div id="stResults" class="results no-print"></div></div>
+      </div>
+      <div id="stPrintTable" class="print-area"></div>
     </section>
 
     <section id="calc" class="view no-print">
@@ -703,7 +727,7 @@
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Managers</h2><p class="hint">Feeds the Send To list in Warehouse Tools → Quick Message. A default list is already baked in and auto-loads on every install — no sharing a link required. Loading from a sheet here is completely separate from the Master Lookup sheet — this one is just two plain columns: Name, Email.</p><label>Google Sheet CSV URL<input id="mgrSourceUrl" placeholder="Published CSV link — columns: Name, Email" /></label><div class="actions"><button id="mgrLoadBtn" type="button">Load / Refresh from Sheet</button><button id="mgrResetBtn" type="button" class="ghost">Reset to Default</button></div><div id="mgrSourceStatus" class="hint">Not loaded yet.</div><div id="mgrList" style="margin-top:12px"></div><div class="actions"><button id="mgrAddBtn" type="button" class="ghost">Add Manager Manually</button></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Shortcuts shown on the Home screen — e.g. your PTO Request or Trailer Inspection apps. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.9.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Trailer Inspection Report, Weekly Timesheet, Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.10.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Trailer Inspection Report, Weekly Timesheet, All Timesheets (Dispatch), Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">
