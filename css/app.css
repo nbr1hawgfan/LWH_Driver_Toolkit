@@ -493,3 +493,22 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
   .fb-narrow{display:table-cell}
   .fb-phone-note{display:block}
 }
+
+/* v1.11.0 — Driver/Transportation identity: asphalt header + highway center
+   line, so it can't be mistaken for the red Warehouse Toolkit header. */
+.app-header{position:relative;background:linear-gradient(180deg,#2a2b31 0%,#1d1e22 100%);border-bottom:0;padding-bottom:22px}
+.app-header::after{content:"";position:absolute;left:0;right:0;bottom:7px;height:5px;
+  background:repeating-linear-gradient(90deg,#f7c400 0 34px,transparent 34px 56px);border-radius:3px;opacity:.95}
+.app-header::before{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--brand)}
+.app-header .eyebrow{color:#f7c400;opacity:1;font-weight:800;letter-spacing:.16em}
+.hdr-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hdr-truck{width:44px;height:22px;color:#fff;flex:0 0 auto}
+.hdr-badge{display:inline-block;background:#f7c400;color:#1d1e22;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px;line-height:1}
+.app-header .header-actions .ghost{border-color:rgba(255,255,255,.55)}
+.hero-division{display:inline-block;background:#1d1e22;color:#f7c400;font-weight:800;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border-radius:6px;margin-bottom:6px}
+@media(max-width:640px){
+  .app-header{padding-bottom:18px}
+  .app-header::after{bottom:6px;height:4px;background:repeating-linear-gradient(90deg,#f7c400 0 24px,transparent 24px 40px)}
+  .hdr-truck{width:34px;height:17px}
+  .hdr-badge{font-size:10px;padding:3px 7px}
+}

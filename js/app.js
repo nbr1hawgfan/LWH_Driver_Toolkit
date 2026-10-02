@@ -100,7 +100,9 @@ function hexToRgb(hex){hex=String(hex||'').trim().replace('#',''); if(hex.length
 function rgbToHex(r,g,b){return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');}
 function shadeColor(hex,percent){const {r,g,b}=hexToRgb(hex); const t=percent<0?0:255; const p=Math.abs(percent); return rgbToHex(r+(t-r)*p,g+(t-g)*p,b+(t-b)*p);}
 function applySettings(){
-  const company=LWHStorage.get('companyName','Logistics Warehouse'); document.getElementById('companyTitle').textContent=company+' Toolkit'; setCompany.value=company;
+  const company=LWHStorage.get('companyName','Logistics Warehouse'); // Driver app keeps a fixed title so it can never read the same as the
+  // Warehouse Toolkit; the company name goes in the eyebrow line instead.
+  document.getElementById('companyTitleText').textContent='Driver Toolkit'; document.getElementById('companyEyebrow').textContent=company+' · Transportation'; setCompany.value=company;
   const color=LWHStorage.get('primaryColor','#c8102e');
   document.documentElement.style.setProperty('--brand',color);
   document.documentElement.style.setProperty('--brand-dark',shadeColor(color,-0.28));

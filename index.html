@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LWH Driver Toolkit</title>
-  <meta name="theme-color" content="#c8102e" />
+  <meta name="theme-color" content="#1d1e22" />
   <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icons/favicon.png" />
@@ -58,7 +58,7 @@
 </head>
 <body>
   <header class="app-header no-print">
-    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.11.0</div></div></div>
+    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow" id="companyEyebrow">Logistics Warehouse · Transportation</div><h1 id="companyTitle" class="hdr-title"><svg class="hdr-truck" viewBox="0 0 64 32" aria-hidden="true"><path d="M2 6h34v18H2z" fill="currentColor" opacity=".95"/><path d="M38 11h12l8 8v5H38z" fill="currentColor"/><path d="M41 13.5h7.5l5 5H41z" fill="#1d1e22"/><circle cx="12" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="26" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="50" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/></svg><span id="companyTitleText">Driver Toolkit</span><span class="hdr-badge">Driver App</span></h1><div class="version">v1.11.0</div></div></div>
     <div class="header-actions"><button id="navToggle" class="ghost" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="installBtn" class="ghost" hidden>Install App</button><button onclick="window.print()">Print</button></div>
   </header>
 
@@ -99,7 +99,7 @@
     </nav>
 
     <section id="home" class="view active no-print">
-      <div class="hero card"><h2 id="heroGreeting">Good Morning</h2><p>Your on-the-road toolkit — HOS, fuel cost, load securement, docs, and weather in one place.</p><p id="heroWeather" class="hero-weather">Loading weather…</p><div id="heroAlert" class="hero-alert" hidden></div><div id="heroForecast" class="weather-days"></div><p id="heroClock" class="hint" style="font-size:1.3em;font-weight:700;color:var(--brand)">--:--</p><div class="stats"><div><b id="statPrints">0</b><span>Docs scanned</span></div><div><b id="statLookups">0</b><span>Trips estimated</span></div><div><b id="statVisitors">0</b><span>Codes scanned</span></div></div></div>
+      <div class="hero card"><div class="hero-division">Transportation Division</div><h2 id="heroGreeting">Good Morning</h2><p>Your on-the-road toolkit — HOS, fuel cost, load securement, docs, and weather in one place.</p><p id="heroWeather" class="hero-weather">Loading weather…</p><div id="heroAlert" class="hero-alert" hidden></div><div id="heroForecast" class="weather-days"></div><p id="heroClock" class="hint" style="font-size:1.3em;font-weight:700;color:var(--brand)">--:--</p><div class="stats"><div><b id="statPrints">0</b><span>Docs scanned</span></div><div><b id="statLookups">0</b><span>Trips estimated</span></div><div><b id="statVisitors">0</b><span>Codes scanned</span></div></div></div>
       <h3>Quick Access</h3>
       <div class="module-grid">
         <button class="module-card" data-view="calc"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></div><b>Calculator</b><span>Basic calculator, front and center for on-the-fly math.</span></button>
