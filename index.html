@@ -228,8 +228,11 @@
         <div class="panel">
           <h2>Fuel Surcharge Calculator</h2>
           <p class="hint">OOIDA method: (current diesel price − base price) ÷ MPG = surcharge per mile. Your numbers are remembered on this device — usually you only need to update the diesel price each week.</p>
+          <label>Price region<select id="fscRegion"><option value="R20">Midwest (PADD 2)</option><option value="R30">Gulf Coast (PADD 3)</option><option value="NUS">U.S. Average</option><option value="R10">East Coast (PADD 1)</option><option value="R40">Rocky Mountain (PADD 4)</option><option value="R50">West Coast (PADD 5)</option></select></label>
           <label>Current diesel price ($/gallon)<input id="fscCurrent" type="number" inputmode="decimal" min="0" step="0.001" placeholder="e.g. 3.759" /></label>
-          <p class="hint" style="margin-top:-6px">Weekly averages by region: <a href="https://www.eia.gov/petroleum/gasdiesel/" target="_blank" rel="noopener">EIA Diesel Prices</a> (updated Mondays).</p>
+          <p id="fscPriceSource" class="hint" style="margin-top:-6px">Loading this week's EIA average…</p>
+          <div class="actions" style="margin-top:-6px"><button type="button" id="fscRefresh" class="ghost">Use This Week's EIA Price</button></div>
+          <p class="hint" style="margin-top:-6px">Source: <a href="https://www.eia.gov/petroleum/gasdiesel/" target="_blank" rel="noopener">EIA weekly retail diesel</a>, published Mondays. You can still type your own price over it.</p>
           <label>Base / peg price ($/gallon)<input id="fscBase" type="number" inputmode="decimal" min="0" step="0.01" /></label>
           <p class="hint" style="margin-top:-6px">The price where surcharge starts — use the base in your rate agreement.</p>
           <label>Truck MPG<input id="fscMpg" type="number" inputmode="decimal" min="0.1" step="0.1" /></label>

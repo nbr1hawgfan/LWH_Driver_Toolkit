@@ -7,8 +7,65 @@
 // update the diesel price week to week.
 (function(){
   const KEY='fscInputs';
-  const IDS=['fscCurrent','fscBase','fscMpg','fscMiles','fscLinehaul'];
-  const DEFAULTS={fscCurrent:'',fscBase:'1.25',fscMpg:'6.5',fscMiles:'',fscLinehaul:''};
+  const IDS=['fscRegion','fscCurrent','fscBase','fscMpg','fscMiles','fscLinehaul'];
+  const DEFAULTS={fscRegion:'R20',fscCurrent:'',fscBase:'1.25',fscMpg:'6.5',fscMiles:'',fscLinehaul:''};
+
+  // ---- Weekly EIA diesel price (auto-fill) ----
+  // Free key from https://www.eia.gov/opendata/register.php — paste it here.
+  // Read-only public data, so it's fine for the key to live in the client.
+  const EIA_API_KEY='';
+  const REGION_NAMES={R20:'Midwest',R30:'Gulf Coast',NUS:'U.S. average',R10:'East Coast',R40:'Rocky Mountain',R50:'West Coast'};
+  const PRICE_CACHE='fscEiaCache';       // {R20:{price,prev,period,fetchedAt}, ...}
+  const CACHE_MS=6*60*60*1000;            // EIA posts once a week; 6h keeps it fresh without hammering it
+  const fmtWeek=iso=>new Date(iso+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+  async function fetchEia(region){
+    const series=`EMD_EPD2D_PTE_${region}_DPG`;   // weekly No. 2 diesel retail, $/gal
+    const url='https://api.eia.gov/v2/petroleum/pri/gnd/data/?api_key='+encodeURIComponent(EIA_API_KEY)+
+      '&frequency=weekly&data[0]=value&facets[series][]='+series+
+      '&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=2';
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=((await res.json()).response||{}).data||[];
+    if(!rows.length) throw new Error('No data returned');
+    return {price:+rows[0].value,prev:rows[1]?+rows[1].value:null,period:rows[0].period,fetchedAt:Date.now()};
+  }
+  function showSource(region,info,note){
+    const src=el('fscPriceSource'); if(!src) return;
+    if(!info){ src.textContent=note||''; return; }
+    let chg='';
+    if(info.prev!=null){
+      const d=info.price-info.prev;
+      chg=Math.abs(d)<0.0005?' · unchanged from last week':` · ${d>0?'up':'down'} ${money(Math.abs(d),3)} from last week`;
+    }
+    src.textContent=`EIA ${REGION_NAMES[region]} weekly average, week of ${fmtWeek(info.period)}: ${money(info.price,3)}${chg}${note?' · '+note:''}`;
+  }
+  // force=true: driver tapped the button or changed region, so always fill the
+  // box. On plain app load we only fill it if they haven't typed their own.
+  async function loadEiaPrice(force){
+    const region=el('fscRegion').value||'R20';
+    const cache=LWHStorage.get(PRICE_CACHE,{});
+    const cached=cache[region];
+    const apply=info=>{
+      if(force||!LWHStorage.get('fscManualPrice',false)){
+        el('fscCurrent').value=info.price.toFixed(3);
+        LWHStorage.set('fscManualPrice',false);
+        render();
+      }
+    };
+    if(cached&&Date.now()-cached.fetchedAt<CACHE_MS){ showSource(region,cached); apply(cached); return; }
+    if(!EIA_API_KEY){ showSource(region,cached,cached?'saved copy':'Auto price is off until an EIA key is added — enter the price manually.'); if(cached) apply(cached); return; }
+    showSource(region,null,'Loading this week\'s EIA average…');
+    try{
+      const info=await fetchEia(region);
+      cache[region]=info; LWHStorage.set(PRICE_CACHE,cache);
+      showSource(region,info); apply(info);
+    }catch(e){
+      console.error('EIA price fetch failed',e);
+      if(cached){ showSource(region,cached,'offline — showing last saved price'); apply(cached); }
+      else showSource(region,null,'Couldn\'t reach EIA right now — enter the price manually.');
+    }
+  }
   function el(id){ return document.getElementById(id); }
   const money=(n,d=2)=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 
@@ -81,12 +138,17 @@
     if(!el('fscOutput')) return;
     load();
     IDS.forEach(id=>{ const n=el(id); if(n) n.addEventListener('input',render); });
+    el('fscCurrent').addEventListener('input',()=>LWHStorage.set('fscManualPrice',true));
+    el('fscRegion').addEventListener('change',()=>{ render(); loadEiaPrice(true); });
+    el('fscRefresh').onclick=()=>loadEiaPrice(true);
     el('fscCalc').onclick=render;
     el('fscReset').onclick=()=>{
-      LWHStorage.remove(KEY); load();
+      LWHStorage.remove(KEY); LWHStorage.set('fscManualPrice',false); load();
       el('fscOutput').innerHTML='<p class="hint">Enter the current diesel price, base price, and MPG.</p>';
+      loadEiaPrice(true);
     };
     render();
+    loadEiaPrice(false);
   }
   window.addEventListener('load',init);
 })();
