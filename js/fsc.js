@@ -13,7 +13,7 @@
   // ---- Weekly EIA diesel price (auto-fill) ----
   // Free key from https://www.eia.gov/opendata/register.php — paste it here.
   // Read-only public data, so it's fine for the key to live in the client.
-  const EIA_API_KEY='';
+  const EIA_API_KEY='1eajXBsHGIRcVHVY9AphqzboTHRS7FOdW5MOloaF';
   const REGION_NAMES={R20:'Midwest',R30:'Gulf Coast',NUS:'U.S. average',R10:'East Coast',R40:'Rocky Mountain',R50:'West Coast'};
   const PRICE_CACHE='fscEiaCache';       // {R20:{price,prev,period,fetchedAt}, ...}
   const CACHE_MS=6*60*60*1000;            // EIA posts once a week; 6h keeps it fresh without hammering it
