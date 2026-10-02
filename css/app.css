@@ -439,3 +439,17 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .bol-sig-img{height:44px}
 .bol-sig-line{display:block;border-bottom:1px solid #000;height:34px}
 .bol-sig-date{font-size:10px;margin-top:2px}
+
+/* v1.11.0 — Incident Report */
+.btn-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border-radius:var(--radius-sm);background:var(--brand);color:#fff;font-weight:700;text-decoration:none;cursor:pointer;border:1.5px solid var(--brand);font-size:16px}
+.btn-link.ghost{background:#fff;color:var(--brand)}
+.btn-link:hover{background:var(--brand-dark);color:#fff}
+.inc-file-btn{margin:0}
+.inc-pill{display:inline-block;padding:6px 12px;border-radius:999px;font-size:14px;font-weight:700;background:#fff3cd;color:#4a3800}
+.inc-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:8px}
+.inc-thumb{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px;display:flex;flex-direction:column;gap:6px}
+.inc-thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block}
+.inc-thumb span{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:2px 8px}
+.inc-thumb button{min-height:38px;padding:6px 10px;font-size:14px}
+.inc-details{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;background:#fff}
+.inc-details summary{font-weight:700;cursor:pointer;font-size:16px}

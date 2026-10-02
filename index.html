@@ -42,11 +42,13 @@
   <script defer src="./js/spottertimesheets.js"></script>
   <script defer src="./js/hos.js"></script>
   <script defer src="./js/fuelcost.js"></script>
+  <script defer src="./js/fsc.js"></script>
   <script defer src="./js/loadsecure.js"></script>
   <script defer src="./js/radar.js"></script>
   <script defer src="./js/paperlog.js"></script>
   <script defer src="./js/detention.js"></script>
   <script defer src="./js/dvir.js"></script>
+  <script defer src="./js/incident.js"></script>
   <script defer src="./js/scanner.js"></script>
   <script defer src="./js/doc-auto-detect.js"></script>
   <script defer src="./js/utilities.js"></script>
@@ -54,7 +56,7 @@
 </head>
 <body>
   <header class="app-header no-print">
-    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.10.0</div></div></div>
+    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow">Logistics Warehouse</div><h1 id="companyTitle">Driver Toolkit</h1><div class="version">v1.11.0</div></div></div>
     <div class="header-actions"><button id="navToggle" class="ghost" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="installBtn" class="ghost" hidden>Install App</button><button onclick="window.print()">Print</button></div>
   </header>
 
@@ -68,11 +70,13 @@
       <div class="nav-section-label">Driver Tools</div>
       <button class="nav-btn" data-view="hos"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg>HOS Countdown</button>
       <button class="nav-btn" data-view="fuelcost"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M4 11h10"/><path d="M14 9h2.5L19 12v5a1 1 0 0 1-1 1h-1"/><circle cx="8" cy="21" r="1.4"/></svg>Trip Fuel Cost</button>
+      <button class="nav-btn" data-view="fsc"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M4 11h10"/><path d="M14 9h2.5L19 12v5a1 1 0 0 1-1 1h-1"/><path d="M17 3l3 3M20 3l-3 3"/></svg>Fuel Surcharge</button>
       <button class="nav-btn" data-view="loadsecure"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="1.5"/><path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>Load Securement</button>
       <button class="nav-btn" data-view="radar"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg>Weather Radar</button>
       <button class="nav-btn" data-view="paperlog"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg>Paper Log Grid</button>
       <button class="nav-btn" data-view="detention"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Detention Tracker</button>
       <button class="nav-btn" data-view="dvir"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg>DVIR Inspection</button>
+      <button class="nav-btn" data-view="incident"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg>Incident Report</button>
       <button class="nav-btn" data-view="utilities"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/><path d="M3 13h18"/></svg>Calculators &amp; Tools</button>
       <button class="nav-btn" data-view="docscan"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Doc Scanner</button>
       <button class="nav-btn" data-view="timesheet"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg>Weekly Timesheet</button>
@@ -104,11 +108,13 @@
       <div class="module-grid">
         <button class="module-card" data-view="hos"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg></div><b>HOS Countdown</b><span>Track your 11/14-hour driving and on-duty windows and your 70-hour/8-day clock.</span></button>
         <button class="module-card" data-view="fuelcost"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M4 11h10"/><path d="M14 9h2.5L19 12v5a1 1 0 0 1-1 1h-1"/><circle cx="8" cy="21" r="1.4"/></svg></div><b>Trip Fuel Cost</b><span>Enter miles, MPG, and price per gallon to estimate a trip's fuel cost.</span></button>
+        <button class="module-card" data-view="fsc"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><path d="M4 11h10"/><path d="M14 9h2.5L19 12v5a1 1 0 0 1-1 1h-1"/><path d="M17 3l3 3M20 3l-3 3"/></svg></div><b>Fuel Surcharge</b><span>OOIDA-style surcharge per mile and per trip from today's diesel price.</span></button>
         <button class="module-card" data-view="loadsecure"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="1.5"/><path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg></div><b>Load Securement</b><span>FMCSA tie-down and working-load-limit quick reference by cargo weight.</span></button>
         <button class="module-card" data-view="radar"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg></div><b>Weather Radar</b><span>Animated precipitation radar for your current route area.</span></button>
         <button class="module-card" data-view="paperlog"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg></div><b>Paper Log Grid</b><span>Backup Record of Duty Status if your ELD malfunctions.</span></button>
         <button class="module-card" data-view="detention"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><b>Detention Tracker</b><span>Log arrival/departure and estimate detention time.</span></button>
         <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Backup only — use Samsara e-DVIR first. Paper form for when it's down.</span></button>
+        <button class="module-card" data-view="incident"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg></div><b>Incident Report</b><span>Accident or damage report with photos — saved on your phone, sent by text or email.</span></button>
         <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Auto-detects and straightens paperwork as you scan, extract text, and share or download as a PDF — multi-page.</span></button>
         <button class="module-card" data-view="timesheet"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h3M12 13h3M7 17h3"/></svg></div><b>Weekly Timesheet</b><span>Paper timesheet — driver, location, hours per day, Sun–Sat.</span></button>
         <button class="module-card" data-view="trailerinspect"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Trailer Inspection</b><span>Backup only — for a trailer swap or when the usual app's down.</span></button>
@@ -214,6 +220,24 @@
           <div class="actions"><button type="button" id="fcCalc">Calculate</button><button type="button" id="fcReset" class="ghost">Reset</button></div>
         </div>
         <div class="card" id="fcOutput"><p class="hint">Enter trip details and tap Calculate.</p></div>
+      </div>
+    </section>
+
+        <section id="fsc" class="view no-print">
+      <div class="tool-layout">
+        <div class="panel">
+          <h2>Fuel Surcharge Calculator</h2>
+          <p class="hint">OOIDA method: (current diesel price − base price) ÷ MPG = surcharge per mile. Your numbers are remembered on this device — usually you only need to update the diesel price each week.</p>
+          <label>Current diesel price ($/gallon)<input id="fscCurrent" type="number" inputmode="decimal" min="0" step="0.001" placeholder="e.g. 3.759" /></label>
+          <p class="hint" style="margin-top:-6px">Weekly averages by region: <a href="https://www.eia.gov/petroleum/gasdiesel/" target="_blank" rel="noopener">EIA Diesel Prices</a> (updated Mondays).</p>
+          <label>Base / peg price ($/gallon)<input id="fscBase" type="number" inputmode="decimal" min="0" step="0.01" /></label>
+          <p class="hint" style="margin-top:-6px">The price where surcharge starts — use the base in your rate agreement.</p>
+          <label>Truck MPG<input id="fscMpg" type="number" inputmode="decimal" min="0.1" step="0.1" /></label>
+          <label>Loaded miles (optional)<input id="fscMiles" type="number" inputmode="numeric" min="0" step="1" /></label>
+          <label>Linehaul rate $/mile (optional)<input id="fscLinehaul" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 2.25" /></label>
+          <div class="actions"><button type="button" id="fscCalc">Calculate</button><button type="button" id="fscReset" class="ghost">Reset</button></div>
+        </div>
+        <div class="card" id="fscOutput"><p class="hint">Enter the current diesel price, base price, and MPG.</p></div>
       </div>
     </section>
 
@@ -351,6 +375,92 @@
         </div>
 
         <div class="actions" style="margin-top:16px"><button type="button" id="dvirExportPdf">Export PDF</button><button type="button" id="dvirPrint" class="ghost">Print</button><button type="button" id="dvirClear" class="ghost">Clear This Report</button></div>
+      </div>
+    </section>
+
+        <section id="incident" class="view no-print">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h2 style="margin:0">Incident Report</h2>
+          <span id="incStatusPill" class="inc-pill">Draft</span>
+        </div>
+        <div class="backup-notice" style="margin-top:14px"><span class="backup-notice-icon">!</span><span><b>At the scene — safety first.</b><ol style="margin:6px 0 0;padding-left:20px;font-weight:600"><li>Make sure everyone is safe. Call 911 if anyone is hurt.</li><li>Flashers on, set your triangles.</li><li>Call the office.</li><li>Take photos of everything.</li><li>Get the other driver's info and the police report number.</li><li>Don't discuss fault at the scene — let the company handle it.</li></ol></span></div>
+        <div class="actions" style="margin-top:0"><a class="btn-link" href="tel:911">Call 911</a><a class="btn-link ghost" href="tel:14794102611">Call Main Office</a></div>
+        <p id="incSaveState" class="hint">Saves automatically on this device as you type.</p>
+
+        <h3 style="margin-top:18px">The Incident</h3>
+        <label>Type of incident<select id="incType"><option>Accident / Collision</option><option>Backing Incident</option><option>Property Damage</option><option>Cargo Damage / Loss</option><option>Injury</option><option>Near Miss</option><option>Equipment Failure / Breakdown</option><option>Other</option></select></label>
+        <div class="grid-2">
+          <label>Date<input id="incDate" type="date" /></label>
+          <label>Time<input id="incTime" type="time" /></label>
+        </div>
+        <div class="actions" style="margin-top:-8px"><button type="button" id="incNow" class="ghost">Set to Now</button></div>
+        <label>Location<input id="incLocation" placeholder="Address, highway and mile marker, or city/state" /></label>
+        <div class="actions" style="margin-top:-8px"><button type="button" id="incGps" class="ghost">Use My GPS Location</button></div>
+        <label>Weather / road conditions<input id="incConditions" placeholder="e.g. Rain, wet road, dark" /></label>
+
+        <h3 style="margin-top:18px">Driver &amp; Equipment</h3>
+        <div class="grid-2">
+          <label>Driver name<input id="incDriver" /></label>
+          <label>Truck #<input id="incTruck" inputmode="numeric" /></label>
+          <label>Trailer #<input id="incTrailer" /></label>
+          <label>Load / BOL #<input id="incLoad" /></label>
+        </div>
+
+        <h3 style="margin-top:18px">What Happened</h3>
+        <label>Describe it in your own words<textarea id="incDescription" rows="6" placeholder="What you were doing, what happened, and what was damaged."></textarea></label>
+
+        <div class="grid-2">
+          <label>Anyone injured?<select id="incInjuries"><option>No</option><option>Yes</option><option>Not sure</option></select></label>
+          <label>Any vehicle towed?<select id="incTowed"><option>No</option><option>Yes</option></select></label>
+        </div>
+        <div id="incInjuryWrap" hidden><label>Who was hurt and how<input id="incInjuryDetails" /></label></div>
+        <label>Police called?<select id="incPolice"><option>No</option><option>Yes</option></select></label>
+        <div id="incPoliceWrap" class="grid-2" hidden>
+          <label>Police dept / officer name<input id="incPoliceDept" /></label>
+          <label>Police report #<input id="incReportNum" /></label>
+        </div>
+
+        <details class="inc-details" style="margin-top:12px">
+          <summary>Other driver &amp; witnesses (if any)</summary>
+          <div class="grid-2" style="margin-top:12px">
+            <label>Other driver name<input id="incOtherName" /></label>
+            <label>Other driver phone<input id="incOtherPhone" type="tel" /></label>
+          </div>
+          <label>Other vehicle (year, make, plate, state)<input id="incOtherVehicle" /></label>
+          <label>Other insurance (company and policy #)<input id="incOtherInsurance" /></label>
+          <label>Witnesses (names and phone numbers)<textarea id="incWitnesses" rows="3"></textarea></label>
+        </details>
+
+        <h3 style="margin-top:18px">Photos <span id="incPhotoCount" class="hint" style="font-weight:400">0 of 12</span></h3>
+        <div class="actions" style="margin-top:0">
+          <label class="btn-link inc-file-btn">Take Photo<input id="incCamera" type="file" accept="image/*" capture="environment" hidden /></label>
+          <label class="btn-link ghost inc-file-btn">Add From Gallery<input id="incGallery" type="file" accept="image/*" multiple hidden /></label>
+        </div>
+        <p id="incPhotoState" class="hint"></p>
+        <div id="incPhotoGrid" class="inc-photo-grid"></div>
+
+        <div class="card" style="margin-top:16px;background:var(--bg)">
+          <label>Driver signature (type your full name to certify this report is true)<input id="incSignature" /></label>
+        </div>
+
+        <h3 style="margin-top:18px">Send Report</h3>
+        <p class="hint">Opens your phone's share menu — pick Messages, Email, or whoever you send it to.</p>
+        <div class="actions">
+          <button type="button" id="incSharePdf">Share as PDF</button>
+          <button type="button" id="incShareText" class="ghost">Share Text + Photos</button>
+          <button type="button" id="incEmail" class="ghost">Email Text Only</button>
+        </div>
+        <p class="hint">No signal? Share Text + Photos works offline-filled; PDF needs a connection the first time the app loads it.</p>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h3 style="margin:0">Saved Reports</h3>
+          <button type="button" id="incNew" class="ghost">Start New Report</button>
+        </div>
+        <p class="hint">Kept on this phone only until you delete them.</p>
+        <div id="incSavedList"></div>
       </div>
     </section>
 
@@ -727,7 +837,7 @@
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Managers</h2><p class="hint">Feeds the Send To list in Warehouse Tools → Quick Message. A default list is already baked in and auto-loads on every install — no sharing a link required. Loading from a sheet here is completely separate from the Master Lookup sheet — this one is just two plain columns: Name, Email.</p><label>Google Sheet CSV URL<input id="mgrSourceUrl" placeholder="Published CSV link — columns: Name, Email" /></label><div class="actions"><button id="mgrLoadBtn" type="button">Load / Refresh from Sheet</button><button id="mgrResetBtn" type="button" class="ghost">Reset to Default</button></div><div id="mgrSourceStatus" class="hint">Not loaded yet.</div><div id="mgrList" style="margin-top:12px"></div><div class="actions"><button id="mgrAddBtn" type="button" class="ghost">Add Manager Manually</button></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Shortcuts shown on the Home screen — e.g. your PTO Request or Trailer Inspection apps. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.10.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Trailer Inspection Report, Weekly Timesheet, All Timesheets (Dispatch), Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.11.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Incident Report, Trailer Inspection Report, Weekly Timesheet, All Timesheets (Dispatch), Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">
