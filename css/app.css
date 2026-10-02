@@ -512,3 +512,31 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
   .hdr-truck{width:34px;height:17px}
   .hdr-badge{font-size:10px;padding:3px 7px}
 }
+
+/* v1.11.0 — Yard Check */
+.yc-counts{margin-top:4px}
+.yc-c-loaded{color:#1f6fb2}
+.yc-c-empty{color:#6b6b78}
+.yc-rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.yc-row{display:grid;grid-template-columns:26px minmax(90px,1fr) auto 44px;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px}
+.yc-row.dupe{border-color:#e0a800;background:#fff8e1}
+.yc-row.dupe::after{content:"Duplicate trailer #";grid-column:2/-1;font-size:13px;font-weight:700;color:#8a6d00}
+.yc-num{font-weight:800;color:var(--muted);text-align:center}
+.yc-trailer{font-size:18px;font-weight:700;text-transform:uppercase;min-height:46px}
+.yc-trailer::placeholder{text-transform:none;font-weight:400}
+.yc-toggle{display:flex;border:1.5px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+.yc-btn{background:#fff;color:var(--ink);border-radius:0;min-width:78px;font-size:15px;padding:8px 10px}
+.yc-btn+.yc-btn{border-left:1.5px solid var(--line)}
+.yc-btn:hover{background:var(--bg)}
+.yc-btn.on.loaded{background:#1f6fb2;color:#fff}
+.yc-btn.on.empty{background:#5c5c6b;color:#fff}
+.yc-del{min-height:44px;padding:0;font-size:18px;color:var(--muted);border-color:var(--line)}
+@media(max-width:420px){
+  .yc-row{grid-template-columns:22px 1fr 44px}
+  .yc-toggle{grid-column:2/3;grid-row:2}
+  .yc-btn{flex:1}
+}
+.stats.yc-counts{grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+.stats.yc-counts div{padding:10px;text-align:center}
+.stats.yc-counts b.yc-c-loaded{color:#1f6fb2}
+.stats.yc-counts b.yc-c-empty{color:#5c5c6b}

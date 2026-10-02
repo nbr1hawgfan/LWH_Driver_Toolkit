@@ -49,6 +49,7 @@
   <script defer src="./js/radar.js"></script>
   <script defer src="./js/paperlog.js"></script>
   <script defer src="./js/detention.js"></script>
+  <script defer src="./js/yardcheck.js"></script>
   <script defer src="./js/dvir.js"></script>
   <script defer src="./js/incident.js"></script>
   <script defer src="./js/scanner.js"></script>
@@ -77,6 +78,7 @@
       <button class="nav-btn" data-view="radar"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg>Weather Radar</button>
       <button class="nav-btn" data-view="paperlog"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg>Paper Log Grid</button>
       <button class="nav-btn" data-view="detention"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Detention Tracker</button>
+      <button class="nav-btn" data-view="yardcheck"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="13" height="9" rx="1"/><path d="M15 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/><path d="M2 21h20"/></svg>Yard Check</button>
       <button class="nav-btn" data-view="dvir"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg>DVIR Inspection</button>
       <button class="nav-btn" data-view="incident"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg>Incident Report</button>
       <button class="nav-btn" data-view="utilities"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/><path d="M3 13h18"/></svg>Calculators &amp; Tools</button>
@@ -116,6 +118,7 @@
         <button class="module-card" data-view="radar"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg></div><b>Weather Radar</b><span>Animated precipitation radar for your current route area.</span></button>
         <button class="module-card" data-view="paperlog"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg></div><b>Paper Log Grid</b><span>Backup Record of Duty Status if your ELD malfunctions.</span></button>
         <button class="module-card" data-view="detention"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><b>Detention Tracker</b><span>Log arrival/departure and estimate detention time.</span></button>
+        <button class="module-card" data-view="yardcheck"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="13" height="9" rx="1"/><path d="M15 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/><path d="M2 21h20"/></svg></div><b>Yard Check</b><span>Count our trailers at a customer yard — loaded or empty — and text the list to dispatch.</span></button>
         <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Backup only — use Samsara e-DVIR first. Paper form for when it's down.</span></button>
         <button class="module-card" data-view="incident"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg></div><b>Incident Report</b><span>Accident or damage report with photos — saved on your phone, sent by text or email.</span></button>
         <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Auto-detects and straightens paperwork as you scan, extract text, and share or download as a PDF — multi-page.</span></button>
@@ -512,6 +515,41 @@
       </div>
     </section>
 
+    <section id="yardcheck" class="view no-print">
+      <div class="card">
+        <h2 style="margin-top:0">Yard Check</h2>
+        <p class="hint">List our trailers at the customer's yard, mark each one Loaded or Empty, then send it. Your progress saves automatically.</p>
+        <label>Customer / yard location<input id="ycLocation" list="ycLocList" placeholder="e.g. Acme Foods — Van Buren" autocomplete="off" /></label>
+        <datalist id="ycLocList"></datalist>
+        <div class="actions" style="margin-top:-6px"><button type="button" id="ycGps" class="ghost">Pin My Location</button><button type="button" id="ycClearPin" class="ghost" hidden>Clear Pin</button></div>
+        <p id="ycPin" class="hint" hidden></p>
+        <div class="grid-2">
+          <label>Date &amp; time<input id="ycWhen" type="datetime-local" /></label>
+          <label>Driver<input id="ycDriver" /></label>
+        </div>
+        <div class="actions" style="margin-top:-8px"><button type="button" id="ycNow" class="ghost">Set to Now</button></div>
+
+        <h3 style="margin-top:18px">Trailers</h3>
+        <div id="ycCounts" class="stats yc-counts"></div>
+        <div id="ycRows" class="yc-rows"></div>
+        <div class="actions"><button type="button" id="ycAdd" class="ghost">+ Add Trailer</button></div>
+        <p class="hint">Tip: press Enter (Go/Next) on the keyboard after a trailer number to jump to the next line.</p>
+        <label>Notes (optional)<textarea id="ycNotes" rows="3" placeholder="Gate code, dock doors, anything dispatch should know"></textarea></label>
+
+        <h3 style="margin-top:18px">Send</h3>
+        <div class="actions"><button type="button" id="ycShare">Share…</button><span id="ycTextBtns" style="display:contents"></span><button type="button" id="ycEmail" class="ghost">Email Dispatch</button><button type="button" id="ycCopy" class="ghost">Copy</button></div>
+        <details id="ycPreviewWrap" class="inc-details" style="margin-top:12px"><summary>Preview message</summary><pre id="ycPreview" class="fb-summary"></pre></details>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h3 style="margin:0">Recently Sent</h3>
+          <button type="button" id="ycNew" class="ghost">Start New Yard Check</button>
+        </div>
+        <p class="hint">Last 15 on this phone. "Copy to New" reuses the same yard and trailer numbers for the next visit.</p>
+        <div id="ycHistory"></div>
+      </div>
+    </section>
+
     <section id="contact" class="view"><div class="tool-layout"><form class="panel no-print" id="contactForm"><h2>Contact QR Cards</h2><div class="grid-2"><label>Name<input id="conName" /></label><label>Title<input id="conTitle" /></label><label>Company<input id="conCompany" value="Logistics Warehouse" /></label><label>Cell Phone<input id="conPhone" /></label><label>Email<input id="conEmail" placeholder="username (auto-adds @logistics-warehouse.com)" /></label><label>Website<input id="conWebsite" value="https://logistics-warehouse.com" /></label></div><p class="hint" style="margin-top:-6px">The office landline (479-410-2611) is automatically included on every card — no need to enter it.</p><div class="grid-2"><label>Street<input id="conStreet" placeholder="700 S. Fresno" /></label><label>City<input id="conCity" placeholder="Fort Smith" /></label><label>State<input id="conState" placeholder="AR" /></label><label>Zip<input id="conZip" placeholder="72901" /></label></div><label>Logo image optional<input id="conLogo" type="file" accept="image/*" /></label><div class="grid-2"><label>Layout<select id="conLayout"><option value="full">QR + Text</option><option value="qronly">QR Only</option></select></label><label>Copies<input id="conCopies" type="number" min="1" value="1" /></label></div><div class="actions"><button type="button" id="conGenerate">Generate Contact Card</button><button type="button" id="conSample" class="ghost">Sample</button><button type="button" onclick="window.print()" class="ghost">Print</button></div></form><div id="contactOutput" class="print-area"></div></div></section>
 
     <section id="generate" class="view">
@@ -885,7 +923,7 @@
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Managers</h2><p class="hint">Feeds the Send To list in Warehouse Tools → Quick Message. A default list is already baked in and auto-loads on every install — no sharing a link required. Loading from a sheet here is completely separate from the Master Lookup sheet — this one is just two plain columns: Name, Email.</p><label>Google Sheet CSV URL<input id="mgrSourceUrl" placeholder="Published CSV link — columns: Name, Email" /></label><div class="actions"><button id="mgrLoadBtn" type="button">Load / Refresh from Sheet</button><button id="mgrResetBtn" type="button" class="ghost">Reset to Default</button></div><div id="mgrSourceStatus" class="hint">Not loaded yet.</div><div id="mgrList" style="margin-top:12px"></div><div class="actions"><button id="mgrAddBtn" type="button" class="ghost">Add Manager Manually</button></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Shortcuts shown on the Home screen — e.g. your PTO Request or Trailer Inspection apps. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.11.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, DVIR Inspection, Incident Report, Trailer Inspection Report, Weekly Timesheet, All Timesheets (Dispatch), Fuel Price Board (Dispatch), Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.11.0</p><p>Built for Logistics Warehouse drivers — HOS tracking, trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, HOS Countdown, Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Paper Log Grid, Detention Tracker, Yard Check, DVIR Inspection, Incident Report, Trailer Inspection Report, Weekly Timesheet, All Timesheets (Dispatch), Fuel Price Board (Dispatch), Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">
