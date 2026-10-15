@@ -153,9 +153,14 @@
   const S=t=>LWHUI.safe(t);
   window.addEventListener('online',flush);
 
+  // A typical yard has 8-14 of our trailers, so start with 12 empty lines.
+  // Blank lines are ignored when saving; "+ Add Trailer" still adds more.
+  const DEFAULT_ROWS=12;
+  const blankRow=()=>({id:rid(),trailer:'',status:'',note:''});
+  function padRows(rows){ rows=rows.slice(); while(rows.length<DEFAULT_ROWS) rows.push(blankRow()); return rows; }
   function blank(){
     return {id:'yc-'+Date.now(),when:nowLocal(),location:'',pin:'',driver:LWHStorage.get('userName','')||'',notes:'',
-      rows:[{id:rid(),trailer:'',status:'',note:''},{id:rid(),trailer:'',status:'',note:''},{id:rid(),trailer:'',status:'',note:''}]};
+      rows:padRows([])};
   }
   const save=()=>LWHStorage.set(CUR,cur);
   const filled=()=>cur.rows.filter(r=>r.trailer.trim());
@@ -187,6 +192,7 @@
     });
   }
   function renderCounts(){
+    if(!el('ycCounts')) return; // count cards removed from the driver screen in v1.16.1
     const f=filled(), L=f.filter(r=>r.status==='Loaded').length, E=f.filter(r=>r.status==='Empty').length, U=f.length-L-E;
     el('ycCounts').innerHTML=`<div><b>${f.length}</b><span>Trailers</span></div><div><b class="yc-c-loaded">${L}</b><span>Loaded</span></div><div><b class="yc-c-empty">${E}</b><span>Empty</span></div>`+
       (U?`<div><b style="color:#8a6d00">${U}</b><span>Not marked</span></div>`:'');
@@ -285,7 +291,7 @@
   function init(){
     if(!el('yardcheck')) return;
     cur=LWHStorage.get(CUR,null)||blank();
-    if(!cur.rows||!cur.rows.length) cur.rows=blank().rows;
+    cur.rows=padRows(cur.rows||[]);
     fillForm(); fillLocList(); renderHistory();
 
     [['ycLocation','location'],['ycWhen','when'],['ycDriver','driver'],['ycNotes','notes']].forEach(([id,k])=>{
@@ -365,8 +371,7 @@
         // Same yard, new visit: keep location and trailer numbers, clear statuses.
         const src=h[+ed.dataset.hedit];
         cur=blank(); cur.location=src.location; cur.pin=src.pin;
-        cur.rows=src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:''}));
-        if(!cur.rows.length) cur.rows=blank().rows;
+        cur.rows=padRows(src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:''})));
         save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); loadYardHistory();
         LWHUI.toast('Trailers copied — mark each Loaded or Empty');
       }
