@@ -531,9 +531,11 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yc-btn.on.loaded{background:#1f6fb2;color:#fff}
 .yc-btn.on.empty{background:#5c5c6b;color:#fff}
 .yc-del{min-height:44px;padding:0;font-size:18px;color:var(--muted);border-color:var(--line)}
+.yc-note{grid-column:2/-1;min-height:40px;font-size:15px}
 @media(max-width:420px){
   .yc-row{grid-template-columns:22px 1fr 44px}
   .yc-toggle{grid-column:2/3;grid-row:2}
+  .yc-note{grid-column:2/-1;grid-row:3}
   .yc-btn{flex:1}
 }
 .stats.yc-counts{grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}

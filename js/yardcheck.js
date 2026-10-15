@@ -14,7 +14,7 @@
 
   function blank(){
     return {id:'yc-'+Date.now(),when:nowLocal(),location:'',pin:'',driver:LWHStorage.get('userName','')||'',notes:'',
-      rows:[{id:rid(),trailer:'',status:''},{id:rid(),trailer:'',status:''},{id:rid(),trailer:'',status:''}]};
+      rows:[{id:rid(),trailer:'',status:'',note:''},{id:rid(),trailer:'',status:'',note:''},{id:rid(),trailer:'',status:'',note:''}]};
   }
   const save=()=>LWHStorage.set(CUR,cur);
   const filled=()=>cur.rows.filter(r=>r.trailer.trim());
@@ -29,6 +29,7 @@
         <button type="button" class="yc-btn${r.status==='Empty'?' on empty':''}" data-status="Empty" aria-pressed="${r.status==='Empty'}">Empty</button>
       </div>
       <button type="button" class="yc-del ghost" data-del aria-label="Remove row ${i+1}">✕</button>
+      <input class="yc-note" data-f="note" value="${LWHUI.safe(r.note||'')}" placeholder="Product / note (optional)" autocomplete="off" enterkeyhint="next" aria-label="Product or note for trailer ${i+1}" />
     </div>`;
   }
   function renderRows(){
@@ -49,7 +50,7 @@
       (U?`<div><b style="color:#8a6d00">${U}</b><span>Not marked</span></div>`:'');
   }
   function addRow(focus){
-    cur.rows.push({id:rid(),trailer:'',status:''}); save(); renderRows();
+    cur.rows.push({id:rid(),trailer:'',status:'',note:''}); save(); renderRows();
     if(focus){ const ins=document.querySelectorAll('#ycRows .yc-trailer'); ins[ins.length-1].focus(); }
   }
 
@@ -57,8 +58,9 @@
   function summary(c){
     c=c||cur;
     const f=c.rows.filter(r=>r.trailer.trim());
-    const by=s=>f.filter(r=>r.status===s).map(r=>'  '+r.trailer.trim().toUpperCase());
-    const L=by('Loaded'), E=by('Empty'), U=f.filter(r=>!r.status).map(r=>'  '+r.trailer.trim().toUpperCase());
+    const line=r=>'  '+r.trailer.trim().toUpperCase()+((r.note||'').trim()?' — '+r.note.trim():'');
+    const by=s=>f.filter(r=>r.status===s).map(line);
+    const L=by('Loaded'), E=by('Empty'), U=f.filter(r=>!r.status).map(line);
     const when=c.when?new Date(c.when).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
     const drv=(c.driver||LWHStorage.get('userName','')||'').trim();
     const out=[`YARD CHECK — ${c.location.trim()||'(location not entered)'}`,`${when}${drv?' · Driver: '+drv:''}`];
@@ -147,15 +149,16 @@
     });
     const rows=el('ycRows');
     rows.addEventListener('input',e=>{
-      const inp=e.target.closest('.yc-trailer'); if(!inp) return;
+      const inp=e.target.closest('.yc-trailer,.yc-note'); if(!inp) return;
       const r=cur.rows.find(x=>x.id===inp.closest('.yc-row').dataset.id); if(!r) return;
+      if(inp.classList.contains('yc-note')){ r.note=inp.value; save(); el('ycPreview').textContent=summary(); return; }
       r.trailer=inp.value; save(); markDupes(); renderCounts(); el('ycPreview').textContent=summary();
     });
     // Enter on a trailer field jumps to the next row (adds one at the end).
     rows.addEventListener('keydown',e=>{
-      if(e.key!=='Enter'||!e.target.closest('.yc-trailer')) return;
+      if(e.key!=='Enter'||!e.target.closest('.yc-trailer,.yc-note')) return;
       e.preventDefault();
-      const ins=[...document.querySelectorAll('#ycRows .yc-trailer')], i=ins.indexOf(e.target);
+      const ins=[...document.querySelectorAll('#ycRows .yc-trailer')], i=ins.indexOf(e.target.closest('.yc-row').querySelector('.yc-trailer'));
       if(i<ins.length-1) ins[i+1].focus(); else addRow(true);
     });
     rows.addEventListener('click',e=>{
@@ -172,7 +175,7 @@
       }
       if(e.target.closest('[data-del]')){
         if(r.trailer.trim()&&!confirm(`Remove trailer ${r.trailer}?`)) return;
-        cur.rows=cur.rows.filter(x=>x!==r); if(!cur.rows.length) cur.rows.push({id:rid(),trailer:'',status:''});
+        cur.rows=cur.rows.filter(x=>x!==r); if(!cur.rows.length) cur.rows.push({id:rid(),trailer:'',status:'',note:''});
         save(); renderRows(); el('ycPreview').textContent=summary();
       }
     });
@@ -212,7 +215,7 @@
         // Same yard, new visit: keep location and trailer numbers, clear statuses.
         const src=h[+ed.dataset.hedit];
         cur=blank(); cur.location=src.location; cur.pin=src.pin;
-        cur.rows=src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:''}));
+        cur.rows=src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:''}));
         if(!cur.rows.length) cur.rows=blank().rows;
         save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0);
         LWHUI.toast('Trailers copied — mark each Loaded or Empty');
