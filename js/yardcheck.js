@@ -3,7 +3,9 @@
 // plain LWHStorage is plenty. The check in progress autosaves; the last 15
 // sent checks are kept so a driver can see or resend what they sent.
 (function(){
-  const CUR='yardCurrent', HIST='yardHistory', LOCS='yardLocations';
+  const CUR='yardCurrent', HIST='yardHistory', LOCS='yardLocations', PEND='yardPending', HCACHE='yardServerHist';
+  const API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/';
+  const SUBMIT_URL=API+'yard-check-submit', HISTORY_URL=API+'yard-check-history';
   const CONTACTS=[{name:'Chris',phone:'14796521662'},{name:'Derek',phone:'14796519227'}];
   const DISPATCH_EMAIL='Dispatch@Logistics-Warehouse.com';
   const el=id=>document.getElementById(id);
@@ -11,6 +13,109 @@
   const nowLocal=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;};
   const rid=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
   let cur=null;
+  const locKey=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+  const tKey=s=>String(s||'').trim().toUpperCase();
+  const DAY=86400000;
+
+  // ---------- Days on yard ----------
+  // Walk this yard's earlier checks newest-first; a trailer has been there
+  // since the oldest check in the unbroken run that includes it. Missing from
+  // one check resets the clock, so it's only as good as how often we check.
+  function since(trailer,checks,asOf){
+    const k=tKey(trailer); let first=null;
+    for(const c of checks){
+      if(asOf&&c.t>asOf) continue;
+      if(c.trailers.has(k)) first=c.t; else break;
+    }
+    return first;
+  }
+  function normChecks(list,excludeId){
+    const seen=new Set(), out=[];
+    list.forEach(c=>{
+      if(!c||c.id===excludeId||seen.has(c.id)) return; seen.add(c.id);
+      const t=new Date(c.checked_at||c.when).getTime(); if(isNaN(t)) return;
+      const rows=c.trailers||c.rows||[];
+      out.push({id:c.id,t,trailers:new Set(rows.map(r=>tKey(r.trailer)).filter(Boolean))});
+    });
+    return out.sort((a,b)=>b.t-a.t);
+  }
+  // Calendar days, so "since Oct 6" on Oct 15 reads 9 days whatever the time of day.
+  const calDays=(from,to)=>{ const a=new Date(from), b=new Date(to); a.setHours(0,0,0,0); b.setHours(0,0,0,0); return Math.round((b-a)/DAY); };
+  function daysLabel(first,asOf){
+    const d=calDays(first,asOf);
+    const when=new Date(first).toLocaleDateString([], {month:'short',day:'numeric'});
+    return {days:d,text:d>=1?`On yard since ${when} · ${d} day${d===1?'':'s'}`:`Also here on the last check (${when})`};
+  }
+  // Earlier checks at the current yard: server copy + this phone's sent list.
+  function priorChecks(){
+    const k=locKey(cur.location); if(!k) return [];
+    const server=(LWHStorage.get(HCACHE,{})[k]||{}).checks||[];
+    const local=LWHStorage.get(HIST,[]).filter(c=>locKey(c.location)===k);
+    return normChecks(server.concat(local),cur.id);
+  }
+  function dwellFor(r){
+    if(!r.trailer.trim()) return null;
+    const asOf=new Date(cur.when||Date.now()).getTime();
+    const f=since(r.trailer,priorChecks(),asOf);
+    return f?daysLabel(f,asOf):null;
+  }
+  let histTimer=null;
+  async function loadYardHistory(){
+    const k=locKey(cur.location);
+    if(!k){ setDwellStatus(''); return; }
+    if(!navigator.onLine){ setDwellStatus('Offline — days on yard uses this phone\'s checks only.'); refreshDwell(); return; }
+    try{
+      const res=await fetch(HISTORY_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:cur.location})});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const body=await res.json();
+      const cache=LWHStorage.get(HCACHE,{}); cache[k]={at:Date.now(),checks:body.checks||[]};
+      // keep the cache small: 10 most recent yards
+      const keys=Object.keys(cache).sort((a,b)=>cache[b].at-cache[a].at); keys.slice(10).forEach(x=>delete cache[x]);
+      LWHStorage.set(HCACHE,cache);
+    }catch(e){ console.warn('Yard history unavailable',e); }
+    if(locKey(cur.location)!==k) return;
+    const n=priorChecks().length;
+    setDwellStatus(n?`Days on yard based on ${n} earlier check${n===1?'':'s'} at this yard.`:'No earlier checks at this yard yet — days on yard starts with this one.');
+    refreshDwell(); el('ycPreview').textContent=summary();
+  }
+  // Update days-on-yard lines in place (doesn't steal focus from a box being typed in).
+  function refreshDwellRow(rowEl){
+    const r=cur.rows.find(x=>x.id===rowEl.dataset.id); if(!r) return;
+    let span=rowEl.querySelector('.yc-dwell'); const d=dwellFor(r);
+    if(!d){ if(span) span.remove(); return; }
+    if(!span){ span=document.createElement('span'); rowEl.insertBefore(span,rowEl.querySelector('.yc-note')); }
+    span.className='yc-dwell'+(d.days>=7?' long':''); span.textContent=d.text;
+  }
+  function refreshDwell(){ document.querySelectorAll('#ycRows .yc-row').forEach(refreshDwellRow); }
+  function setDwellStatus(t){ const s=el('ycDwellStatus'); if(s){ s.textContent=t; s.hidden=!t; } }
+
+  // ---------- Office sync ----------
+  function payload(c,how){
+    return {id:c.id,location:c.location.trim(),pin:c.pin||'',driver:(c.driver||'').trim(),checked_at:new Date(c.when||Date.now()).toISOString(),how:how||'',notes:(c.notes||'').trim(),
+      trailers:c.rows.filter(r=>r.trailer.trim()).map(r=>({trailer:tKey(r.trailer),status:r.status||'',note:(r.note||'').trim()}))};
+  }
+  function setSync(t,err){ const s=el('ycSync'); if(!s) return; s.textContent=t; s.style.color=err?'var(--brand)':''; }
+  function queue(c,how){
+    const q=LWHStorage.get(PEND,[]).filter(x=>x.id!==c.id); q.push(payload(c,how)); LWHStorage.set(PEND,q); flush();
+  }
+  let flushing=false;
+  async function flush(){
+    if(flushing) return; let q=LWHStorage.get(PEND,[]); if(!q.length) return;
+    if(!navigator.onLine){ setSync(`Offline — ${q.length} yard check${q.length===1?'':'s'} will sync to the office when you have signal.`); return; }
+    flushing=true; setSync('Syncing to office…');
+    let failed=null;
+    for(const item of q.slice()){
+      try{
+        const res=await fetch(SUBMIT_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
+        if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
+        q=LWHStorage.get(PEND,[]).filter(x=>x.id!==item.id); LWHStorage.set(PEND,q);
+      }catch(e){ failed=e; break; }
+    }
+    flushing=false;
+    if(failed){ setSync(`Saved on this phone — office sync will retry (${failed.message}).`,true); console.warn('Yard sync failed',failed); }
+    else setSync('Synced to office ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
+  }
+  window.addEventListener('online',flush);
 
   function blank(){
     return {id:'yc-'+Date.now(),when:nowLocal(),location:'',pin:'',driver:LWHStorage.get('userName','')||'',notes:'',
@@ -29,6 +134,7 @@
         <button type="button" class="yc-btn${r.status==='Empty'?' on empty':''}" data-status="Empty" aria-pressed="${r.status==='Empty'}">Empty</button>
       </div>
       <button type="button" class="yc-del ghost" data-del aria-label="Remove row ${i+1}">✕</button>
+      ${(()=>{const d=dwellFor(r);return d?`<span class="yc-dwell${d.days>=7?' long':''}">${d.text}</span>`:'';})()}
       <input class="yc-note" data-f="note" value="${LWHUI.safe(r.note||'')}" placeholder="Product / note (optional)" autocomplete="off" enterkeyhint="next" aria-label="Product or note for trailer ${i+1}" />
     </div>`;
   }
@@ -58,7 +164,8 @@
   function summary(c){
     c=c||cur;
     const f=c.rows.filter(r=>r.trailer.trim());
-    const line=r=>'  '+r.trailer.trim().toUpperCase()+((r.note||'').trim()?' — '+r.note.trim():'');
+    const days=r=>{ if(c!==cur) return ''; const d=dwellFor(r); return d&&d.days>=1?` (${d.days} day${d.days===1?'':'s'} on yard)`:''; };
+    const line=r=>'  '+r.trailer.trim().toUpperCase()+((r.note||'').trim()?' — '+r.note.trim():'')+days(r);
     const by=s=>f.filter(r=>r.status===s).map(line);
     const L=by('Loaded'), E=by('Empty'), U=f.filter(r=>!r.status).map(line);
     const when=c.when?new Date(c.when).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
@@ -86,6 +193,7 @@
     const h=LWHStorage.get(HIST,[]).filter(x=>x.id!==cur.id);
     h.unshift(Object.assign(JSON.parse(JSON.stringify(cur)),{sentAt:Date.now(),how}));
     LWHStorage.set(HIST,h.slice(0,15));
+    queue(cur,how);
     const loc=cur.location.trim();
     if(loc){ const locs=LWHStorage.get(LOCS,[]).filter(x=>x.toLowerCase()!==loc.toLowerCase()); locs.unshift(loc); LWHStorage.set(LOCS,locs.slice(0,25)); fillLocList(); }
     renderHistory();
@@ -145,7 +253,9 @@
     fillForm(); fillLocList(); renderHistory();
 
     [['ycLocation','location'],['ycWhen','when'],['ycDriver','driver'],['ycNotes','notes']].forEach(([id,k])=>{
-      el(id).addEventListener('input',()=>{ cur[k]=el(id).value; save(); el('ycPreview').textContent=summary(); });
+      el(id).addEventListener('input',()=>{ cur[k]=el(id).value; save(); el('ycPreview').textContent=summary();
+        if(k==='location'){ clearTimeout(histTimer); histTimer=setTimeout(loadYardHistory,700); }
+        if(k==='when'){ refreshDwell(); el('ycPreview').textContent=summary(); } });
     });
     const rows=el('ycRows');
     rows.addEventListener('input',e=>{
@@ -154,6 +264,8 @@
       if(inp.classList.contains('yc-note')){ r.note=inp.value; save(); el('ycPreview').textContent=summary(); return; }
       r.trailer=inp.value; save(); markDupes(); renderCounts(); el('ycPreview').textContent=summary();
     });
+    // Refresh the days-on-yard line once the driver leaves a trailer box.
+    rows.addEventListener('focusout',e=>{ const inp=e.target.closest('.yc-trailer'); if(inp) refreshDwellRow(inp.closest('.yc-row')); });
     // Enter on a trailer field jumps to the next row (adds one at the end).
     rows.addEventListener('keydown',e=>{
       if(e.key!=='Enter'||!e.target.closest('.yc-trailer,.yc-note')) return;
@@ -199,7 +311,7 @@
     el('ycTextBtns').addEventListener('click',e=>{ const b=e.target.closest('[data-textto]'); if(b) textTo(CONTACTS[+b.dataset.textto]); });
     el('ycNew').onclick=()=>{
       if(filled().length&&!LWHStorage.get(HIST,[]).some(h=>h.id===cur.id)&&!confirm('This yard check hasn\'t been sent. Start a new one anyway?')) return;
-      cur=blank(); save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0);
+      cur=blank(); save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); setDwellStatus('');
     };
     el('ycHistory').addEventListener('click',async e=>{
       const h=LWHStorage.get(HIST,[]);
@@ -217,11 +329,13 @@
         cur=blank(); cur.location=src.location; cur.pin=src.pin;
         cur.rows=src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:''}));
         if(!cur.rows.length) cur.rows=blank().rows;
-        save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0);
+        save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); loadYardHistory();
         LWHUI.toast('Trailers copied — mark each Loaded or Empty');
       }
     });
     el('ycPreview').textContent=summary();
+    if(cur.location.trim()) loadYardHistory();
+    flush();
     // The first-run name prompt happens after this sets up, so fill the
     // driver name in whenever the tab is opened and it's still blank.
     new MutationObserver(()=>{
@@ -230,5 +344,6 @@
       }
     }).observe(el('yardcheck'),{attributes:true,attributeFilter:['class']});
   }
+  window.LWHYard={HISTORY_URL,locKey,tKey,normChecks,since,daysLabel,calDays};
   window.addEventListener('load',init);
 })();

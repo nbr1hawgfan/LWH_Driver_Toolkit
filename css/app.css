@@ -532,13 +532,32 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yc-btn.on.empty{background:#5c5c6b;color:#fff}
 .yc-del{min-height:44px;padding:0;font-size:18px;color:var(--muted);border-color:var(--line)}
 .yc-note{grid-column:2/-1;min-height:40px;font-size:15px}
+.yc-dwell{grid-column:2/-1;font-size:13px;font-weight:700;color:#1f6fb2}
+.yc-dwell.long{color:#b3261e}
 @media(max-width:420px){
   .yc-row{grid-template-columns:22px 1fr 44px}
   .yc-toggle{grid-column:2/3;grid-row:2}
-  .yc-note{grid-column:2/-1;grid-row:3}
+  .yc-dwell{grid-column:2/-1}
+  .yc-note{grid-column:2/-1}
   .yc-btn{flex:1}
 }
 .stats.yc-counts{grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
 .stats.yc-counts div{padding:10px;text-align:center}
 .stats.yc-counts b.yc-c-loaded{color:#1f6fb2}
 .stats.yc-counts b.yc-c-empty{color:#5c5c6b}
+
+/* v1.14.0 — Status Update, Road & Nearby, Yard Board */
+.su-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin:4px 0 14px}
+.su-btn{background:#fff;color:var(--ink);border:1.5px solid var(--line);min-height:52px;font-size:16px;font-weight:700}
+.su-btn:hover{background:var(--bg)}
+.su-btn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.su-check{display:flex;align-items:center;gap:10px;flex-direction:row;font-weight:600}
+.su-check input{width:22px;height:22px;min-height:0;margin:0}
+.near-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.near-grid .btn-link{text-align:center}
+.yb-yard{margin-top:14px;overflow-x:auto}
+.yb-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.yb-table th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1.5px solid var(--line);padding:6px 8px}
+.yb-table td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+.yb-table tr.long td{background:#fdecea}
+.yb-table tr.long td:nth-child(3){color:#b3261e;font-weight:700}
