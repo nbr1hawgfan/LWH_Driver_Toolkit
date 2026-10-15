@@ -96,25 +96,61 @@
   }
   function setSync(t,err){ const s=el('ycSync'); if(!s) return; s.textContent=t; s.style.color=err?'var(--brand)':''; }
   function queue(c,how){
-    const q=LWHStorage.get(PEND,[]).filter(x=>x.id!==c.id); q.push(payload(c,how)); LWHStorage.set(PEND,q); flush();
+    const q=LWHStorage.get(PEND,[]).filter(x=>x.id!==c.id); q.push(payload(c,how)); LWHStorage.set(PEND,q); return flush();
   }
-  let flushing=false;
-  async function flush(){
-    if(flushing) return; let q=LWHStorage.get(PEND,[]); if(!q.length) return;
-    if(!navigator.onLine){ setSync(`Offline — ${q.length} yard check${q.length===1?'':'s'} will sync to the office when you have signal.`); return; }
-    flushing=true; setSync('Syncing to office…');
+  const isPending=id=>LWHStorage.get(PEND,[]).some(x=>x.id===id);
+  // One upload run at a time; a call made mid-run waits for it and then runs
+  // again so anything queued in the meantime still goes out.
+  let flushRun=null, retryTimer=null;
+  function flush(){
+    if(flushRun) return flushRun.then(()=>isAnyPending()?flush():undefined);
+    flushRun=doFlush().finally(()=>{ flushRun=null; });
+    return flushRun;
+  }
+  const isAnyPending=()=>LWHStorage.get(PEND,[]).length>0;
+  async function doFlush(){
+    let q=LWHStorage.get(PEND,[]); if(!q.length) return;
+    clearTimeout(retryTimer);
+    if(!navigator.onLine){ setSync(`No signal — ${q.length} yard check${q.length===1?' is':'s are'} saved on this phone and will upload when you have signal.`,true); retryTimer=setTimeout(flush,60000); return; }
+    setSync('Uploading to dispatch…');
     let failed=null;
     for(const item of q.slice()){
       try{
         const res=await fetch(SUBMIT_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
         if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
         q=LWHStorage.get(PEND,[]).filter(x=>x.id!==item.id); LWHStorage.set(PEND,q);
+        confirmSaved(item.id);
       }catch(e){ failed=e; break; }
     }
-    flushing=false;
-    if(failed){ setSync(`Saved on this phone — office sync will retry (${failed.message}).`,true); console.warn('Yard sync failed',failed); }
-    else setSync('Synced to office ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
+    if(failed){ setSync(`Saved on this phone — will keep trying to upload (${failed.message}).`,true); retryTimer=setTimeout(flush,60000); console.warn('Yard sync failed',failed); }
+    else setSync('On the dispatch board ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
   }
+  // ---------- Save to Dispatch (main button) ----------
+  let awaiting=null; // id of the check whose confirmation is showing
+  function showSaved(state,c){
+    const box=el('ycSaved'); if(!box) return;
+    const f=c.rows.filter(r=>r.trailer.trim()), L=f.filter(r=>r.status==='Loaded').length, E=f.filter(r=>r.status==='Empty').length;
+    const what=`${S(c.location.trim()||'(no location)')} · ${f.length} trailer${f.length===1?'':'s'} (${L} loaded, ${E} empty)`;
+    box.className='yc-saved '+state; box.hidden=false;
+    box.innerHTML=state==='ok'
+      ?`<b>✓ Saved to the dispatch board</b><span>${what} · ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span><button type="button" class="ghost" data-ycnew>Start next yard check</button>`
+      :state==='wait'?`<b>Saving…</b><span>${what}</span>`
+      :`<b>Saved on this phone — not uploaded yet</b><span>${what}. No signal or the office didn't answer. It will upload by itself when it can; this message will turn green when it does.</span>`;
+    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  function confirmSaved(id){
+    if(id!==awaiting) return;
+    const c=LWHStorage.get(HIST,[]).find(h=>h.id===id)||cur; showSaved('ok',c); awaiting=null;
+  }
+  async function saveOffice(){
+    if(!ready()) return;
+    const id=cur.id, snap=JSON.parse(JSON.stringify(cur));
+    awaiting=id; showSaved('wait',snap);
+    logSent('Saved');
+    await flush();
+    if(awaiting===id&&isPending(id)) showSaved('later',snap);
+  }
+  const S=t=>LWHUI.safe(t);
   window.addEventListener('online',flush);
 
   function blank(){
@@ -219,7 +255,7 @@
   }
   async function copy(isFallback){
     if(!isFallback&&!filled().length){ LWHUI.toast('Add at least one trailer number'); return; }
-    try{ await navigator.clipboard.writeText(summary()); LWHUI.toast('Copied — paste it into a text or email'); if(isFallback) logSent('Copied'); }
+    try{ await navigator.clipboard.writeText(summary()); LWHUI.toast('Copied — paste it into a text or email'); if(isFallback||ready()) logSent('Copied'); }
     catch(e){ el('ycPreviewWrap').open=true; LWHUI.toast('Long-press the preview to copy'); }
   }
 
@@ -305,13 +341,15 @@
     };
     el('ycClearPin').onclick=()=>{ cur.pin=''; save(); el('ycPin').hidden=true; el('ycClearPin').hidden=true; el('ycPreview').textContent=summary(); };
     el('ycShare').onclick=share;
+    el('ycSave').onclick=saveOffice;
+    el('ycSaved').addEventListener('click',e=>{ if(e.target.closest('[data-ycnew]')) el('ycNew').click(); });
     el('ycEmail').onclick=emailIt;
     el('ycCopy').onclick=()=>copy(false);
     el('ycTextBtns').innerHTML=CONTACTS.map((c,i)=>`<button type="button" class="ghost" data-textto="${i}">Text ${c.name}</button>`).join('');
     el('ycTextBtns').addEventListener('click',e=>{ const b=e.target.closest('[data-textto]'); if(b) textTo(CONTACTS[+b.dataset.textto]); });
     el('ycNew').onclick=()=>{
       if(filled().length&&!LWHStorage.get(HIST,[]).some(h=>h.id===cur.id)&&!confirm('This yard check hasn\'t been sent. Start a new one anyway?')) return;
-      cur=blank(); save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); setDwellStatus('');
+      cur=blank(); save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); setDwellStatus(''); el('ycSaved').hidden=true; awaiting=null;
     };
     el('ycHistory').addEventListener('click',async e=>{
       const h=LWHStorage.get(HIST,[]);

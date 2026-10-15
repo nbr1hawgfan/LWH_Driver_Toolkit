@@ -581,3 +581,15 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yb-chip.s-departed{background:#5c5c6b;color:#fff}
 .yb-chip.s-waiting{background:#fff4d6;color:#7a5a00}
 .yb-chip.s-runninglate{background:var(--brand);color:#fff}
+
+/* v1.16.0 — Yard Check: Save to Dispatch */
+.yc-savebar{margin-top:18px}
+.yc-save{width:100%;min-height:56px;font-size:18px;font-weight:800}
+.yc-saved{display:flex;flex-direction:column;gap:4px;margin-top:12px;padding:14px;border-radius:var(--radius-sm);border:1.5px solid var(--line);background:#fff}
+.yc-saved b{font-size:17px}
+.yc-saved span{font-size:14px;color:var(--muted)}
+.yc-saved button{margin-top:8px;align-self:flex-start}
+.yc-saved.ok{border-color:#1d6b34;background:#e9f6ec}
+.yc-saved.ok b{color:#1d6b34}
+.yc-saved.later{border-color:#b98900;background:#fff8e1}
+.yc-saved.later b{color:#7a5a00}
