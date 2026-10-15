@@ -1,4 +1,4 @@
-# Yard Check sync — one-time setup
+# Office sync — Supabase setup
 
 The Driver Toolkit (v1.14.0+) sends every Yard Check to Supabase project
 `tjivcqxnkftujceumdtx`, the same project the timesheets use. Until these
@@ -22,3 +22,19 @@ phone, queue up, and send themselves once the functions exist.
 
 Like the timesheet functions, these are open to anyone who has the URL. They
 only accept yard-check shaped data and only return yard checks.
+
+## Status: deployed (Oct 15, 2026)
+
+All of this is live on project `tjivcqxnkftujceumdtx` (LWH Companion):
+
+| Piece | What it does |
+|---|---|
+| table `yard_checks` | one row per sent Yard Check |
+| table `driver_status_updates` | one row per Status Update (Arrived, Loaded, ...) |
+| `yard-check-submit` | phone → save a yard check |
+| `yard-check-history` | yard checks by yard and/or day (`from`/`to`) |
+| `status-submit` | phone → save a status update |
+| `status-history` | status updates for a day (`from`/`to`), optional `driver` |
+
+All four functions run with JWT verification off, like the timesheet ones.
+The Dispatch Board in the toolkit reads the two history functions.

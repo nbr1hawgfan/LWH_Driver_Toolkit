@@ -1,13 +1,97 @@
-// Yard Board (Dispatch) — every yard's latest synced Yard Check, with how
-// many days each trailer has been sitting there. Reads the yard-check-history
-// edge function; the days-on-yard math is shared with yardcheck.js.
+// Dispatch Board — two tabs:
+//   Day       — pick any day: every driver's status updates as a timeline,
+//               plus every yard check sent that day, with totals.
+//   Yards Now — each yard's latest synced Yard Check, with days on yard.
+// Reads the yard-check-history and status-history edge functions; the
+// days-on-yard math is shared with yardcheck.js (window.LWHYard).
 (function(){
   const el=id=>document.getElementById(id);
-  let yards=[], loaded=false;
+  const API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/';
+  const STATUS_URL=API+'status-history';
+  const S=s=>LWHUI.safe(s);
+  const pad=n=>String(n).padStart(2,'0');
+  const fmt=t=>new Date(t).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const tm=t=>new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const post=async(url,body)=>{
+    const res=await fetch(url,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
+    return res.json();
+  };
+  let tab='day';
+  let yards=[], yardsLoaded=false;
+  let day={date:'',updates:[],checks:[],loaded:false};
 
   function status(t){ const s=el('ybStatus'); if(s) s.textContent=t; }
-  const fmt=t=>new Date(t).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 
+  // ======================= Day view =======================
+  function dayRange(dateStr){
+    const a=new Date(dateStr+'T00:00:00'), b=new Date(a); b.setDate(b.getDate()+1);
+    return {from:a.toISOString(),to:b.toISOString()};
+  }
+  async function loadDay(){
+    const date=el('ybDate').value||ymd(new Date()); el('ybDate').value=date;
+    status('Loading '+new Date(date+'T00:00:00').toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+'…');
+    const r=dayRange(date);
+    const [u,c]=await Promise.allSettled([post(STATUS_URL,{...r,limit:1000}),post(window.LWHYard.HISTORY_URL,{...r,limit:500})]);
+    day={date,updates:u.status==='fulfilled'?(u.value.updates||[]):[],checks:c.status==='fulfilled'?(c.value.checks||[]):[],loaded:true};
+    const errs=[u,c].filter(x=>x.status==='rejected').map(x=>x.reason.message);
+    status(errs.length?'Some data didn\'t load: '+errs.join('; '):'Updated '+tm(Date.now()));
+    fillDrivers(); renderDay();
+  }
+  function fillDrivers(){
+    const cur=el('ybDriver').value;
+    const names=[...new Set(day.updates.map(u=>u.driver).concat(day.checks.map(c=>c.driver)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    el('ybDriver').innerHTML='<option value="">All drivers</option>'+names.map(n=>`<option${n===cur?' selected':''}>${S(n)}</option>`).join('');
+  }
+  function renderDay(){
+    const who=el('ybDriver').value;
+    const ups=day.updates.filter(u=>!who||u.driver===who).slice().sort((a,b)=>new Date(a.sent_at)-new Date(b.sent_at));
+    const cks=day.checks.filter(c=>!who||c.driver===who).slice().sort((a,b)=>new Date(a.checked_at)-new Date(b.checked_at));
+    const tr=cks.flatMap(c=>c.trailers||[]);
+    const L=tr.filter(t=>t.status==='Loaded').length, E=tr.filter(t=>t.status==='Empty').length;
+    const drivers=new Set(ups.map(u=>u.driver||'(no name)').concat(cks.map(c=>c.driver||'(no name)')));
+    const late=ups.filter(u=>u.status==='Running Late').length;
+
+    const stats=`<div class="stats yb-stats">
+      <div><b>${ups.length}</b><span>Status updates</span></div>
+      <div><b>${drivers.size}</b><span>Drivers</span></div>
+      <div><b>${cks.length}</b><span>Yard checks</span></div>
+      <div><b>${tr.length}</b><span>Trailers (${L} L · ${E} E)</span></div>
+      ${late?`<div><b style="color:var(--brand)">${late}</b><span>Running late</span></div>`:''}
+    </div>`;
+
+    // Timeline grouped by driver, in time order.
+    const byDriver={};
+    ups.forEach(u=>{ (byDriver[u.driver||'(no name)']=byDriver[u.driver||'(no name)']||[]).push(u); });
+    const timeline=Object.keys(byDriver).sort((a,b)=>a.localeCompare(b)).map(d=>{
+      const list=byDriver[d], last=list[list.length-1];
+      return `<div class="card yb-driver">
+        <div class="yb-driver-head"><h3 style="margin:0">${S(d)}</h3><span class="hint">Last: <b>${S(last.status)}</b>${last.location?' at '+S(last.location):''} · ${tm(last.sent_at)}</span></div>
+        <ol class="yb-tl">${list.map(u=>{
+          const ids=[u.trailer&&'Trailer '+S(u.trailer),u.load_ref&&'Load '+S(u.load_ref)].filter(Boolean).join(' · ');
+          return `<li class="yb-tl-item"><span class="yb-tl-time">${tm(u.sent_at)}</span>
+            <div><span class="yb-chip s-${u.status.replace(/\s+/g,'').toLowerCase()}">${S(u.status)}</span> ${u.location?'<b>'+S(u.location)+'</b>':''}
+            ${ids||u.eta||u.note||u.pin?`<div class="hint">${[ids,u.eta&&'New ETA '+S(u.eta),u.note&&S(u.note)].filter(Boolean).join(' · ')}${u.pin?` · <a href="${S(u.pin)}" target="_blank" rel="noopener">Map</a>`:''}</div>`:''}</div></li>`;
+        }).join('')}</ol>
+      </div>`;
+    }).join('');
+
+    const checks=cks.map(c=>`<div class="card yb-yard">
+      <div class="yb-driver-head"><h3 style="margin:0">${S(c.location||'(no location)')}</h3><span class="hint">${tm(c.checked_at)}${c.driver?' · '+S(c.driver):''}${c.pin?` · <a href="${S(c.pin)}" target="_blank" rel="noopener">Map</a>`:''}</span></div>
+      <table class="yb-table"><thead><tr><th>Trailer</th><th>Status</th><th>Product / note</th></tr></thead><tbody>
+      ${(c.trailers||[]).map(t=>`<tr><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${S(t.note||'')}</td></tr>`).join('')}
+      </tbody></table>
+      ${c.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(c.notes)}</p>`:''}
+    </div>`).join('');
+
+    el('ybResults').innerHTML=stats+
+      `<h3 class="yb-section">Driver timeline</h3>`+(timeline||'<p class="hint">No status updates this day.</p>')+
+      `<h3 class="yb-section">Yard checks</h3>`+(checks||'<p class="hint">No yard checks this day.</p>');
+  }
+  function shiftDay(n){ const d=new Date((el('ybDate').value||ymd(new Date()))+'T00:00:00'); d.setDate(d.getDate()+n); el('ybDate').value=ymd(d); loadDay(); }
+
+  // ======================= Yards Now =======================
   function build(checks){
     const Y=window.LWHYard, by={};
     checks.forEach(c=>{ const k=c.location_key||Y.locKey(c.location); (by[k]=by[k]||[]).push(c); });
@@ -23,22 +107,17 @@
       return {name:latest.location||'(no location)',latest,checks:list.length,trailers};
     }).sort((a,b)=>new Date(b.latest.checked_at)-new Date(a.latest.checked_at));
   }
-
-  async function load(){
+  async function loadYards(){
     status('Loading yard checks…');
     try{
-      const res=await fetch(window.LWHYard.HISTORY_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({limit:500})});
-      if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
-      const body=await res.json();
-      yards=build(body.checks||[]); loaded=true;
-      status(yards.length?`${yards.length} yard${yards.length===1?'':'s'} · ${(body.checks||[]).length} checks loaded · ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}`:'No yard checks synced yet.');
-      render();
-    }catch(e){ status('Load failed: '+e.message+' — check your connection, or the yard-check-history function may not be deployed yet.'); console.error(e); }
+      const body=await post(window.LWHYard.HISTORY_URL,{limit:500});
+      yards=build(body.checks||[]); yardsLoaded=true;
+      status(yards.length?`${yards.length} yard${yards.length===1?'':'s'} · ${(body.checks||[]).length} checks loaded · ${tm(Date.now())}`:'No yard checks synced yet.');
+      renderYards();
+    }catch(e){ status('Load failed: '+e.message+' — check your connection.'); console.error(e); }
   }
-
-  function render(){
+  function renderYards(){
     const q=(el('ybSearch').value||'').trim().toLowerCase(), minDays=+el('ybMinDays').value||0;
-    const S=LWHUI.safe;
     const out=yards.map(y=>{
       const nameHit=!q||y.name.toLowerCase().includes(q);
       const rows=y.trailers.filter(t=>t.days>=minDays&&(nameHit||t.trailer.toLowerCase().includes(q)||t.note.toLowerCase().includes(q)));
@@ -54,28 +133,57 @@
         ${y.latest.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(y.latest.notes)}</p>`:''}
       </div>`;
     }).join('');
-    el('ybResults').innerHTML=out||(loaded?'<p class="hint">No trailers match.</p>':'');
+    el('ybResults').innerHTML=out||(yardsLoaded?'<p class="hint">No trailers match.</p>':'');
   }
 
-  function csv(){
-    if(!yards.length){ LWHUI.toast('Load the yard checks first'); return; }
-    const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
-    const lines=[['Yard','Trailer','Status','Days on yard','On yard since','Product / note','Last check','Checked by'].map(esc).join(',')];
-    yards.forEach(y=>y.trailers.forEach(t=>lines.push([y.name,t.trailer,t.status,t.days,new Date(t.since).toLocaleDateString(),t.note,fmt(y.latest.checked_at),y.latest.driver].map(esc).join(','))));
+  // ======================= Shared =======================
+  function download(name,lines){
     const a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));
-    a.download=`yard-board-${new Date().toISOString().slice(0,10)}.csv`; a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   }
+  const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  function csv(){
+    if(tab==='day'){
+      if(!day.loaded){ LWHUI.toast('Load a day first'); return; }
+      const who=el('ybDriver').value;
+      const lines=[['Type','Time','Driver','Status / Trailer','Location','Trailer / Status','Load / Note','ETA / Note','Map'].map(esc).join(',')];
+      day.updates.filter(u=>!who||u.driver===who).slice().sort((a,b)=>new Date(a.sent_at)-new Date(b.sent_at))
+        .forEach(u=>lines.push(['Status update',fmt(u.sent_at),u.driver,u.status,u.location,u.trailer,u.load_ref,[u.eta&&'ETA '+u.eta,u.note].filter(Boolean).join(' · '),u.pin].map(esc).join(',')));
+      day.checks.filter(c=>!who||c.driver===who).forEach(c=>(c.trailers||[]).forEach(t=>lines.push(['Yard check',fmt(c.checked_at),c.driver,t.trailer,c.location,t.status,t.note,c.notes,c.pin].map(esc).join(','))));
+      download(`dispatch-day-${day.date}.csv`,lines);
+    }else{
+      if(!yards.length){ LWHUI.toast('Load the yard checks first'); return; }
+      const lines=[['Yard','Trailer','Status','Days on yard','On yard since','Product / note','Last check','Checked by'].map(esc).join(',')];
+      yards.forEach(y=>y.trailers.forEach(t=>lines.push([y.name,t.trailer,t.status,t.days,new Date(t.since).toLocaleDateString(),t.note,fmt(y.latest.checked_at),y.latest.driver].map(esc).join(','))));
+      download(`yards-now-${ymd(new Date())}.csv`,lines);
+    }
+  }
+  function setTab(t){
+    tab=t;
+    document.querySelectorAll('#ybTabs [data-ybtab]').forEach(b=>b.classList.toggle('active',b.dataset.ybtab===t));
+    el('ybDayCtl').hidden=t!=='day'; el('ybYardCtl').hidden=t!=='yards';
+    el('ybResults').innerHTML='';
+    if(t==='day'){ day.loaded?(renderDay(),status('Updated '+tm(Date.now()))):loadDay(); }
+    else{ yardsLoaded?renderYards():loadYards(); }
+  }
+  function refresh(){ tab==='day'?loadDay():loadYards(); }
 
   function init(){
     if(!el('yardBoard')) return;
-    el('ybLoad').onclick=load;
+    el('ybDate').value=ymd(new Date());
+    el('ybTabs').addEventListener('click',e=>{ const b=e.target.closest('[data-ybtab]'); if(b) setTab(b.dataset.ybtab); });
+    el('ybDate').addEventListener('change',loadDay);
+    el('ybPrev').onclick=()=>shiftDay(-1);
+    el('ybNext').onclick=()=>shiftDay(1);
+    el('ybToday').onclick=()=>{ el('ybDate').value=ymd(new Date()); loadDay(); };
+    el('ybDriver').addEventListener('change',renderDay);
+    el('ybLoad').onclick=refresh;
     el('ybCsv').onclick=csv;
-    el('ybSearch').addEventListener('input',render);
-    el('ybMinDays').addEventListener('change',render);
-    // Load the first time the view is opened.
-    new MutationObserver(()=>{ if(el('yardBoard').classList.contains('active')&&!loaded) load(); })
+    el('ybSearch').addEventListener('input',renderYards);
+    el('ybMinDays').addEventListener('change',renderYards);
+    // Load the first time the board is opened.
+    new MutationObserver(()=>{ if(el('yardBoard').classList.contains('active')&&!day.loaded&&!yardsLoaded) setTab(tab); })
       .observe(el('yardBoard'),{attributes:true,attributeFilter:['class']});
   }
   window.addEventListener('load',init);

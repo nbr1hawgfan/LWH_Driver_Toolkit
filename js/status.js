@@ -4,7 +4,8 @@
 (function(){
   const CONTACTS=[{name:'Chris',phone:'14796521662'},{name:'Derek',phone:'14796519227'}];
   const STATUSES=['Arrived','Loaded','Unloaded','Delivered','Departed','Waiting','Running Late'];
-  const KEY='statusDraft', LOG='statusLog';
+  const KEY='statusDraft', LOG='statusLog', PEND='statusPending';
+  const SUBMIT_URL='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/status-submit';
   const el=id=>document.getElementById(id);
   let st=null, pin='', pinAt=0, locating=false;
 
@@ -41,8 +42,32 @@
     el('suEtaWrap').hidden=st.status!=='Running Late';
   }
   function ok(){ if(!st.status){ LWHUI.toast('Tap a status first'); return false; } return true; }
+  // ---------- Office sync (queued so no-signal sends still get there) ----------
+  function setSync(t,err){ const s=el('suSync'); if(!s) return; s.textContent=t; s.style.color=err?'var(--brand)':''; }
+  let flushing=false;
+  async function flush(){
+    if(flushing) return; let q=LWHStorage.get(PEND,[]); if(!q.length) return;
+    if(!navigator.onLine){ setSync(`Offline — ${q.length} update${q.length===1?'':'s'} will reach the office when you have signal.`); return; }
+    flushing=true; let failed=null;
+    for(const item of q.slice()){
+      try{
+        const res=await fetch(SUBMIT_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
+        if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
+        q=LWHStorage.get(PEND,[]).filter(x=>x.id!==item.id); LWHStorage.set(PEND,q);
+      }catch(e){ failed=e; break; }
+    }
+    flushing=false;
+    if(failed){ setSync(`Saved on this phone — office board will update when it can (${failed.message}).`,true); console.warn('Status sync failed',failed); }
+    else setSync('On the dispatch board ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
+  }
+  window.addEventListener('online',flush);
+
   function log(how){
-    const l=LWHStorage.get(LOG,[]); l.unshift({at:Date.now(),status:st.status,location:st.location.trim(),how});
+    const at=Date.now(), id='su-'+at.toString(36)+Math.random().toString(36).slice(2,6);
+    const q=LWHStorage.get(PEND,[]); q.push({id,status:st.status,driver:(LWHStorage.get('userName','')||'').trim(),location:st.location.trim(),trailer:st.trailer.trim(),load_ref:st.load.trim(),
+      eta:st.status==='Running Late'?st.eta.trim():'',note:st.note.trim(),pin:st.usePin?pin:'',how,sent_at:new Date(at).toISOString()});
+    LWHStorage.set(PEND,q); flush();
+    const l=LWHStorage.get(LOG,[]); l.unshift({at,status:st.status,location:st.location.trim(),how});
     LWHStorage.set(LOG,l.slice(0,20)); renderLog();
     const locs=LWHStorage.get('yardLocations',[]), loc=st.location.trim();
     if(loc&&!locs.some(x=>x.toLowerCase()===loc.toLowerCase())){ locs.unshift(loc); LWHStorage.set('yardLocations',locs.slice(0,25)); fillLocs(); }
@@ -61,7 +86,7 @@
     });
     el('suUsePin').checked=st.usePin!==false;
     el('suUsePin').onchange=()=>{ st.usePin=el('suUsePin').checked; save(); if(st.usePin) locate(); else el('suPin').textContent='Location will not be included.'; preview(); };
-    renderStatuses(); fillLocs(); renderLog(); preview();
+    renderStatuses(); fillLocs(); renderLog(); preview(); flush();
     el('suStatuses').addEventListener('click',e=>{
       const b=e.target.closest('[data-su]'); if(!b) return;
       st.status=b.dataset.su; save(); renderStatuses(); preview(); locate();

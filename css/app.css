@@ -561,3 +561,23 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yb-table td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
 .yb-table tr.long td{background:#fdecea}
 .yb-table tr.long td:nth-child(3){color:#b3261e;font-weight:700}
+
+/* v1.15.0 — Dispatch Board Day view */
+.yb-daybar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.yb-daybar input{flex:1;min-width:0}
+.yb-daybar button{min-width:46px}
+.stats.yb-stats{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px}
+.stats.yb-stats div{padding:10px;text-align:center}
+.yb-section{margin:20px 0 0}
+.yb-driver{margin-top:12px}
+.yb-driver-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.yb-tl{list-style:none;margin:10px 0 0;padding:0}
+.yb-tl-item{display:grid;grid-template-columns:72px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.yb-tl-time{font-weight:800;color:var(--muted);font-size:14px}
+.yb-chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:13px;font-weight:800;background:#ececf1;color:#33333d;margin-right:4px}
+.yb-chip.s-arrived{background:#e3effa;color:#1f6fb2}
+.yb-chip.s-loaded{background:#1f6fb2;color:#fff}
+.yb-chip.s-unloaded,.yb-chip.s-delivered{background:#e4f4e8;color:#1d6b34}
+.yb-chip.s-departed{background:#5c5c6b;color:#fff}
+.yb-chip.s-waiting{background:#fff4d6;color:#7a5a00}
+.yb-chip.s-runninglate{background:var(--brand);color:#fff}

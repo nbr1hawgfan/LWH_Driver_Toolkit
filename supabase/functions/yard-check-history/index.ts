@@ -1,8 +1,9 @@
 // yard-check-history — recent Yard Checks, for days-on-yard and the dispatch view.
 // Deploy:  supabase functions deploy yard-check-history --no-verify-jwt
-// POST JSON: { location?: string, limit?: number }
+// POST JSON: { location?: string, from?: ISO, to?: ISO, limit?: number }
 //   with location → that yard's checks, newest first (default 40)
 //   without       → newest checks across every yard (default 300)
+//   from/to       → only checks with checked_at in [from, to)  (dispatch Day view)
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
@@ -13,6 +14,7 @@ const CORS = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const locKey = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+const iso = (v: unknown) => { const d = new Date(typeof v === "string" ? v : ""); return isNaN(d.getTime()) ? "" : d.toISOString(); };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -29,6 +31,9 @@ Deno.serve(async (req) => {
     .order("checked_at", { ascending: false })
     .limit(limit);
   if (location) q = q.eq("location_key", location);
+  const from = iso(b.from), to = iso(b.to);
+  if (from) q = q.gte("checked_at", from);
+  if (to) q = q.lt("checked_at", to);
   const { data, error } = await q;
   if (error) return json({ error: error.message }, 500);
   return json({ ok: true, checks: data ?? [] });
