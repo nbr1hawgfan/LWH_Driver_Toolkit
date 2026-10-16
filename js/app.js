@@ -320,6 +320,20 @@ if(window.saveUsageSettings) saveUsageSettings.onclick=()=>{
 // - Web Share Target (this app appearing in the OS share sheet) lands here
 //   as ?title=&text=&url= — routed into Notepad since that's the simplest
 //   generic drop point for "whatever just got shared in."
+// ---- Retired modules ----
+// Hidden at the Transportation Director's request so drivers only use
+// Samsara for logs, HOS and inspections. The code and screens are left in
+// place: delete a name from this list to bring that module back.
+const RETIRED_VIEWS=['paperlog','dvir','trailerinspect','hos','statusupdate'];
+function retireModules(){
+  RETIRED_VIEWS.forEach(v=>{
+    document.querySelectorAll(`.nav-btn[data-view="${v}"],.module-card[data-view="${v}"]`).forEach(el=>el.remove());
+  });
+  const show=LWHUI.show.bind(LWHUI);
+  LWHUI.show=view=>show(RETIRED_VIEWS.includes(view)?'home':view);
+}
+retireModules();
+
 function applyIncomingUrlParams(){
   const params=new URLSearchParams(location.search);
   const view=params.get('view');
