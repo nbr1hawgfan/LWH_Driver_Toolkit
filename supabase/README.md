@@ -38,6 +38,9 @@ All of this is live on project `tjivcqxnkftujceumdtx` (LWH Companion):
 | bucket `yard-photos` (private) | trailer photos, stored as `<check id>/<photo id>.jpg` |
 | `yard-photo-upload` | phone → upload one shrunk JPEG for a yard check |
 | `yard-photo-urls` | 1-hour view links for the Dispatch Board |
+| tables `recruit_codes`, `recruit_scans`, `recruit_awards` | Recruiter: driver codes, counted scans, office-credited points |
+| `recruit-go` | the link inside each driver's QR: counts the scan, redirects to the driver application |
+| `recruit` | register a driver's code, stats/leaderboard, award/unaward (manager passcode) |
 
 All of these functions run with JWT verification off, like the timesheet ones.
 The Dispatch Board in the toolkit reads the two history functions.

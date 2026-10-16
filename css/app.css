@@ -625,3 +625,27 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yb-find-h{margin:16px 0 0;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 .yb-tnum{background:none;border:0;padding:0;min-height:0;font:inherit;font-weight:800;color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
 .yb-tnum:hover{color:var(--brand)}
+
+/* v1.19.0 — Recruiter */
+.rc-qrwrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin:8px 0 4px;text-align:center}
+.rc-qr{padding:14px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.rc-qr img,.rc-qr canvas{display:block}
+.rc-qrcap{margin:0;font-weight:800}
+.rc-actions{justify-content:center}
+.stats.rc-stats{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.stats.rc-stats div{padding:10px;text-align:center}
+.rc-badge{margin:10px 0 0;font-size:18px;font-weight:800}
+.rc-board{list-style:none;margin:10px 0 0;padding:0}
+.rc-board li{display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.rc-board li.me{background:#fff4f4;border-radius:8px;padding-left:6px;padding-right:6px}
+.rc-rank{font-weight:900;font-size:18px;color:var(--muted);text-align:center}
+.rc-name{font-weight:800}
+.rc-name small{display:block;font-weight:700;color:var(--muted)}
+.rc-pts{text-align:right}
+.rc-pts b{font-size:18px;color:var(--brand)}
+.rc-pts small{display:block;color:var(--muted);font-size:12px}
+.rc-full{position:fixed;inset:0;z-index:1000;background:#fff;display:flex;align-items:center;justify-content:center;padding:20px}
+.rc-full[hidden]{display:none}
+.rc-full-inner{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.rc-full-title{margin:0;font-size:24px;font-weight:900;color:var(--brand)}
+.rc-full-sub{margin:0;font-size:18px;font-weight:700}

@@ -168,6 +168,13 @@
   }
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
   function csv(){
+    if(tab==='recruit'){
+      const rows=[...document.querySelectorAll('#rcDispBoard li')];
+      if(!rows.length){ LWHUI.toast('Nothing to export yet'); return; }
+      const lines=[['Driver','Points (shown period)','Applied / Hired / Reached'].map(esc).join(',')];
+      rows.forEach(li=>lines.push([li.querySelector('.rc-name').childNodes[0].textContent.trim(),li.querySelector('.rc-pts b').textContent,li.querySelector('.rc-pts small').textContent].map(esc).join(',')));
+      download(`recruiting-${ymd(new Date())}.csv`,lines); return;
+    }
     if(tab==='day'){
       if(!day.loaded){ LWHUI.toast('Load a day first'); return; }
       const who=el('ybDriver').value;
@@ -255,10 +262,12 @@
     document.querySelectorAll('#ybTabs [data-ybtab]').forEach(b=>b.classList.toggle('active',b.dataset.ybtab===t));
     el('ybDayCtl').hidden=t!=='day'; el('ybYardCtl').hidden=t!=='yards';
     el('ybResults').innerHTML='';
+    if(t==='recruit'){ status(''); window.LWHRecruit.openBoard(); return; }
+    window.LWHRecruit.closeBoard();
     if(t==='day'){ day.loaded?(renderDay(),status('Updated '+tm(Date.now()))):loadDay(); }
     else{ yardsLoaded?renderYards():loadYards(); }
   }
-  function refresh(){ tab==='day'?loadDay():loadYards(); }
+  function refresh(){ tab==='day'?loadDay():tab==='yards'?loadYards():window.LWHRecruit.openBoard(); }
 
   function init(){
     if(!el('yardBoard')) return;
