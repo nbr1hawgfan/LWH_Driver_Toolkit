@@ -208,10 +208,10 @@ let renderQuickLinksList=()=>{};
 // Seeded once on first run only — if quickLinks already exists in storage
 // (even as an empty array from someone removing everything), it's left
 // alone so edits/removals aren't silently undone on a later load.
-const QUICK_LINKS_DEFAULT=[
-  {name:'PTO Requests',url:'https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec'},
-  {name:'Safety Training',url:'https://logisticswarehouse.infinit-i.net/#/login'}
-];
+// PTO Request and Safety Training now live as buttons in Quick Access (next to
+// Unpaid Time Off), so they're no longer Quick Links defaults.
+const QUICK_LINKS_DEFAULT=[];
+const QA_BUILT_IN_LINKS=['https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec','https://logisticswarehouse.infinit-i.net/#/login'];
 function renderQuickLinksHome(){
   const wrap=document.getElementById('quickLinksHome'), grid=document.getElementById('quickLinksGrid');
   if(!wrap||!grid) return;
@@ -229,8 +229,8 @@ function initQuickLinks(){
   // re-adding it if someone deliberately removes it afterward.
   if(!LWHStorage.get('quickLinksMigratedSafety',false)){
     const links=LWHStorage.get('quickLinks',[]);
-    const safety=QUICK_LINKS_DEFAULT.find(l=>l.name==='Safety Training');
-    if(safety && !links.some(l=>l.url===safety.url)){ links.push(safety); LWHStorage.set('quickLinks',links); }
+    const safety={name:'Safety Training',url:QA_BUILT_IN_LINKS[1]};
+    if(!links.some(l=>l.url===safety.url)){ links.push(safety); LWHStorage.set('quickLinks',links); }
     LWHStorage.set('quickLinksMigratedSafety',true);
   }
   // One-time migration: add Unpaid Time Off (right after PTO if present) for
@@ -255,6 +255,14 @@ function initQuickLinks(){
     const kept=links.filter(l=>l.url!==TRAILER_GAS);
     if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
     LWHStorage.set('quickLinksMigratedTrailerInApp',true);
+  }
+  // One-time migration: PTO and Safety moved into Quick Access, so drop them
+  // from saved Quick Links to avoid showing them twice (flagged; runs once).
+  if(!LWHStorage.get('quickLinksMigratedQARow',false)){
+    const links=LWHStorage.get('quickLinks',[]);
+    const kept=links.filter(l=>!QA_BUILT_IN_LINKS.includes(l.url));
+    if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
+    LWHStorage.set('quickLinksMigratedQARow',true);
   }
   renderQuickLinksList=function render(){
     const links=LWHStorage.get('quickLinks',[]);

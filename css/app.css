@@ -106,7 +106,7 @@ button.ghost:hover{background:var(--brand-tint)}
 .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .module-card{display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-height:130px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);padding:18px;border-radius:var(--radius);text-align:left;transition:box-shadow .15s ease,border-color .15s ease;text-decoration:none}
 .module-card:hover{box-shadow:var(--shadow);border-color:var(--brand);background:#fff}
-.module-card .icon-badge{width:42px;height:42px;border-radius:11px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
+.module-card .icon-badge,.qa-tile .icon-badge{width:42px;height:42px;border-radius:11px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
 .module-card b{font-size:17px;color:var(--ink);font-weight:700}
 .module-card span{color:var(--muted);font-weight:400;font-size:13.5px;line-height:1.4}
 .module-card .ext-badge{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);background:var(--brand-tint);padding:3px 7px;border-radius:6px}
@@ -766,3 +766,10 @@ body:not(.mgr-on) .mgr-only{display:none!important}
 #timeoff .to-reason{margin:8px 0;white-space:pre-wrap}
 #timeoff .to-note{background:var(--bg);padding:8px 10px;margin-top:6px;font-size:14px}
 #timeoff .to-cancel{margin-top:10px}
+
+/* ---- Quick Access: Time Off / PTO / Safety row (3 across, even on phones) ---- */
+.qa-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qa-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:110px;padding:14px 6px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);border-radius:var(--radius);text-align:center;text-decoration:none;font-size:14px;line-height:1.2}
+.qa-tile b{font-size:14px}
+.qa-tile:hover{border-color:var(--brand);background:#fff}
+.qa-tile .icon-badge{margin:0}
