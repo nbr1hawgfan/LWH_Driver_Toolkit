@@ -210,7 +210,6 @@ let renderQuickLinksList=()=>{};
 // alone so edits/removals aren't silently undone on a later load.
 const QUICK_LINKS_DEFAULT=[
   {name:'PTO Requests',url:'https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec'},
-  {name:'Unpaid Time Off',url:'https://nbr1hawgfan.github.io/LWH_Driver-PErsonal_Time/'},
   {name:'Safety Training',url:'https://logisticswarehouse.infinit-i.net/#/login'}
 ];
 function renderQuickLinksHome(){
@@ -237,15 +236,16 @@ function initQuickLinks(){
   // One-time migration: add Unpaid Time Off (right after PTO if present) for
   // devices that already have saved Quick Links. Flagged so a deliberate
   // removal sticks.
-  if(!LWHStorage.get('quickLinksMigratedUTO',false)){
+  // (Superseded: Unpaid Time Off is now built in — see the migration below.)
+  LWHStorage.set('quickLinksMigratedUTO',true);
+  // One-time migration: Unpaid Time Off is now built into the toolkit, so drop
+  // the old external link from saved Quick Links (flagged; runs once).
+  if(!LWHStorage.get('quickLinksMigratedUTOInApp',false)){
+    const UTO_URL='https://nbr1hawgfan.github.io/LWH_Driver-PErsonal_Time/';
     const links=LWHStorage.get('quickLinks',[]);
-    const uto=QUICK_LINKS_DEFAULT.find(l=>l.name==='Unpaid Time Off');
-    if(uto && !links.some(l=>l.url===uto.url)){
-      const pto=links.findIndex(l=>/pto/i.test(l.name||''));
-      links.splice(pto>-1?pto+1:links.length,0,uto);
-      LWHStorage.set('quickLinks',links);
-    }
-    LWHStorage.set('quickLinksMigratedUTO',true);
+    const kept=links.filter(l=>String(l.url||'').replace(/\/+$/,'')!==UTO_URL.replace(/\/+$/,''));
+    if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
+    LWHStorage.set('quickLinksMigratedUTOInApp',true);
   }
   // One-time migration: Trailer Inspection is now built into the toolkit,
   // so drop the old external link from saved Quick Links (flagged; runs once).
@@ -341,9 +341,36 @@ function retireModules(){
     document.querySelectorAll(`.nav-btn[data-view="${v}"],.module-card[data-view="${v}"]`).forEach(el=>el.remove());
   });
   const show=LWHUI.show.bind(LWHUI);
-  LWHUI.show=view=>show(RETIRED_VIEWS.includes(view)?'home':view);
+  LWHUI.show=view=>show(RETIRED_VIEWS.includes(view)||(MANAGER_VIEWS.includes(view)&&!managerToolsOn())?'home':view);
+}
+
+// ---- Manager tools ----
+// "Managers stay managers and drivers stay drivers": Dispatch Board, All
+// Timesheets and Fuel Price Board are hidden unless a manager turns them on
+// for their own phone in Settings → Manager Tools. This only hides screens to
+// keep the app clean for drivers; it is not a security lock.
+// To change the code, edit MANAGER_TOOLS_CODE below.
+const MANAGER_VIEWS=['yardBoard','spotterTimesheets','fuelboard'];
+const MANAGER_TOOLS_CODE='2468';
+function managerToolsOn(){ return LWHStorage.get('managerToolsOn',false)===true; }
+function applyManagerTools(){
+  const on=managerToolsOn();
+  document.body.classList.toggle('mgr-on',on);
+  const off=document.getElementById('mgrToolsOff'), onBox=document.getElementById('mgrToolsOnBox');
+  if(off) off.hidden=on; if(onBox) onBox.hidden=!on;
+  if(!on){ const active=document.querySelector('.view.active'); if(active&&MANAGER_VIEWS.includes(active.id)) LWHUI.show('home'); }
 }
 retireModules();
+applyManagerTools();
+(function wireManagerTools(){
+  const btn=document.getElementById('mgrToolsOn'), offBtn=document.getElementById('mgrToolsOffBtn'), code=document.getElementById('mgrToolsCode');
+  if(btn) btn.onclick=()=>{
+    if((code.value||'').trim()!==MANAGER_TOOLS_CODE){ LWHUI.toast('Wrong code'); return; }
+    code.value=''; LWHStorage.set('managerToolsOn',true); applyManagerTools(); LWHUI.toast('Manager tools turned on');
+  };
+  if(code) code.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); });
+  if(offBtn) offBtn.onclick=()=>{ LWHStorage.set('managerToolsOn',false); applyManagerTools(); LWHUI.toast('Manager tools hidden'); };
+})();
 
 function applyIncomingUrlParams(){
   const params=new URLSearchParams(location.search);
