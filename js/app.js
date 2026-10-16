@@ -115,7 +115,10 @@ function applySettings(){
   if(window.setUserName) setUserName.value=LWHStorage.get('userName','');
   if(window.setUsageLogUrl) setUsageLogUrl.value=LWHStorage.get('usageLogUrl','')||USAGE_LOG_URL_DEFAULT;
   calX.value=LWHStorage.get('calX',0); calY.value=LWHStorage.get('calY',0); calScale.value=LWHStorage.get('calScale',100);
-  statPrints.textContent=LWHStorage.get('printJobs',0); statLookups.textContent=LWHStorage.get('lookupCount',0); statVisitors.textContent=(LWHStorage.get('visitorLog',[])||[]).length;
+  // Usage stats were removed from the home screen to keep it simple; guarded in case they return.
+  if(window.statPrints) statPrints.textContent=LWHStorage.get('printJobs',0);
+  if(window.statLookups) statLookups.textContent=LWHStorage.get('lookupCount',0);
+  if(window.statVisitors) statVisitors.textContent=(LWHStorage.get('visitorLog',[])||[]).length;
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;installBtn.hidden=false});
 let renderManagersList=()=>{};
