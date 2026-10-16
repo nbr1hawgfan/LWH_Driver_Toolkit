@@ -35,6 +35,9 @@ All of this is live on project `tjivcqxnkftujceumdtx` (LWH Companion):
 | `yard-check-history` | yard checks by yard and/or day (`from`/`to`) |
 | `status-submit` | phone → save a status update |
 | `status-history` | status updates for a day (`from`/`to`), optional `driver` |
+| bucket `yard-photos` (private) | trailer photos, stored as `<check id>/<photo id>.jpg` |
+| `yard-photo-upload` | phone → upload one shrunk JPEG for a yard check |
+| `yard-photo-urls` | 1-hour view links for the Dispatch Board |
 
-All four functions run with JWT verification off, like the timesheet ones.
+All of these functions run with JWT verification off, like the timesheet ones.
 The Dispatch Board in the toolkit reads the two history functions.

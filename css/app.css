@@ -593,3 +593,22 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yc-saved.ok b{color:#1d6b34}
 .yc-saved.later{border-color:#b98900;background:#fff8e1}
 .yc-saved.later b{color:#7a5a00}
+
+/* v1.17.0 — Yard Check: Damaged + photos */
+.yc-extra{grid-column:2/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.yc-dmg,.yc-photo-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;padding:6px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:15px;cursor:pointer}
+.yc-dmg.on{background:#b3261e;border-color:#b3261e;color:#fff}
+.yc-photo-count{font-size:13px;font-weight:700;color:var(--muted)}
+.yc-photo-count.need{color:#b3261e}
+.yc-thumbs{grid-column:2/-1;display:flex;gap:8px;flex-wrap:wrap}
+.yc-thumbs:empty{display:none}
+.yc-thumb{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.yc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.yc-thumb-up{display:flex;align-items:center;justify-content:center;height:100%;font-size:11px;color:var(--muted);text-align:center}
+.yc-thumb button{position:absolute;top:2px;right:2px;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;border:0}
+.yc-row.damaged{border-color:#b3261e;box-shadow:inset 3px 0 0 #b3261e}
+.yb-chip.s-damaged{background:#b3261e;color:#fff}
+.yb-table tr.dmg td{background:#fdecea}
+.yb-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.yb-thumb{display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
+.yb-thumb img{width:100%;height:100%;object-fit:cover;display:block}

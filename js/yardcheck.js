@@ -1,11 +1,13 @@
-// Yard Check — driver counts our trailers at a customer drop yard and sends
-// the list (grouped Loaded / Empty) by text, email, or any app. No photos, so
-// plain LWHStorage is plenty. The check in progress autosaves; the last 15
-// sent checks are kept so a driver can see or resend what they sent.
+// Yard Check — driver lists our trailers at a customer drop yard (Loaded /
+// Empty, product note, Damaged + photos) and saves it to the dispatch board.
+// The check in progress autosaves to LWHStorage; photos live in IndexedDB on
+// the phone until they're uploaded, so nothing is lost without signal. The
+// last 15 sent checks are kept so a driver can see or resend what they sent.
 (function(){
   const CUR='yardCurrent', HIST='yardHistory', LOCS='yardLocations', PEND='yardPending', HCACHE='yardServerHist';
   const API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/';
-  const SUBMIT_URL=API+'yard-check-submit', HISTORY_URL=API+'yard-check-history';
+  const SUBMIT_URL=API+'yard-check-submit', HISTORY_URL=API+'yard-check-history', PHOTO_URL=API+'yard-photo-upload';
+  const MAX_PHOTOS=5, MAX_EDGE=1600, JPEG_Q=0.72;
   const CONTACTS=[{name:'Chris',phone:'14796521662'},{name:'Derek',phone:'14796519227'}];
   const DISPATCH_EMAIL='Dispatch@Logistics-Warehouse.com';
   const el=id=>document.getElementById(id);
@@ -89,10 +91,83 @@
   function refreshDwell(){ document.querySelectorAll('#ycRows .yc-row').forEach(refreshDwellRow); }
   function setDwellStatus(t){ const s=el('ycDwellStatus'); if(s){ s.textContent=t; s.hidden=!t; } }
 
+  // ---------- Photos (IndexedDB: {id, checkId, blob?, takenAt, uploaded}) ----------
+  let pdb=null;
+  function openPhotoDb(){
+    if(pdb) return Promise.resolve(pdb);
+    return new Promise((res,rej)=>{
+      if(!('indexedDB' in window)) return rej(new Error('Photos need a newer browser'));
+      const r=indexedDB.open('lwh-yard-photos',1);
+      r.onupgradeneeded=()=>{ r.result.createObjectStore('photos',{keyPath:'id'}); };
+      r.onsuccess=()=>{ pdb=r.result; res(pdb); }; r.onerror=()=>rej(r.error);
+    });
+  }
+  async function ptx(mode,fn){
+    const db=await openPhotoDb();
+    return new Promise((res,rej)=>{
+      const t=db.transaction('photos',mode), out=fn(t.objectStore('photos'));
+      t.oncomplete=()=>res(out&&out.result!==undefined?out.result:undefined); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error);
+    });
+  }
+  const pGet=id=>ptx('readonly',s=>s.get(id));
+  const pAll=()=>ptx('readonly',s=>s.getAll());
+  const pPut=rec=>ptx('readwrite',s=>s.put(rec));
+  const pDel=id=>ptx('readwrite',s=>s.delete(id));
+  const photoPath=(checkId,photoId)=>`${checkId}/${photoId}.jpg`;
+  function compress(file){
+    return new Promise((res,rej)=>{
+      const url=URL.createObjectURL(file), img=new Image();
+      img.onload=()=>{
+        let w=img.naturalWidth,h=img.naturalHeight; const k=Math.min(1,MAX_EDGE/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
+        const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+        c.toBlob(b=>b?res(b):rej(new Error('Could not process photo')),'image/jpeg',JPEG_Q);
+      };
+      img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('Could not read that photo')); };
+      img.src=url;
+    });
+  }
+  const thumbUrls={};
+  async function thumbUrl(id){
+    if(thumbUrls[id]) return thumbUrls[id];
+    const rec=await pGet(id).catch(()=>null);
+    if(!rec||!rec.blob) return '';
+    return (thumbUrls[id]=URL.createObjectURL(rec.blob));
+  }
+  async function addPhotos(r,files){
+    files=[...(files||[])].filter(f=>/^image\//.test(f.type)); if(!files.length) return;
+    r.photos=r.photos||[];
+    const room=MAX_PHOTOS-r.photos.length;
+    if(room<=0){ LWHUI.toast(`Up to ${MAX_PHOTOS} photos per trailer`); return; }
+    if(files.length>room) LWHUI.toast(`Only ${room} more photo${room===1?'':'s'} fit on this trailer`);
+    for(const f of files.slice(0,room)){
+      try{
+        const blob=await compress(f), id='ph-'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), takenAt=Date.now();
+        await pPut({id,checkId:cur.id,blob,takenAt,uploaded:false});
+        r.photos.push({id,takenAt});
+      }catch(e){ LWHUI.toast(e.message||'Could not add photo'); console.error(e); }
+    }
+    save(); refreshRowExtras(r); el('ycPreview').textContent=summary();
+  }
+  async function removePhoto(r,id){
+    r.photos=(r.photos||[]).filter(p=>p.id!==id); save();
+    if(thumbUrls[id]){ URL.revokeObjectURL(thumbUrls[id]); delete thumbUrls[id]; }
+    const rec=await pGet(id).catch(()=>null); if(rec&&!rec.uploaded) pDel(id).catch(()=>{});
+    refreshRowExtras(r); el('ycPreview').textContent=summary();
+  }
+  // Drop photos that belong to no current or pending check (e.g. a check abandoned without saving).
+  async function cleanupPhotos(){
+    try{
+      const keep=new Set([cur.id,...LWHStorage.get(PEND,[]).map(x=>x.id)]);
+      const all=await pAll();
+      await Promise.all(all.filter(p=>!keep.has(p.checkId)).map(p=>pDel(p.id)));
+    }catch(e){ /* photos unsupported — nothing to clean */ }
+  }
+
   // ---------- Office sync ----------
   function payload(c,how){
     return {id:c.id,location:c.location.trim(),pin:c.pin||'',driver:(c.driver||'').trim(),checked_at:new Date(c.when||Date.now()).toISOString(),how:how||'',notes:(c.notes||'').trim(),
-      trailers:c.rows.filter(r=>r.trailer.trim()).map(r=>({trailer:tKey(r.trailer),status:r.status||'',note:(r.note||'').trim()}))};
+      trailers:c.rows.filter(r=>r.trailer.trim()).map(r=>({trailer:tKey(r.trailer),status:r.status||'',note:(r.note||'').trim(),
+        damaged:!!r.damaged,photos:(r.photos||[]).map(p=>photoPath(c.id,p.id))}))};
   }
   function setSync(t,err){ const s=el('ycSync'); if(!s) return; s.textContent=t; s.style.color=err?'var(--brand)':''; }
   function queue(c,how){
@@ -116,14 +191,48 @@
     let failed=null;
     for(const item of q.slice()){
       try{
+        await uploadPhotos(item);
         const res=await fetch(SUBMIT_URL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)});
         if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error(b.error||('HTTP '+res.status)); }
         q=LWHStorage.get(PEND,[]).filter(x=>x.id!==item.id); LWHStorage.set(PEND,q);
+        await releasePhotoBlobs(item);
         confirmSaved(item.id);
       }catch(e){ failed=e; break; }
     }
     if(failed){ setSync(`Saved on this phone — will keep trying to upload (${failed.message}).`,true); retryTimer=setTimeout(flush,60000); console.warn('Yard sync failed',failed); }
     else setSync('On the dispatch board ✓ · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}));
+  }
+  // Upload any of this check's photos not yet on the server. A photo whose
+  // record is gone (e.g. app data cleared) is dropped from the check rather
+  // than leaving a broken link on the board.
+  async function uploadPhotos(item){
+    const todo=[];
+    for(const t of item.trailers){
+      const keep=[];
+      for(const path of (t.photos||[])){
+        const id=path.split('/')[1].replace(/\.jpg$/,'');
+        let rec=null; try{ rec=await pGet(id); }catch(e){}
+        if(!rec){ continue; }
+        keep.push(path); if(!rec.uploaded) todo.push(rec);
+      }
+      t.photos=keep;
+    }
+    for(let i=0;i<todo.length;i++){
+      const rec=todo[i];
+      setSync(`Uploading photo ${i+1} of ${todo.length}…`);
+      const res=await fetch(`${PHOTO_URL}?check=${encodeURIComponent(item.id)}&photo=${encodeURIComponent(rec.id)}`,{method:'POST',mode:'cors',headers:{'Content-Type':'image/jpeg'},body:rec.blob});
+      if(!res.ok){ const b=await res.json().catch(()=>({})); throw new Error('photo: '+(b.error||('HTTP '+res.status))); }
+      rec.uploaded=true; await pPut(rec);
+    }
+    if(todo.length) setSync('Uploading yard check…');
+  }
+  // After the check is saved, keep only a tiny "uploaded" marker so re-saving
+  // the same check still links its photos; the image itself is freed.
+  async function releasePhotoBlobs(item){
+    for(const t of item.trailers) for(const path of (t.photos||[])){
+      const id=path.split('/')[1].replace(/\.jpg$/,'');
+      try{ const rec=await pGet(id); if(rec&&rec.uploaded&&rec.blob&&rec.checkId!==cur.id){ delete rec.blob; await pPut(rec); } }catch(e){}
+    }
   }
   // ---------- Save to Dispatch (main button) ----------
   let awaiting=null; // id of the check whose confirmation is showing
@@ -156,7 +265,7 @@
   // A typical yard has 8-14 of our trailers, so start with 12 empty lines.
   // Blank lines are ignored when saving; "+ Add Trailer" still adds more.
   const DEFAULT_ROWS=12;
-  const blankRow=()=>({id:rid(),trailer:'',status:'',note:''});
+  const blankRow=()=>({id:rid(),trailer:'',status:'',note:'',damaged:false,photos:[]});
   function padRows(rows){ rows=rows.slice(); while(rows.length<DEFAULT_ROWS) rows.push(blankRow()); return rows; }
   function blank(){
     return {id:'yc-'+Date.now(),when:nowLocal(),location:'',pin:'',driver:LWHStorage.get('userName','')||'',notes:'',
@@ -177,11 +286,31 @@
       <button type="button" class="yc-del ghost" data-del aria-label="Remove row ${i+1}">✕</button>
       ${(()=>{const d=dwellFor(r);return d?`<span class="yc-dwell${d.days>=7?' long':''}">${d.text}</span>`:'';})()}
       <input class="yc-note" data-f="note" value="${LWHUI.safe(r.note||'')}" placeholder="Product / note (optional)" autocomplete="off" enterkeyhint="next" aria-label="Product or note for trailer ${i+1}" />
+      <div class="yc-extra">
+        <button type="button" class="yc-dmg${r.damaged?' on':''}" data-dmg aria-pressed="${!!r.damaged}">⚠ Damaged</button>
+        <label class="yc-photo-btn">📷 Photo<input type="file" accept="image/*" multiple hidden data-photo aria-label="Add photo for trailer ${i+1}" /></label>
+        <span class="yc-photo-count"></span>
+      </div>
+      <div class="yc-thumbs"></div>
     </div>`;
   }
   function renderRows(){
     el('ycRows').innerHTML=cur.rows.map(rowHtml).join('');
     markDupes(); renderCounts();
+    cur.rows.forEach(refreshRowExtras);
+  }
+  // Damaged state, photo count and thumbnails for one row, updated in place.
+  async function refreshRowExtras(r){
+    const rowEl=document.querySelector(`#ycRows .yc-row[data-id="${r.id}"]`); if(!rowEl) return;
+    const n=(r.photos||[]).length, need=r.damaged&&!n;
+    rowEl.classList.toggle('damaged',!!r.damaged);
+    const b=rowEl.querySelector('[data-dmg]'); b.classList.toggle('on',!!r.damaged); b.setAttribute('aria-pressed',!!r.damaged);
+    const cnt=rowEl.querySelector('.yc-photo-count');
+    cnt.textContent=need?'Photo required':(n?`${n} photo${n===1?'':'s'}`:''); cnt.classList.toggle('need',need);
+    const box=rowEl.querySelector('.yc-thumbs');
+    if(!n){ box.innerHTML=''; return; }
+    const urls=await Promise.all(r.photos.map(p=>thumbUrl(p.id)));
+    box.innerHTML=r.photos.map((p,i)=>`<span class="yc-thumb">${urls[i]?`<img src="${urls[i]}" alt="Trailer photo ${i+1}">`:'<span class="yc-thumb-up">Uploaded</span>'}<button type="button" data-rmphoto="${p.id}" aria-label="Remove photo ${i+1}">✕</button></span>`).join('');
   }
   function markDupes(){
     const seen={};
@@ -198,7 +327,7 @@
       (U?`<div><b style="color:#8a6d00">${U}</b><span>Not marked</span></div>`:'');
   }
   function addRow(focus){
-    cur.rows.push({id:rid(),trailer:'',status:'',note:''}); save(); renderRows();
+    cur.rows.push(blankRow()); save(); renderRows();
     if(focus){ const ins=document.querySelectorAll('#ycRows .yc-trailer'); ins[ins.length-1].focus(); }
   }
 
@@ -207,7 +336,8 @@
     c=c||cur;
     const f=c.rows.filter(r=>r.trailer.trim());
     const days=r=>{ if(c!==cur) return ''; const d=dwellFor(r); return d&&d.days>=1?` (${d.days} day${d.days===1?'':'s'} on yard)`:''; };
-    const line=r=>'  '+r.trailer.trim().toUpperCase()+((r.note||'').trim()?' — '+r.note.trim():'')+days(r);
+    const extra=r=>(r.damaged?' — DAMAGED':'')+((r.photos||[]).length?` [${r.photos.length} photo${r.photos.length===1?'':'s'} on dispatch board]`:'');
+    const line=r=>'  '+r.trailer.trim().toUpperCase()+((r.note||'').trim()?' — '+r.note.trim():'')+extra(r)+days(r);
     const by=s=>f.filter(r=>r.status===s).map(line);
     const L=by('Loaded'), E=by('Empty'), U=f.filter(r=>!r.status).map(line);
     const when=c.when?new Date(c.when).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
@@ -226,6 +356,12 @@
   function ready(){
     const f=filled();
     if(!f.length){ LWHUI.toast('Add at least one trailer number'); return false; }
+    const noPhoto=f.filter(r=>r.damaged&&!(r.photos||[]).length);
+    if(noPhoto.length){
+      alert(`Damaged trailer${noPhoto.length===1?'':'s'} ${noPhoto.map(r=>tKey(r.trailer)).join(', ')} need${noPhoto.length===1?'s':''} at least one photo before saving.`);
+      const rowEl=document.querySelector(`#ycRows .yc-row[data-id="${noPhoto[0].id}"]`); if(rowEl) rowEl.scrollIntoView({behavior:'smooth',block:'center'});
+      return false;
+    }
     if(!cur.location.trim()&&!cur.pin){ if(!confirm('No location entered. Send anyway?')) return false; }
     const unmarked=f.filter(r=>!r.status).length;
     if(unmarked&&!confirm(`${unmarked} trailer(s) not marked Loaded or Empty. Send anyway?`)) return false;
@@ -306,6 +442,11 @@
       if(inp.classList.contains('yc-note')){ r.note=inp.value; save(); el('ycPreview').textContent=summary(); return; }
       r.trailer=inp.value; save(); markDupes(); renderCounts(); el('ycPreview').textContent=summary();
     });
+    rows.addEventListener('change',e=>{
+      const inp=e.target.closest('[data-photo]'); if(!inp) return;
+      const r=cur.rows.find(x=>x.id===inp.closest('.yc-row').dataset.id); if(r) addPhotos(r,inp.files);
+      inp.value='';
+    });
     // Refresh the days-on-yard line once the driver leaves a trailer box.
     rows.addEventListener('focusout',e=>{ const inp=e.target.closest('.yc-trailer'); if(inp) refreshDwellRow(inp.closest('.yc-row')); });
     // Enter on a trailer field jumps to the next row (adds one at the end).
@@ -327,9 +468,16 @@
         });
         renderCounts(); el('ycPreview').textContent=summary(); return;
       }
+      if(e.target.closest('[data-dmg]')){
+        r.damaged=!r.damaged; save(); refreshRowExtras(r); el('ycPreview').textContent=summary();
+        if(r.damaged&&!(r.photos||[]).length) LWHUI.toast('Damaged — add at least one photo');
+        return;
+      }
+      const rm=e.target.closest('[data-rmphoto]');
+      if(rm){ if(confirm('Remove this photo?')) removePhoto(r,rm.dataset.rmphoto); return; }
       if(e.target.closest('[data-del]')){
         if(r.trailer.trim()&&!confirm(`Remove trailer ${r.trailer}?`)) return;
-        cur.rows=cur.rows.filter(x=>x!==r); if(!cur.rows.length) cur.rows.push({id:rid(),trailer:'',status:'',note:''});
+        (r.photos||[]).forEach(p=>removePhoto(r,p.id)); cur.rows=cur.rows.filter(x=>x!==r); if(!cur.rows.length) cur.rows.push(blankRow());
         save(); renderRows(); el('ycPreview').textContent=summary();
       }
     });
@@ -356,6 +504,7 @@
     el('ycNew').onclick=()=>{
       if(filled().length&&!LWHStorage.get(HIST,[]).some(h=>h.id===cur.id)&&!confirm('This yard check hasn\'t been sent. Start a new one anyway?')) return;
       cur=blank(); save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); setDwellStatus(''); el('ycSaved').hidden=true; awaiting=null;
+      cleanupPhotos();
     };
     el('ycHistory').addEventListener('click',async e=>{
       const h=LWHStorage.get(HIST,[]);
@@ -371,14 +520,14 @@
         // Same yard, new visit: keep location and trailer numbers, clear statuses.
         const src=h[+ed.dataset.hedit];
         cur=blank(); cur.location=src.location; cur.pin=src.pin;
-        cur.rows=padRows(src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:''})));
+        cur.rows=padRows(src.rows.filter(r=>r.trailer.trim()).map(r=>({id:rid(),trailer:r.trailer,status:'',note:'',damaged:false,photos:[]})));
         save(); fillForm(); el('ycPreview').textContent=summary(); window.scrollTo(0,0); loadYardHistory();
         LWHUI.toast('Trailers copied — mark each Loaded or Empty');
       }
     });
     el('ycPreview').textContent=summary();
     if(cur.location.trim()) loadYardHistory();
-    flush();
+    flush(); cleanupPhotos();
     // The first-run name prompt happens after this sets up, so fill the
     // driver name in whenever the tab is opened and it's still blank.
     new MutationObserver(()=>{

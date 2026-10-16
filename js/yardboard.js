@@ -7,7 +7,7 @@
 (function(){
   const el=id=>document.getElementById(id);
   const API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/';
-  const STATUS_URL=API+'status-history';
+  const STATUS_URL=API+'status-history', PHOTO_URLS=API+'yard-photo-urls';
   const S=s=>LWHUI.safe(s);
   const pad=n=>String(n).padStart(2,'0');
   const fmt=t=>new Date(t).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
@@ -23,6 +23,26 @@
   let day={date:'',updates:[],checks:[],loaded:false};
 
   function status(t){ const s=el('ybStatus'); if(s) s.textContent=t; }
+
+  // ---------- Photos: thumbnails get short-lived links after the page draws ----------
+  const urlCache={}; // path -> {url, at}
+  function photoCell(t){
+    const ph=t.photos||[];
+    const chip=t.damaged?'<span class="yb-chip s-damaged">Damaged</span>':'';
+    const thumbs=ph.length?`<div class="yb-thumbs">${ph.map(p=>`<a class="yb-thumb" data-path="${S(p)}" target="_blank" rel="noopener"><img data-path="${S(p)}" alt="Trailer photo"></a>`).join('')}</div>`:'';
+    return chip+thumbs;
+  }
+  async function fillPhotos(){
+    const nodes=[...document.querySelectorAll('#ybResults [data-path]')];
+    if(!nodes.length) return;
+    const fresh=p=>urlCache[p]&&Date.now()-urlCache[p].at<45*60000;
+    const need=[...new Set(nodes.map(n=>n.dataset.path))].filter(p=>!fresh(p));
+    if(need.length){
+      try{ const b=await post(PHOTO_URLS,{paths:need}); Object.entries(b.urls||{}).forEach(([p,u])=>urlCache[p]={url:u,at:Date.now()}); }
+      catch(e){ console.warn('Photo links failed',e); }
+    }
+    nodes.forEach(n=>{ const u=urlCache[n.dataset.path]&&urlCache[n.dataset.path].url; if(!u) return; if(n.tagName==='IMG') n.src=u; else n.href=u; });
+  }
 
   // ======================= Day view =======================
   function dayRange(dateStr){
@@ -52,6 +72,7 @@
     const L=tr.filter(t=>t.status==='Loaded').length, E=tr.filter(t=>t.status==='Empty').length;
     const drivers=new Set(ups.map(u=>u.driver||'(no name)').concat(cks.map(c=>c.driver||'(no name)')));
     const late=ups.filter(u=>u.status==='Running Late').length;
+    const dmg=tr.filter(t=>t.damaged).length;
 
     const stats=`<div class="stats yb-stats">
       <div><b>${ups.length}</b><span>Status updates</span></div>
@@ -59,6 +80,7 @@
       <div><b>${cks.length}</b><span>Yard checks</span></div>
       <div><b>${tr.length}</b><span>Trailers (${L} L · ${E} E)</span></div>
       ${late?`<div><b style="color:var(--brand)">${late}</b><span>Running late</span></div>`:''}
+      ${dmg?`<div><b style="color:var(--brand)">${dmg}</b><span>Damaged</span></div>`:''}
     </div>`;
 
     // Timeline grouped by driver, in time order.
@@ -80,7 +102,7 @@
     const checks=cks.map(c=>`<div class="card yb-yard">
       <div class="yb-driver-head"><h3 style="margin:0">${S(c.location||'(no location)')}</h3><span class="hint">${tm(c.checked_at)}${c.driver?' · '+S(c.driver):''}${c.pin?` · <a href="${S(c.pin)}" target="_blank" rel="noopener">Map</a>`:''}</span></div>
       <table class="yb-table"><thead><tr><th>Trailer</th><th>Status</th><th>Product / note</th></tr></thead><tbody>
-      ${(c.trailers||[]).map(t=>`<tr><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${S(t.note||'')}</td></tr>`).join('')}
+      ${(c.trailers||[]).map(t=>`<tr class="${t.damaged?'dmg':''}"><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${S(t.note||'')}${photoCell(t)}</td></tr>`).join('')}
       </tbody></table>
       ${c.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(c.notes)}</p>`:''}
     </div>`).join('');
@@ -88,6 +110,7 @@
     el('ybResults').innerHTML=stats+
       `<h3 class="yb-section">Driver timeline</h3>`+(timeline||'<p class="hint">No status updates this day.</p>')+
       `<h3 class="yb-section">Yard checks</h3>`+(checks||'<p class="hint">No yard checks this day.</p>');
+    fillPhotos();
   }
   function shiftDay(n){ const d=new Date((el('ybDate').value||ymd(new Date()))+'T00:00:00'); d.setDate(d.getDate()+n); el('ybDate').value=ymd(d); loadDay(); }
 
@@ -102,7 +125,7 @@
       const trailers=(latest.trailers||[]).map(t=>{
         const first=Y.since(t.trailer,earlier,asOf);
         const days=first?Y.calDays(first,asOf):0;
-        return {trailer:t.trailer,status:t.status||'',note:t.note||'',days,since:first||asOf};
+        return {trailer:t.trailer,status:t.status||'',note:t.note||'',damaged:!!t.damaged,photos:t.photos||[],days,since:first||asOf};
       }).sort((a,b)=>b.days-a.days||a.trailer.localeCompare(b.trailer,undefined,{numeric:true}));
       return {name:latest.location||'(no location)',latest,checks:list.length,trailers};
     }).sort((a,b)=>new Date(b.latest.checked_at)-new Date(a.latest.checked_at));
@@ -120,7 +143,7 @@
     const q=(el('ybSearch').value||'').trim().toLowerCase(), minDays=+el('ybMinDays').value||0;
     const out=yards.map(y=>{
       const nameHit=!q||y.name.toLowerCase().includes(q);
-      const rows=y.trailers.filter(t=>t.days>=minDays&&(nameHit||t.trailer.toLowerCase().includes(q)||t.note.toLowerCase().includes(q)));
+      const rows=y.trailers.filter(t=>t.days>=minDays&&(minDays!==-1||t.damaged)&&(nameHit||t.trailer.toLowerCase().includes(q)||t.note.toLowerCase().includes(q)||(t.damaged&&'damaged'.includes(q))));
       if(!rows.length) return '';
       const L=y.trailers.filter(t=>t.status==='Loaded').length, E=y.trailers.filter(t=>t.status==='Empty').length;
       const pin=y.latest.pin?` · <a href="${S(y.latest.pin)}" target="_blank" rel="noopener">Map</a>`:'';
@@ -128,12 +151,13 @@
         <h3 style="margin:0 0 4px">${S(y.name)}</h3>
         <div class="hint">Last check ${fmt(y.latest.checked_at)}${y.latest.driver?' by '+S(y.latest.driver):''} · ${y.trailers.length} trailer${y.trailers.length===1?'':'s'} (${L} loaded, ${E} empty) · ${y.checks} check${y.checks===1?'':'s'} on file${pin}</div>
         <table class="yb-table"><thead><tr><th>Trailer</th><th>Status</th><th>On yard</th><th>Product / note</th></tr></thead><tbody>
-        ${rows.map(t=>`<tr class="${t.days>=7?'long':''}"><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${t.days>=1?`${t.days} day${t.days===1?'':'s'}<br><span class="hint">since ${new Date(t.since).toLocaleDateString([], {month:'short',day:'numeric'})}</span>`:'<span class="hint">new</span>'}</td><td>${S(t.note)}</td></tr>`).join('')}
+        ${rows.map(t=>`<tr class="${t.days>=7?'long':''}${t.damaged?' dmg':''}"><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${t.days>=1?`${t.days} day${t.days===1?'':'s'}<br><span class="hint">since ${new Date(t.since).toLocaleDateString([], {month:'short',day:'numeric'})}</span>`:'<span class="hint">new</span>'}</td><td>${S(t.note)}${photoCell(t)}</td></tr>`).join('')}
         </tbody></table>
         ${y.latest.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(y.latest.notes)}</p>`:''}
       </div>`;
     }).join('');
     el('ybResults').innerHTML=out||(yardsLoaded?'<p class="hint">No trailers match.</p>':'');
+    fillPhotos();
   }
 
   // ======================= Shared =======================
@@ -150,12 +174,12 @@
       const lines=[['Type','Time','Driver','Status / Trailer','Location','Trailer / Status','Load / Note','ETA / Note','Map'].map(esc).join(',')];
       day.updates.filter(u=>!who||u.driver===who).slice().sort((a,b)=>new Date(a.sent_at)-new Date(b.sent_at))
         .forEach(u=>lines.push(['Status update',fmt(u.sent_at),u.driver,u.status,u.location,u.trailer,u.load_ref,[u.eta&&'ETA '+u.eta,u.note].filter(Boolean).join(' · '),u.pin].map(esc).join(',')));
-      day.checks.filter(c=>!who||c.driver===who).forEach(c=>(c.trailers||[]).forEach(t=>lines.push(['Yard check',fmt(c.checked_at),c.driver,t.trailer,c.location,t.status,t.note,c.notes,c.pin].map(esc).join(','))));
+      day.checks.filter(c=>!who||c.driver===who).forEach(c=>(c.trailers||[]).forEach(t=>lines.push(['Yard check',fmt(c.checked_at),c.driver,t.trailer,c.location,t.status+(t.damaged?' · DAMAGED':''),[t.note,(t.photos||[]).length?(t.photos.length+' photo(s)'):''].filter(Boolean).join(' · '),c.notes,c.pin].map(esc).join(','))));
       download(`dispatch-day-${day.date}.csv`,lines);
     }else{
       if(!yards.length){ LWHUI.toast('Load the yard checks first'); return; }
-      const lines=[['Yard','Trailer','Status','Days on yard','On yard since','Product / note','Last check','Checked by'].map(esc).join(',')];
-      yards.forEach(y=>y.trailers.forEach(t=>lines.push([y.name,t.trailer,t.status,t.days,new Date(t.since).toLocaleDateString(),t.note,fmt(y.latest.checked_at),y.latest.driver].map(esc).join(','))));
+      const lines=[['Yard','Trailer','Status','Damaged','Photos','Days on yard','On yard since','Product / note','Last check','Checked by'].map(esc).join(',')];
+      yards.forEach(y=>y.trailers.forEach(t=>lines.push([y.name,t.trailer,t.status,t.damaged?'Yes':'',(t.photos||[]).length||'',t.days,new Date(t.since).toLocaleDateString(),t.note,fmt(y.latest.checked_at),y.latest.driver].map(esc).join(','))));
       download(`yards-now-${ymd(new Date())}.csv`,lines);
     }
   }

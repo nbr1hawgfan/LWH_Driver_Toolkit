@@ -1,6 +1,7 @@
 // yard-check-submit — saves (or updates) one sent Yard Check from the Driver Toolkit.
 // Deploy:  supabase functions deploy yard-check-submit --no-verify-jwt
-// POST JSON: { id, location, pin, driver, checked_at, how, notes, trailers:[{trailer,status,note}] }
+// POST JSON: { id, location, pin, driver, checked_at, how, notes, trailers:[{trailer,status,note,damaged,photos:[path]}] }
+// photos are paths already uploaded via yard-photo-upload, under "<id>/".
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
@@ -13,6 +14,7 @@ const json = (body: unknown, status = 200) =>
 
 const str = (v: unknown, max = 500) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const locKey = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+const PHOTO_PATH = /^yc-[A-Za-z0-9-]{1,60}\/ph-[A-Za-z0-9-]{1,60}\.jpg$/;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -33,6 +35,10 @@ Deno.serve(async (req) => {
       trailer: str(t?.trailer, 30).toUpperCase(),
       status: ["Loaded", "Empty"].includes(str(t?.status, 10)) ? str(t?.status, 10) : "",
       note: str(t?.note, 200),
+      damaged: t?.damaged === true,
+      photos: (Array.isArray(t?.photos) ? t.photos : [])
+        .filter((p: unknown): p is string => typeof p === "string" && PHOTO_PATH.test(p) && p.startsWith(id + "/"))
+        .slice(0, 10),
     }))
     .filter((t) => t.trailer);
   if (!trailers.length) return json({ error: "No trailers" }, 400);
