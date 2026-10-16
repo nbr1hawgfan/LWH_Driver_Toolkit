@@ -332,10 +332,10 @@ if(window.saveUsageSettings) saveUsageSettings.onclick=()=>{
 //   as ?title=&text=&url= — routed into Notepad since that's the simplest
 //   generic drop point for "whatever just got shared in."
 // ---- Retired modules ----
-// Hidden at the Transportation Director's request so drivers only use
-// Samsara for logs, HOS and inspections. The code and screens are left in
+// Hidden at the Transportation Director's request to keep the app simple
+// for drivers (Samsara covers logs, HOS and inspections). The code and screens are left in
 // place: delete a name from this list to bring that module back.
-const RETIRED_VIEWS=['paperlog','dvir','trailerinspect','hos','statusupdate'];
+const RETIRED_VIEWS=['paperlog','dvir','trailerinspect','hos','statusupdate','detention','contact','generate','scancode'];
 function retireModules(){
   RETIRED_VIEWS.forEach(v=>{
     document.querySelectorAll(`.nav-btn[data-view="${v}"],.module-card[data-view="${v}"]`).forEach(el=>el.remove());

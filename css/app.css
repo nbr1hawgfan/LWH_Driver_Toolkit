@@ -105,7 +105,7 @@ button.ghost:hover{background:var(--brand-tint)}
 
 .module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .module-card{display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-height:130px;background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-sm);padding:18px;border-radius:var(--radius);text-align:left;transition:box-shadow .15s ease,border-color .15s ease;text-decoration:none}
-.module-card:hover{box-shadow:var(--shadow);border-color:var(--brand)}
+.module-card:hover{box-shadow:var(--shadow);border-color:var(--brand);background:#fff}
 .module-card .icon-badge{width:42px;height:42px;border-radius:11px;background:var(--brand-tint);color:var(--brand);display:flex;align-items:center;justify-content:center}
 .module-card b{font-size:17px;color:var(--ink);font-weight:700}
 .module-card span{color:var(--muted);font-weight:400;font-size:13.5px;line-height:1.4}
