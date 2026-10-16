@@ -208,7 +208,6 @@ let renderQuickLinksList=()=>{};
 const QUICK_LINKS_DEFAULT=[
   {name:'PTO Requests',url:'https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec'},
   {name:'Unpaid Time Off',url:'https://nbr1hawgfan.github.io/LWH_Driver-PErsonal_Time/'},
-  {name:'Trailer Inspection',url:'https://script.google.com/macros/s/AKfycbyTZ4y30FAUEqoSBZR2luzCrwWWGtitmrDEAmILm1NTywV78yveXPxYSI5tBLI6QyFO/exec'},
   {name:'Safety Training',url:'https://logisticswarehouse.infinit-i.net/#/login'}
 ];
 function renderQuickLinksHome(){
@@ -244,6 +243,15 @@ function initQuickLinks(){
       LWHStorage.set('quickLinks',links);
     }
     LWHStorage.set('quickLinksMigratedUTO',true);
+  }
+  // One-time migration: Trailer Inspection is now built into the toolkit,
+  // so drop the old external link from saved Quick Links (flagged; runs once).
+  if(!LWHStorage.get('quickLinksMigratedTrailerInApp',false)){
+    const TRAILER_GAS='https://script.google.com/macros/s/AKfycbyTZ4y30FAUEqoSBZR2luzCrwWWGtitmrDEAmILm1NTywV78yveXPxYSI5tBLI6QyFO/exec';
+    const links=LWHStorage.get('quickLinks',[]);
+    const kept=links.filter(l=>l.url!==TRAILER_GAS);
+    if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
+    LWHStorage.set('quickLinksMigratedTrailerInApp',true);
   }
   renderQuickLinksList=function render(){
     const links=LWHStorage.get('quickLinks',[]);

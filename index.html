@@ -54,6 +54,7 @@
   <script defer src="./js/status.js"></script>
   <script defer src="./js/recruit.js"></script>
   <script defer src="./js/dvir.js"></script>
+  <script defer src="./js/trailerdefect.js"></script>
   <script defer src="./js/incident.js"></script>
   <script defer src="./js/scanner.js"></script>
   <script defer src="./js/doc-auto-detect.js"></script>
@@ -62,7 +63,7 @@
 </head>
 <body>
   <header class="app-header no-print">
-    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow" id="companyEyebrow">Logistics Warehouse · Transportation</div><h1 id="companyTitle" class="hdr-title"><svg class="hdr-truck" viewBox="0 0 64 32" aria-hidden="true"><path d="M2 6h34v18H2z" fill="currentColor" opacity=".95"/><path d="M38 11h12l8 8v5H38z" fill="currentColor"/><path d="M41 13.5h7.5l5 5H41z" fill="#1d1e22"/><circle cx="12" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="26" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="50" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/></svg><span id="companyTitleText">Driver Toolkit</span><span class="hdr-badge">Driver App</span></h1><div class="version">v1.21.1</div></div></div>
+    <div class="brand-row"><div id="brandLogoBox" class="brand-logo"></div><div><div class="eyebrow" id="companyEyebrow">Logistics Warehouse · Transportation</div><h1 id="companyTitle" class="hdr-title"><svg class="hdr-truck" viewBox="0 0 64 32" aria-hidden="true"><path d="M2 6h34v18H2z" fill="currentColor" opacity=".95"/><path d="M38 11h12l8 8v5H38z" fill="currentColor"/><path d="M41 13.5h7.5l5 5H41z" fill="#1d1e22"/><circle cx="12" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="26" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/><circle cx="50" cy="26" r="4" fill="#f7c400" stroke="#1d1e22" stroke-width="2"/></svg><span id="companyTitleText">Driver Toolkit</span><span class="hdr-badge">Driver App</span></h1><div class="version">v1.22.0</div></div></div>
     <div class="header-actions"><button id="navToggle" class="ghost" aria-label="Menu"><svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><button id="installBtn" class="ghost" hidden>Install App</button><button onclick="window.print()">Print</button></div>
   </header>
 
@@ -85,6 +86,7 @@
       <button class="nav-btn" data-view="paperlog"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg>Paper Log Grid</button>
       <button class="nav-btn" data-view="detention"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Detention Tracker</button>
       <button class="nav-btn" data-view="yardcheck"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="7" width="13" height="9" rx="1"/><path d="M15 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/><path d="M2 21h20"/></svg>Yard Check</button>
+      <button class="nav-btn" data-view="trailerdefect"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="10" rx="1"/><circle cx="6" cy="18" r="2"/><circle cx="13" cy="18" r="2"/><path d="m16 11 2 2 4-4"/></svg>Trailer Inspection</button>
       <button class="nav-btn" data-view="dvir"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg>DVIR Inspection</button>
       <button class="nav-btn" data-view="incident"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg>Incident Report</button>
       <button class="nav-btn" data-view="utilities"><svg class="icon" viewBox="0 0 24 24"><path d="M3 9h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"/><path d="M3 13h18"/></svg>Calculators &amp; Tools</button>
@@ -101,7 +103,6 @@
       <div class="nav-section-label">Links</div>
       <a class="nav-btn" href="https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg>PTO Request</a>
       <a class="nav-btn" href="https://nbr1hawgfan.github.io/LWH_Driver-PErsonal_Time/" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Unpaid Time Off</a>
-      <a class="nav-btn" href="https://script.google.com/macros/s/AKfycbyTZ4y30FAUEqoSBZR2luzCrwWWGtitmrDEAmILm1NTywV78yveXPxYSI5tBLI6QyFO/exec" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/></svg>Trailer Inspection</a>
       <a class="nav-btn" href="https://logisticswarehouse.infinit-i.net/#/login" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z"/></svg>Safety Training</a>
       <div class="nav-section-label">Other</div>
       <button class="nav-btn" data-view="settings"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.4-2-3.4-2.3.8a7.6 7.6 0 0 0-2.6-1.5L14 2h-4l-.5 2.5a7.6 7.6 0 0 0-2.6 1.5l-2.3-.8-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3l-2 1.4 2 3.4 2.3-.8a7.6 7.6 0 0 0 2.6 1.5L10 22h4l.5-2.5a7.6 7.6 0 0 0 2.6-1.5l2.3.8 2-3.4z"/></svg>Settings</button>
@@ -130,6 +131,7 @@
         <button class="module-card" data-view="radar"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12 12 4"/><path d="M12 12 17 15"/></svg></div><b>Weather Radar</b><span>Animated precipitation radar for your current route area.</span></button>
         <button class="module-card" data-view="paperlog"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="1.5"/><path d="M3 9h18"/><path d="M7 13h4M7 17h7"/></svg></div><b>Paper Log Grid</b><span>Backup Record of Duty Status if your ELD malfunctions.</span></button>
         <button class="module-card" data-view="detention"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><b>Detention Tracker</b><span>Log arrival/departure and estimate detention time.</span></button>
+        <button class="module-card" data-view="trailerdefect"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="6" width="15" height="10" rx="1"/><circle cx="6" cy="18" r="2"/><circle cx="13" cy="18" r="2"/><path d="m16 11 2 2 4-4"/></svg></div><b>Trailer Inspection</b><span>Report trailer defects with a photo — goes straight to the shop and safety team.</span></button>
         <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Backup only — use Samsara e-DVIR first. Paper form for when it's down.</span></button>
         <button class="module-card" data-view="incident"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg></div><b>Incident Report</b><span>Accident or damage report with photos — saved on your phone, sent by text or email.</span></button>
         <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Auto-detects and straightens paperwork as you scan, extract text, and share or download as a PDF — multi-page.</span></button>
@@ -175,6 +177,121 @@
         <p id="tsSyncStatus" class="hint" style="text-align:center;margin-top:8px">Enter your name to sync to the office.</p>
 
         <div class="actions" style="margin-top:16px"><button type="button" id="tsExportPdf">Export PDF</button><button type="button" id="tsPrint" class="ghost">Print</button><button type="button" id="tsClear" class="ghost">Clear This Week</button></div>
+      </div>
+    </section>
+
+    <section id="trailerdefect" class="view no-print">
+      <div class="td-wrap">
+        <div class="td-head card">
+          <div class="td-head-row">
+            <h2 style="margin:0">Trailer Inspection</h2>
+            <span class="td-step-label" id="tdStepLabel">Step 1 of 7</span>
+          </div>
+          <div class="td-dots"><i class="td-dot active" id="tdDot1"></i><i class="td-dot" id="tdDot2"></i><i class="td-dot" id="tdDot3"></i><i class="td-dot" id="tdDot4"></i><i class="td-dot" id="tdDot5"></i><i class="td-dot" id="tdDot6"></i><i class="td-dot" id="tdDot7"></i></div>
+        </div>
+
+        <div id="tdLoadErr" class="td-alert" hidden>
+          <b>Couldn't load the inspection form.</b>
+          <span id="tdLoadErrMsg"></span>
+          <div class="td-alert-actions"><button type="button" id="tdRetryLoad">Try again</button><a class="td-linkbtn" id="tdOldLink" target="_blank" rel="noopener">Open the inspection page instead</a></div>
+        </div>
+
+        <div id="tdForm">
+          <!-- 1 DATE -->
+          <div class="td-step" id="tdS1">
+            <div class="td-q">What is today's date?</div>
+            <div class="td-hint">Already filled in with today — just check it.</div>
+            <input type="date" id="tdDate" class="td-big">
+            <div class="td-nav"><button type="button" class="td-next" id="tdN1">Continue →</button></div>
+          </div>
+
+          <!-- 2 DRIVER -->
+          <div class="td-step" id="tdS2" hidden>
+            <div class="td-q">Who are you?</div>
+            <div class="td-hint">Tap your name below.</div>
+            <div class="td-banner" id="tdDriverBanner" hidden><span id="tdDriverBannerText"></span><button type="button" class="td-change" id="tdDriverChange">Change</button></div>
+            <div class="td-chips" id="tdDriverGrid"><div class="hint" id="tdLoading">Loading names…</div></div>
+            <div class="td-newentry" id="tdDriverNew" hidden>
+              <input type="text" id="tdDriverNewInput" class="td-big" placeholder="Type your full name…" autocomplete="off" autocapitalize="words" spellcheck="false">
+              <div class="td-row"><button type="button" id="tdDriverNewOk">Use this name</button><button type="button" class="ghost" id="tdDriverNewCancel">Cancel</button></div>
+            </div>
+            <div class="td-nav"><button type="button" class="td-next" id="tdN2">Continue →</button><button type="button" class="td-back" data-back="1">← Back</button></div>
+          </div>
+
+          <!-- 3 TRAILER -->
+          <div class="td-step" id="tdS3" hidden>
+            <div class="td-q">What is the trailer number?</div>
+            <div class="td-hint">Look on the side or door of the trailer.</div>
+            <input type="text" id="tdTrailer" class="td-big" placeholder="e.g. T-1042" autocomplete="off" autocapitalize="characters">
+            <div class="td-nav"><button type="button" class="td-next" id="tdN3">Continue →</button><button type="button" class="td-back" data-back="2">← Back</button></div>
+          </div>
+
+          <!-- 4 LOCATION -->
+          <div class="td-step" id="tdS4" hidden>
+            <div class="td-q">Where is this trailer?</div>
+            <div class="td-hint">Tap the yard or location below.</div>
+            <div class="td-banner" id="tdLocBanner" hidden><span id="tdLocBannerText"></span><button type="button" class="td-change" id="tdLocChange">Change</button></div>
+            <div class="td-chips" id="tdLocGrid"></div>
+            <div class="td-newentry" id="tdLocNew" hidden>
+              <input type="text" id="tdLocNewInput" class="td-big" placeholder="Type the location…" autocomplete="off" autocapitalize="words" spellcheck="false">
+              <div class="td-row"><button type="button" id="tdLocNewOk">Use this location</button><button type="button" class="ghost" id="tdLocNewCancel">Cancel</button></div>
+            </div>
+            <div class="td-nav"><button type="button" class="td-next" id="tdN4">Continue →</button><button type="button" class="td-back" data-back="3">← Back</button></div>
+          </div>
+
+          <!-- 5 DEFECTS -->
+          <div class="td-step" id="tdS5" hidden>
+            <div class="td-q">Any defects to report?</div>
+            <div class="td-hint">Tap everything that applies. If the trailer is clear, tap the green button at the bottom.</div>
+            <div class="td-search"><input type="search" id="tdSearch" placeholder="🔍  Search defects…"><button type="button" class="td-search-clear" id="tdSearchClear" hidden aria-label="Clear search">✕</button></div>
+            <div id="tdDefectList"></div>
+            <p class="hint" id="tdNoMatch" hidden style="text-align:center">No defects match your search.</p>
+            <div class="td-selected" id="tdSelected" hidden><b>⚠️ Selected:</b><div id="tdSelectedTags"></div></div>
+            <div class="td-custom-box">
+              <div class="td-custom-head">Not on the list? Write it in</div>
+              <div id="tdCustomRows"></div>
+              <button type="button" class="td-add" id="tdAddCustom">+ Add a defect that's not listed</button>
+            </div>
+            <button type="button" class="td-clear" id="tdClearBtn"><span class="td-check" id="tdClearCheck"></span><span>Trailer is clear — no defects found</span></button>
+            <div class="td-nav"><button type="button" class="td-next" id="tdN5">Continue →</button><button type="button" class="td-back" data-back="4">← Back</button></div>
+          </div>
+
+          <!-- 6 NOTES + PHOTO -->
+          <div class="td-step" id="tdS6" hidden>
+            <div class="td-q">Any notes or a photo?</div>
+            <div class="td-hint">Both are optional. Skip if there's nothing to add.</div>
+            <textarea id="tdNotes" class="td-notes" rows="4" placeholder="e.g. Front driver-side tire low. Roof damage near rear door seal…"></textarea>
+            <input type="file" id="tdPhotoInput" accept="image/*" capture="environment" hidden>
+            <button type="button" class="td-photo" id="tdPhotoPick"><span class="td-photo-icon">📸</span><b>Tap to take or add a photo</b><span class="hint">Optional</span></button>
+            <div class="td-photo-preview" id="tdPhotoPreview" hidden><img id="tdPhotoImg" alt="Inspection photo"><button type="button" class="td-change" id="tdPhotoRemove">✕ Remove photo</button></div>
+            <div class="td-nav"><button type="button" class="td-next" id="tdN6">Continue to review →</button><button type="button" class="td-skip" id="tdSkip6">Skip — nothing to add</button><button type="button" class="td-back" data-back="5">← Back</button></div>
+          </div>
+
+          <!-- 7 REVIEW -->
+          <div class="td-step" id="tdS7" hidden>
+            <div class="td-q">Ready to submit?</div>
+            <div class="td-hint">Check everything looks right before sending.</div>
+            <div class="td-review card" id="tdReview"></div>
+            <div id="tdSubmitErr" class="td-alert" hidden>
+              <b>The inspection did not send.</b>
+              <span id="tdSubmitErrMsg"></span>
+              <div class="td-alert-actions"><button type="button" id="tdRetrySubmit">Try again</button><a class="td-linkbtn" id="tdOldLink2" target="_blank" rel="noopener">Use the inspection page instead</a></div>
+            </div>
+            <div class="td-nav"><button type="button" class="td-submit" id="tdSubmit">📤 Submit inspection</button><button type="button" class="td-back" data-back="6">← Go back &amp; edit</button></div>
+          </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="td-done card" id="tdDone" hidden>
+          <div class="td-done-icon">✅</div>
+          <h2>Inspection submitted!</h2>
+          <p id="tdDoneSummary"></p>
+          <p class="hint">The report was emailed to the team.</p>
+          <p class="hint" id="tdDonePhoto" hidden style="color:var(--bad)">The photo didn't upload — the inspection itself was saved.</p>
+          <button type="button" id="tdNew">+ New inspection</button>
+        </div>
+
+        <div class="td-busy" id="tdBusy" hidden><div class="td-spinner"></div><div id="tdBusyMsg">Sending…</div></div>
       </div>
     </section>
 
@@ -1043,7 +1160,7 @@
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Managers</h2><p class="hint">Feeds the Send To list in Warehouse Tools → Quick Message. A default list is already baked in and auto-loads on every install — no sharing a link required. Loading from a sheet here is completely separate from the Master Lookup sheet — this one is just two plain columns: Name, Email.</p><label>Google Sheet CSV URL<input id="mgrSourceUrl" placeholder="Published CSV link — columns: Name, Email" /></label><div class="actions"><button id="mgrLoadBtn" type="button">Load / Refresh from Sheet</button><button id="mgrResetBtn" type="button" class="ghost">Reset to Default</button></div><div id="mgrSourceStatus" class="hint">Not loaded yet.</div><div id="mgrList" style="margin-top:12px"></div><div class="actions"><button id="mgrAddBtn" type="button" class="ghost">Add Manager Manually</button></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Shortcuts shown on the Home screen — e.g. your PTO Request or Trailer Inspection apps. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.21.1</p><p>Built for Logistics Warehouse drivers — trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Detention Tracker, Road &amp; Nearby, Yard Check, Incident Report, Weekly Timesheet, All Timesheets (Dispatch), Dispatch Board, Fuel Price Board (Dispatch), Recruiter, Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.22.0</p><p>Built for Logistics Warehouse drivers — trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner, Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Detention Tracker, Road &amp; Nearby, Yard Check, Trailer Inspection, Incident Report, Weekly Timesheet, All Timesheets (Dispatch), Dispatch Board, Fuel Price Board (Dispatch), Recruiter, Contact QR Cards, Generate Code, Scan Code, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">
