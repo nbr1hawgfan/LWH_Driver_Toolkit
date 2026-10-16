@@ -612,3 +612,16 @@ summary{font-weight:700;cursor:pointer;color:var(--ink)}
 .yb-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .yb-thumb{display:block;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--bg)}
 .yb-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* v1.18.0 — Dispatch Board: Find a trailer */
+.yb-find{display:flex;gap:8px;margin:0 0 14px}
+.yb-find input{flex:1;min-width:0;font-size:17px;font-weight:700;text-transform:uppercase}
+.yb-find input::placeholder{text-transform:none;font-weight:400}
+.yb-find button{min-width:76px}
+.yb-find-card,.yb-find-sum{margin-top:12px}
+.yb-find-card{border-left:4px solid var(--brand)}
+.yb-find-where{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.yb-find-loc{font-size:20px;font-weight:800}
+.yb-find-h{margin:16px 0 0;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.yb-tnum{background:none;border:0;padding:0;min-height:0;font:inherit;font-weight:800;color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+.yb-tnum:hover{color:var(--brand)}

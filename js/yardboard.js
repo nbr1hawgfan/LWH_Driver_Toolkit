@@ -33,7 +33,7 @@
     return chip+thumbs;
   }
   async function fillPhotos(){
-    const nodes=[...document.querySelectorAll('#ybResults [data-path]')];
+    const nodes=[...document.querySelectorAll('#ybResults [data-path],#ybFind [data-path]')];
     if(!nodes.length) return;
     const fresh=p=>urlCache[p]&&Date.now()-urlCache[p].at<45*60000;
     const need=[...new Set(nodes.map(n=>n.dataset.path))].filter(p=>!fresh(p));
@@ -102,7 +102,7 @@
     const checks=cks.map(c=>`<div class="card yb-yard">
       <div class="yb-driver-head"><h3 style="margin:0">${S(c.location||'(no location)')}</h3><span class="hint">${tm(c.checked_at)}${c.driver?' · '+S(c.driver):''}${c.pin?` · <a href="${S(c.pin)}" target="_blank" rel="noopener">Map</a>`:''}</span></div>
       <table class="yb-table"><thead><tr><th>Trailer</th><th>Status</th><th>Product / note</th></tr></thead><tbody>
-      ${(c.trailers||[]).map(t=>`<tr class="${t.damaged?'dmg':''}"><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${S(t.note||'')}${photoCell(t)}</td></tr>`).join('')}
+      ${(c.trailers||[]).map(t=>`<tr class="${t.damaged?'dmg':''}"><td><button type="button" class="yb-tnum" data-find="${S(t.trailer)}">${S(t.trailer)}</button></td><td>${S(t.status||'—')}</td><td>${S(t.note||'')}${photoCell(t)}</td></tr>`).join('')}
       </tbody></table>
       ${c.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(c.notes)}</p>`:''}
     </div>`).join('');
@@ -151,7 +151,7 @@
         <h3 style="margin:0 0 4px">${S(y.name)}</h3>
         <div class="hint">Last check ${fmt(y.latest.checked_at)}${y.latest.driver?' by '+S(y.latest.driver):''} · ${y.trailers.length} trailer${y.trailers.length===1?'':'s'} (${L} loaded, ${E} empty) · ${y.checks} check${y.checks===1?'':'s'} on file${pin}</div>
         <table class="yb-table"><thead><tr><th>Trailer</th><th>Status</th><th>On yard</th><th>Product / note</th></tr></thead><tbody>
-        ${rows.map(t=>`<tr class="${t.days>=7?'long':''}${t.damaged?' dmg':''}"><td><b>${S(t.trailer)}</b></td><td>${S(t.status||'—')}</td><td>${t.days>=1?`${t.days} day${t.days===1?'':'s'}<br><span class="hint">since ${new Date(t.since).toLocaleDateString([], {month:'short',day:'numeric'})}</span>`:'<span class="hint">new</span>'}</td><td>${S(t.note)}${photoCell(t)}</td></tr>`).join('')}
+        ${rows.map(t=>`<tr class="${t.days>=7?'long':''}${t.damaged?' dmg':''}"><td><button type="button" class="yb-tnum" data-find="${S(t.trailer)}">${S(t.trailer)}</button></td><td>${S(t.status||'—')}</td><td>${t.days>=1?`${t.days} day${t.days===1?'':'s'}<br><span class="hint">since ${new Date(t.since).toLocaleDateString([], {month:'short',day:'numeric'})}</span>`:'<span class="hint">new</span>'}</td><td>${S(t.note)}${photoCell(t)}</td></tr>`).join('')}
         </tbody></table>
         ${y.latest.notes?`<p class="hint" style="margin:8px 0 0"><b>Yard notes:</b> ${S(y.latest.notes)}</p>`:''}
       </div>`;
@@ -183,6 +183,73 @@
       download(`yards-now-${ymd(new Date())}.csv`,lines);
     }
   }
+
+  // ======================= Find a trailer =======================
+  // Searches every synced yard check and status update (not just one day).
+  // Partial numbers work: "4180" finds 514180. Exact matches are listed first.
+  const tk=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9-]/g,'');
+  let findSeq=0;
+  async function findTrailer(raw){
+    const q=tk(raw);
+    if(q.length<3){ LWHUI.toast('Type at least 3 characters of the trailer number'); return; }
+    const seq=++findSeq, box=el('ybFind');
+    box.hidden=false; el('ybResults').hidden=true;
+    box.innerHTML=`<div class="card"><p class="hint" style="margin:0">Searching for <b>${S(q)}</b>…</p></div>`;
+    const [c,u]=await Promise.allSettled([post(window.LWHYard.HISTORY_URL,{trailer:q,limit:300}),post(STATUS_URL,{trailer:q,limit:300})]);
+    if(seq!==findSeq) return;
+    if(c.status==='rejected'&&u.status==='rejected'){ box.innerHTML=`<div class="card"><p class="hint" style="margin:0">Search failed: ${S(c.reason.message)} — check your connection.</p></div>`; return; }
+    const checks=c.status==='fulfilled'?(c.value.checks||[]):[], ups=u.status==='fulfilled'?(u.value.updates||[]):[];
+    // Group every sighting by the actual trailer number.
+    const groups={};
+    const g=n=>groups[n]=groups[n]||{num:n,seen:[],updates:[]};
+    checks.forEach(ck=>(ck.trailers||[]).forEach(t=>{ const n=tk(t.trailer); if(n.includes(q)) g(n).seen.push({ck,t}); }));
+    ups.forEach(x=>{ const n=tk(x.trailer); if(n.includes(q)) g(n).updates.push(x); });
+    const last=gr=>Math.max(...gr.seen.map(x=>+new Date(x.ck.checked_at)),...gr.updates.map(x=>+new Date(x.sent_at)),0);
+    const list=Object.values(groups).sort((a,b)=>(b.num===q)-(a.num===q)||last(b)-last(a));
+    if(!list.length){
+      box.innerHTML=`<div class="card yb-find-card"><div class="yb-driver-head"><h3 style="margin:0">No sightings of ${S(q)}</h3><button type="button" class="ghost" data-findclear>✕ Clear</button></div>
+        <p class="hint" style="margin:8px 0 0">No yard check or status update mentions a trailer number containing <b>${S(q)}</b>. It may not have been checked since drivers started saving to the board, or the number may have been typed differently.</p></div>`;
+      return;
+    }
+    const shown=list.slice(0,5);
+    // Days on yard needs that yard's other checks (to see when the trailer was missing).
+    const yardHist={};
+    await Promise.all([...new Set(shown.map(gr=>gr.seen[0]&&gr.seen.sort((a,b)=>new Date(b.ck.checked_at)-new Date(a.ck.checked_at))[0].ck.location).filter(Boolean))]
+      .map(loc=>post(window.LWHYard.HISTORY_URL,{location:loc,limit:80}).then(b=>{ yardHist[loc]=b.checks||[]; }).catch(()=>{})));
+    if(seq!==findSeq) return;
+    const Y=window.LWHYard;
+    box.innerHTML=(list.length>1?`<div class="card yb-find-sum"><div class="yb-driver-head"><span><b>${list.length}</b> trailer number${list.length===1?'':'s'} contain <b>${S(q)}</b>${list.length>5?' — showing the 5 most recent; type more digits to narrow it':''}</span><button type="button" class="ghost" data-findclear>✕ Clear</button></div></div>`:'')+
+      shown.map((gr,gi)=>{
+        gr.seen.sort((a,b)=>new Date(b.ck.checked_at)-new Date(a.ck.checked_at));
+        gr.updates.sort((a,b)=>new Date(b.sent_at)-new Date(a.sent_at));
+        const top=gr.seen[0];
+        let where='<p class="hint" style="margin:6px 0 0">Not on any yard check yet — only in status updates.</p>';
+        if(top){
+          const asOf=+new Date(top.ck.checked_at);
+          const first=Y.since(gr.num,Y.normChecks(yardHist[top.ck.location]||[top.ck]),asOf)||asOf;
+          const d=Y.calDays(first,asOf), ago=Y.calDays(asOf,Date.now());
+          where=`<div class="yb-find-where">
+            <div class="yb-find-loc">📍 ${S(top.ck.location||'(no location)')}</div>
+            <div>${top.t.status?`<b>${S(top.t.status)}</b> · `:''}last seen ${fmt(top.ck.checked_at)}${top.ck.driver?' by '+S(top.ck.driver):''}${ago>=1?` <span class="hint">(${ago} day${ago===1?'':'s'} ago)</span>`:''}</div>
+            <div class="hint">${d>=1?`On that yard since ${new Date(first).toLocaleDateString([], {month:'short',day:'numeric'})} · ${d} day${d===1?'':'s'} as of that check`:'First check that saw it at this yard'}${top.ck.pin?` · <a href="${S(top.ck.pin)}" target="_blank" rel="noopener">Map</a>`:''}</div>
+            ${top.t.note?`<div>Note: ${S(top.t.note)}</div>`:''}
+            ${photoCell(top.t)}
+          </div>`;
+        }
+        const hist=gr.seen.slice(0,25).map(x=>`<li class="yb-tl-item"><span class="yb-tl-time">${new Date(x.ck.checked_at).toLocaleDateString([], {month:'short',day:'numeric'})}</span>
+          <div><b>${S(x.ck.location||'(no location)')}</b> · ${S(x.t.status||'not marked')}${x.t.damaged?' <span class="yb-chip s-damaged">Damaged</span>':''}<div class="hint">${tm(x.ck.checked_at)}${x.ck.driver?' · '+S(x.ck.driver):''}${x.t.note?' · '+S(x.t.note):''}${(x.t.photos||[]).length?` · ${x.t.photos.length} photo${x.t.photos.length===1?'':'s'}`:''}</div></div></li>`).join('');
+        const upd=gr.updates.slice(0,25).map(x=>`<li class="yb-tl-item"><span class="yb-tl-time">${new Date(x.sent_at).toLocaleDateString([], {month:'short',day:'numeric'})}</span>
+          <div><span class="yb-chip s-${x.status.replace(/\s+/g,'').toLowerCase()}">${S(x.status)}</span> ${x.location?'<b>'+S(x.location)+'</b>':''}<div class="hint">${tm(x.sent_at)}${x.driver?' · '+S(x.driver):''}${x.load_ref?' · Load '+S(x.load_ref):''}${x.note?' · '+S(x.note):''}</div></div></li>`).join('');
+        return `<div class="card yb-find-card">
+          <div class="yb-driver-head"><h3 style="margin:0">Trailer ${S(gr.num)}${gr.num===q?'':' <span class="hint">(partial match)</span>'}</h3>${list.length===1&&gi===0?'<button type="button" class="ghost" data-findclear>✕ Clear</button>':''}</div>
+          ${where}
+          ${hist?`<h4 class="yb-find-h">Yard checks (${gr.seen.length})</h4><ol class="yb-tl">${hist}</ol>`:''}
+          ${upd?`<h4 class="yb-find-h">Status updates (${gr.updates.length})</h4><ol class="yb-tl">${upd}</ol>`:''}
+        </div>`;
+      }).join('');
+    fillPhotos();
+  }
+  function clearFind(){ findSeq++; el('ybFind').hidden=true; el('ybFind').innerHTML=''; el('ybResults').hidden=false; el('ybFindInput').value=''; }
   function setTab(t){
     tab=t;
     document.querySelectorAll('#ybTabs [data-ybtab]').forEach(b=>b.classList.toggle('active',b.dataset.ybtab===t));
@@ -206,6 +273,12 @@
     el('ybCsv').onclick=csv;
     el('ybSearch').addEventListener('input',renderYards);
     el('ybMinDays').addEventListener('change',renderYards);
+    el('ybFindForm').addEventListener('submit',e=>{ e.preventDefault(); findTrailer(el('ybFindInput').value); el('ybFindInput').blur(); });
+    el('yardBoard').addEventListener('click',e=>{
+      if(e.target.closest('[data-findclear]')){ clearFind(); return; }
+      const f=e.target.closest('[data-find]');
+      if(f){ el('ybFindInput').value=f.dataset.find; findTrailer(f.dataset.find); el('yardBoard').scrollIntoView({behavior:'smooth',block:'start'}); }
+    });
     // Load the first time the board is opened.
     new MutationObserver(()=>{ if(el('yardBoard').classList.contains('active')&&!day.loaded&&!yardsLoaded) setTab(tab); })
       .observe(el('yardBoard'),{attributes:true,attributeFilter:['class']});

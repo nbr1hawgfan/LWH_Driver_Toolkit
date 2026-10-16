@@ -1,5 +1,5 @@
 // status-history — Status Updates for the dispatch Day view.
-// POST JSON: { from?: ISO, to?: ISO, driver?: string, limit?: number }  (newest first)
+// POST JSON: { from?: ISO, to?: ISO, driver?: string, trailer?: string, limit?: number }  (newest first)
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
@@ -26,6 +26,8 @@ Deno.serve(async (req) => {
   if (from) q = q.gte("sent_at", from);
   if (to) q = q.lt("sent_at", to);
   if (typeof b.driver === "string" && b.driver.trim()) q = q.ilike("driver", b.driver.trim());
+  const trailer = typeof b.trailer === "string" ? b.trailer.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 20) : "";
+  if (trailer) q = q.ilike("trailer", `%${trailer}%`);
   const { data, error } = await q;
   if (error) return json({ error: error.message }, 500);
   return json({ ok: true, updates: data ?? [] });

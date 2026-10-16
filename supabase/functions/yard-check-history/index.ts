@@ -1,9 +1,10 @@
 // yard-check-history — recent Yard Checks, for days-on-yard and the dispatch view.
 // Deploy:  supabase functions deploy yard-check-history --no-verify-jwt
-// POST JSON: { location?: string, from?: ISO, to?: ISO, limit?: number }
+// POST JSON: { location?: string, from?: ISO, to?: ISO, trailer?: string, limit?: number }
 //   with location → that yard's checks, newest first (default 40)
 //   without       → newest checks across every yard (default 300)
 //   from/to       → only checks with checked_at in [from, to)  (dispatch Day view)
+//   trailer       → only checks that list a trailer number containing this text (Find a trailer)
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
@@ -34,6 +35,8 @@ Deno.serve(async (req) => {
   const from = iso(b.from), to = iso(b.to);
   if (from) q = q.gte("checked_at", from);
   if (to) q = q.lt("checked_at", to);
+  const trailer = typeof b.trailer === "string" ? b.trailer.toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 20) : "";
+  if (trailer) q = q.ilike("trailers_text", `%${trailer}%`);
   const { data, error } = await q;
   if (error) return json({ error: error.message }, 500);
   return json({ ok: true, checks: data ?? [] });
