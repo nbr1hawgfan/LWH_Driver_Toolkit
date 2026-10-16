@@ -207,6 +207,7 @@ let renderQuickLinksList=()=>{};
 // alone so edits/removals aren't silently undone on a later load.
 const QUICK_LINKS_DEFAULT=[
   {name:'PTO Requests',url:'https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec'},
+  {name:'Unpaid Time Off',url:'https://nbr1hawgfan.github.io/LWH_Driver-PErsonal_Time/'},
   {name:'Trailer Inspection',url:'https://script.google.com/macros/s/AKfycbyTZ4y30FAUEqoSBZR2luzCrwWWGtitmrDEAmILm1NTywV78yveXPxYSI5tBLI6QyFO/exec'},
   {name:'Safety Training',url:'https://logisticswarehouse.infinit-i.net/#/login'}
 ];
@@ -230,6 +231,19 @@ function initQuickLinks(){
     const safety=QUICK_LINKS_DEFAULT.find(l=>l.name==='Safety Training');
     if(safety && !links.some(l=>l.url===safety.url)){ links.push(safety); LWHStorage.set('quickLinks',links); }
     LWHStorage.set('quickLinksMigratedSafety',true);
+  }
+  // One-time migration: add Unpaid Time Off (right after PTO if present) for
+  // devices that already have saved Quick Links. Flagged so a deliberate
+  // removal sticks.
+  if(!LWHStorage.get('quickLinksMigratedUTO',false)){
+    const links=LWHStorage.get('quickLinks',[]);
+    const uto=QUICK_LINKS_DEFAULT.find(l=>l.name==='Unpaid Time Off');
+    if(uto && !links.some(l=>l.url===uto.url)){
+      const pto=links.findIndex(l=>/pto/i.test(l.name||''));
+      links.splice(pto>-1?pto+1:links.length,0,uto);
+      LWHStorage.set('quickLinks',links);
+    }
+    LWHStorage.set('quickLinksMigratedUTO',true);
   }
   renderQuickLinksList=function render(){
     const links=LWHStorage.get('quickLinks',[]);
