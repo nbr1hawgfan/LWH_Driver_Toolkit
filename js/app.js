@@ -174,7 +174,9 @@ let renderQuickLinksList=()=>{};
 // PTO Request and Safety Training now live as buttons in Quick Access (next to
 // Unpaid Time Off), so they're no longer Quick Links defaults.
 const QUICK_LINKS_DEFAULT=[];
-const QA_BUILT_IN_LINKS=['https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec','https://logisticswarehouse.infinit-i.net/#/login'];
+// Index 1 (Safety Training) is used by the Safety migration below — keep it there.
+const PTO_GAS_OLD='https://script.google.com/macros/s/AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV/exec';
+const QA_BUILT_IN_LINKS=['https://nbr1hawgfan.github.io/LWH_PTO/','https://logisticswarehouse.infinit-i.net/#/login',PTO_GAS_OLD];
 function renderQuickLinksHome(){
   const wrap=document.getElementById('quickLinksHome'), grid=document.getElementById('quickLinksGrid');
   if(!wrap||!grid) return;
@@ -226,6 +228,16 @@ function initQuickLinks(){
     const kept=links.filter(l=>!QA_BUILT_IN_LINKS.includes(l.url));
     if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
     LWHStorage.set('quickLinksMigratedQARow',true);
+  }
+  // One-time migration: PTO moved from the Apps Script web app to the
+  // LWH_PTO GitHub app (Quick Access button). Drop any saved Quick Link that
+  // still points at either PTO address so it doesn't show twice (flagged).
+  if(!LWHStorage.get('quickLinksMigratedPTOPwa',false)){
+    const links=LWHStorage.get('quickLinks',[]);
+    const isPTO=u=>{ u=String(u||''); return u.indexOf('AKfycbwXblseav0VCgynTXxL6BYTLniZ4xJAiYholbDgnFPXBqL46_sxP1Rc49MWMga52QsV')!==-1 || u.replace(/\/+$/,'')===PTO_GAS_OLD.replace(/\/+$/,'') || u.replace(/\/+$/,'')==='https://nbr1hawgfan.github.io/LWH_PTO'; };
+    const kept=links.filter(l=>!isPTO(l.url));
+    if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
+    LWHStorage.set('quickLinksMigratedPTOPwa',true);
   }
   // One-time cleanup: an old storage fix copied the Warehouse Toolkit's Quick
   // Links into this app on computers that use both. Drop any link that's also
