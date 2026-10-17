@@ -102,7 +102,7 @@ function shadeColor(hex,percent){const {r,g,b}=hexToRgb(hex); const t=percent<0?
 function applySettings(){
   const company=LWHStorage.get('companyName','Logistics Warehouse'); // Driver app keeps a fixed title so it can never read the same as the
   // Warehouse Toolkit; the company name goes in the eyebrow line instead.
-  document.getElementById('companyTitleText').textContent='Driver Toolkit'; document.getElementById('companyEyebrow').textContent=company+' · Transportation'; setCompany.value=company;
+  document.getElementById('companyTitleText').textContent='Driver Toolkit'; document.getElementById('companyName').textContent=company; showHeaderUser(); setCompany.value=company;
   const color=LWHStorage.get('primaryColor','#c8102e');
   document.documentElement.style.setProperty('--brand',color);
   document.documentElement.style.setProperty('--brand-dark',shadeColor(color,-0.28));
@@ -132,6 +132,11 @@ function refreshInstallBtn(){
 }
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;refreshInstallBtn()});
 window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;if(window.installBtn)installBtn.hidden=true;const ib=document.getElementById('installBar');if(ib)ib.hidden=true;LWHUI.toast('Installed — look for Driver Toolkit on your home screen')});
+// Header: the driver's name on the right, like the customer portal's signed-in name
+function showHeaderUser(){
+  const n=(LWHStorage.get('userName','')||'').trim(), box=document.getElementById('hdrUser');
+  if(!box) return; box.hidden=!n; document.getElementById('hdrUserName').textContent=n;
+}
 let renderManagersList=()=>{};
 // Deliberately self-contained and independent of inventory.js's master-sheet
 // parser — this is a plain two-column CSV (Name, Email), nothing like the
@@ -335,7 +340,7 @@ function promptForNameIfNeeded(){
   let name=LWHStorage.get('userName','');
   if(!name){
     name=(prompt("What's your name? Used to track app usage for the team — nothing else is collected.")||'').trim();
-    if(name){ LWHStorage.set('userName',name); if(window.heroGreeting) heroGreeting.textContent=getGreeting(); }
+    if(name){ LWHStorage.set('userName',name); if(window.heroGreeting) heroGreeting.textContent=getGreeting(); showHeaderUser(); }
   }
   if(window.setUserName) setUserName.value=name;
 }
@@ -353,6 +358,7 @@ if(window.saveUsageSettings) saveUsageSettings.onclick=()=>{
   LWHStorage.set('userName',(setUserName.value||'').trim());
   LWHStorage.set('usageLogUrl',(setUsageLogUrl.value||'').trim());
   if(window.heroGreeting) heroGreeting.textContent=getGreeting();
+  showHeaderUser();
   LWHUI.toast('Saved');
   pingUsage();
 };

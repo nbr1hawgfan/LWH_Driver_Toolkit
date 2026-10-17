@@ -859,3 +859,66 @@ body:not(.mgr-on) .mgr-only{display:none!important}
 .install-bar .ghost{background:transparent;color:#fff;border-color:#777}
 .install-bar .ghost:hover{background:#222;color:#fff}
 @media(max-width:640px){.install-bar-actions{width:100%}.install-bar-actions button{flex:1}}
+
+/* =========================================================================
+   v1.30.0 — Header matches the Customer Portal (Doug): white info strip,
+   red band with round logo + condensed title, black pill, white diagonal
+   cut, black shortcut bar. Screen only.
+   ========================================================================= */
+@media screen{
+  .lw-topbar{display:flex;justify-content:flex-end;align-items:center;gap:28px;background:#fff;color:#444;font-size:13.5px;padding:7px 32px;border-bottom:1px solid #e6e6e6}
+  .lw-topbar a,.lw-topbar span{display:inline-flex;align-items:center;gap:7px;color:#444;text-decoration:none}
+  .lw-topbar a b{color:#111;font-weight:800}
+  .lw-topbar svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .lw-topbar a svg{color:var(--brand)}
+
+  .app-header.lw-header{position:relative;overflow:hidden;background:var(--brand);color:#fff;padding:14px 150px 14px 18px;border:0;box-shadow:none;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:88px}
+  .app-header.lw-header::before{display:none}
+  .app-header.lw-header::after{content:"";display:block;position:absolute;top:0;bottom:0;right:-60px;width:150px;left:auto;height:auto;background:#fff;transform:skewX(-22deg);transform-origin:top;opacity:1;border-radius:0!important}
+  .lw-header .brand-row{gap:14px;align-items:center}
+  .lw-header .brand-logo{width:58px;height:58px;border-radius:50%!important;background-color:#fff;background-size:78%;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.2);flex:0 0 auto}
+  .lw-brand-text{display:flex;flex-direction:column;min-width:0}
+  .lw-header .lw-title{margin:0;font-family:"Oswald","Arial Narrow",Arial,sans-serif;font-weight:700;font-size:26px;line-height:1.05;letter-spacing:.01em;text-transform:none;color:#fff;white-space:nowrap}
+  .lw-sub{font-family:"Oswald","Arial Narrow",Arial,sans-serif;font-weight:500;font-size:12.5px;letter-spacing:.24em;text-transform:uppercase;color:#fff;opacity:.95;margin-top:3px;white-space:nowrap}
+  .lw-sub-sep{opacity:.7;margin:0 2px}
+  .lw-header .version{font-size:11px;opacity:.75;margin-top:2px}
+  .lw-hdr-right{display:flex;align-items:center;gap:22px;position:relative;z-index:1}
+  .lw-pill{display:inline-flex;align-items:center;gap:8px;background:#111;color:#fff;font-family:"Oswald","Arial Narrow",Arial,sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;padding:9px 18px;white-space:nowrap}
+  .lw-pill svg{width:15px;height:15px;fill:none;stroke:#f5b400;stroke-width:2.2}
+  .lw-user{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+  .lw-user b{font-size:15px;font-weight:800}
+  .lw-user span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.95}
+
+  .lw-navbar{display:flex;align-items:stretch;gap:4px;background:#1c1c1c;padding:0 22px;min-height:54px;overflow-x:auto;scrollbar-width:none}
+  .lw-navbar button{background:transparent;border:0;color:#fff;font-family:"Oswald","Arial Narrow",Arial,sans-serif;font-weight:500;font-size:16px;letter-spacing:.02em;text-transform:none;padding:0 16px;min-height:54px;white-space:nowrap;border-bottom:4px solid transparent;border-top:4px solid transparent;box-shadow:none}
+  .lw-navbar button:hover{background:#2a2a2a;color:#fff}
+  .lw-navbar .lw-nav-link.active{border-bottom-color:var(--brand)}
+  .lw-navbar svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #navToggle.lw-nav-menu{display:none;align-items:center;gap:8px}
+  .lw-nav-install{margin-left:auto;display:inline-flex;align-items:center;gap:7px}
+  .lw-nav-install[hidden]{display:none}
+
+  @media(max-width:900px){
+    .lw-topbar .lw-tb-addr{display:none}
+  }
+  @media(max-width:640px){
+    .lw-topbar{justify-content:space-between;gap:12px;padding:6px 14px;font-size:12.5px}
+    .app-header.lw-header{padding:10px 64px 10px 12px;min-height:70px;flex-direction:row;align-items:center}
+    .app-header.lw-header::after{width:70px;right:-34px}
+    .lw-header .brand-logo{width:46px;height:46px}
+    .lw-header .lw-title{font-size:21px}
+    .lw-sub{font-size:10.5px;letter-spacing:.16em}
+    .lw-sub-sep,#companyEyebrow{display:none}
+    .lw-header .version{display:none}
+    .lw-hdr-right .lw-user{display:none}
+    .lw-pill{font-size:12px;padding:6px 10px}
+    .lw-pill svg{display:none}
+    .lw-navbar{padding:0 8px;min-height:48px}
+    .lw-navbar button{min-height:48px;font-size:16px;padding:0 12px}
+    .lw-navbar .lw-nav-link{display:none}
+    #navToggle.lw-nav-menu{display:inline-flex}
+    .lw-navbar .install-btn span{display:inline}
+    .lw-navbar .install-btn{padding:0 12px}
+  }
+  @media(max-width:640px){ .lw-hdr-right{display:none} }
+}
