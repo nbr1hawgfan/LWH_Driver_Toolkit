@@ -2,7 +2,6 @@ let deferredInstallPrompt=null;
 // Default Managers CSV — same idea as Master Lookup's default sheet: bakes in
 // the real list so every install works out of the box with no manual setup.
 // Still overridable per-device via Settings if ever needed.
-const MANAGERS_DEFAULT_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSRqVtSZLZSa1kh9LyCEHwoZCdwWclMqm3QDaBvrnK67ZY_Q-qFdQWQgx98hPSso0AsEJB1zFtxu3ue/pub?output=csv';
 // Fort Smith, AR — used unless someone overrides it in Settings.
 const DEFAULT_WEATHER_LOC={lat:35.3859,lon:-94.3985};
 function parseWeatherLoc(v){
@@ -154,70 +153,18 @@ function splitManagerCsv(text){
     return {name:(parts[0]||'').trim(),email:(parts[1]||'').trim()};
   }).filter(m=>m.name||m.email);
 }
-async function loadManagersFromUrl(){
-  const input=document.getElementById('mgrSourceUrl');
-  const statusEl=document.getElementById('mgrSourceStatus');
-  const url=(input&&input.value||LWHStorage.get('managersSourceUrl','')||MANAGERS_DEFAULT_URL||'').trim();
-  if(!url){ if(statusEl) statusEl.textContent='Paste a Google Sheet CSV link above first.'; return; }
-  LWHStorage.set('managersSourceUrl',url);
-  if(statusEl) statusEl.textContent='Loading...';
-  try{
-    const res=await fetch(url+(url.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store',mode:'cors'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    if(/<html|<!doctype html|ServiceLogin|accounts\.google/i.test(text.slice(0,300))) throw new Error('Got a webpage instead of CSV — check the sheet is published as CSV (File → Share → Publish to web).');
-    const managers=splitManagerCsv(text);
-    LWHStorage.set('managers',managers);
-    if(statusEl) statusEl.textContent=`Loaded ${managers.length} manager(s) from the sheet.`;
-    renderManagersList();
-    if(window.refreshQuickMessageManagers) refreshQuickMessageManagers();
-    LWHUI.toast(`Loaded ${managers.length} manager(s)`);
-  }catch(e){
-    if(statusEl) statusEl.textContent='Load failed: '+e.message;
-    LWHUI.toast('Manager sheet load failed');
-  }
-}
+// Quick Message goes only to the drivers' own managers (chain of command).
+// Fixed list, not editable on the phone; change it here if the managers change.
+const DRIVER_MANAGERS=[
+  {name:'Chris Morland',email:'cmorland@logistics-warehouse.com'},
+  {name:'Derek Dixon',email:'ddixon@logistics-warehouse.com'}
+];
 function initManagers(){
-  const list=document.getElementById('mgrList'); if(!list) return;
-  renderManagersList=function render(){
-    const managers=LWHStorage.get('managers',[]);
-    list.innerHTML=managers.length?managers.map((m,i)=>`<div class="grid-2" style="align-items:center;margin-bottom:6px"><input data-idx="${i}" data-field="name" value="${String(m.name||'').replace(/"/g,'&quot;')}" placeholder="Name" /><input data-idx="${i}" data-field="email" type="email" value="${String(m.email||'').replace(/"/g,'&quot;')}" placeholder="email@company.com" /></div><div class="actions" style="margin-bottom:12px"><button type="button" class="ghost" data-remove="${i}">Remove</button></div>`).join(''):'<p class="hint">No managers yet.</p>';
-  };
-  list.addEventListener('input',e=>{
-    const t=e.target; if(t.dataset.idx===undefined) return;
-    const managers=LWHStorage.get('managers',[]);
-    if(!managers[t.dataset.idx]) return;
-    managers[t.dataset.idx][t.dataset.field]=t.value;
-    LWHStorage.set('managers',managers);
-    if(window.refreshQuickMessageManagers) refreshQuickMessageManagers();
-  });
-  list.addEventListener('click',e=>{
-    const b=e.target.closest('[data-remove]'); if(!b) return;
-    const managers=LWHStorage.get('managers',[]);
-    managers.splice(+b.dataset.remove,1);
-    LWHStorage.set('managers',managers);
-    renderManagersList();
-    if(window.refreshQuickMessageManagers) refreshQuickMessageManagers();
-  });
-  const addBtn=document.getElementById('mgrAddBtn');
-  if(addBtn) addBtn.onclick=()=>{
-    const managers=LWHStorage.get('managers',[]);
-    managers.push({name:'',email:''});
-    LWHStorage.set('managers',managers);
-    renderManagersList();
-  };
-  const sourceInput=document.getElementById('mgrSourceUrl');
-  if(sourceInput) sourceInput.value=LWHStorage.get('managersSourceUrl','')||MANAGERS_DEFAULT_URL;
-  const loadBtn=document.getElementById('mgrLoadBtn');
-  if(loadBtn) loadBtn.onclick=loadManagersFromUrl;
-  const resetBtn=document.getElementById('mgrResetBtn');
-  if(resetBtn) resetBtn.onclick=()=>{
-    LWHStorage.set('managersSourceUrl',MANAGERS_DEFAULT_URL);
-    if(sourceInput) sourceInput.value=MANAGERS_DEFAULT_URL;
-    loadManagersFromUrl();
-    LWHUI.toast('Reset to default manager list');
-  };
-  renderManagersList();
+  LWHStorage.set('managers',DRIVER_MANAGERS.slice());
+  LWHStorage.remove('managersSourceUrl');
+  const list=document.getElementById('mgrList');
+  if(list) list.innerHTML=DRIVER_MANAGERS.map(m=>`<div class="mgr-fixed"><b>${LWHUI.safe(m.name)}</b><span>${LWHUI.safe(m.email)}</span></div>`).join('');
+  if(window.refreshQuickMessageManagers) refreshQuickMessageManagers();
 }
 
 let renderQuickLinksList=()=>{};
@@ -441,7 +388,6 @@ window.addEventListener('load',()=>{
   initQuickLinks();
   promptForNameIfNeeded();
   pingUsage();
-  setTimeout(()=>{ loadManagersFromUrl(); },500);
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js').then(()=>pwaStatus.textContent='Service worker registered. App is installable from HTTPS/GitHub Pages.').catch(err=>pwaStatus.textContent='Service worker error: '+err.message)}else{pwaStatus.textContent='Service workers not supported in this browser.'}
   applyIncomingUrlParams();
 });

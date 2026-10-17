@@ -910,7 +910,7 @@
     const current=sel.value;
     sel.innerHTML=managers.length
       ? managers.map(m=>`<option value="${String(m.email||'').replace(/"/g,'&quot;')}">${String(m.name||m.email||'Unnamed').replace(/</g,'&lt;')}</option>`).join('')
-      : '<option value="">No managers added yet — add in Settings</option>';
+      : '<option value="">No managers set</option>';
     if(current) sel.value=current;
   }
   window.refreshQuickMessageManagers=refreshQuickMessageManagers; // Settings calls this after adding/editing/removing a manager
@@ -936,15 +936,15 @@
       if(!text){ alert('Type a quick message first.'); return; }
       if(qmPhotoFile){
         if(navigator.canShare && navigator.canShare({files:[qmPhotoFile]})){
-          try{ await navigator.share({files:[qmPhotoFile],title:'Warehouse Alert',text:`To: ${chosen.name||chosen.email} <${chosen.email}>\n\n${text}`}); }
+          try{ await navigator.share({files:[qmPhotoFile],title:'Driver Message',text:`To: ${chosen.name||chosen.email} <${chosen.email}>\n\n${text}`}); }
           catch(e){ /* user cancelled — not an error */ }
         } else {
           // No file-sharing support here — download the photo and open mailto so it can be attached manually.
           const a=document.createElement('a'); a.href=URL.createObjectURL(qmPhotoFile); a.download='warehouse-photo.jpg'; document.body.append(a); a.click(); a.remove();
-          location.href=`mailto:${encodeURIComponent(chosen.email)}?subject=${encodeURIComponent('Warehouse Alert')}&body=${encodeURIComponent(text+'\n\n(Photo downloaded separately to your device — please attach it to this email.)')}`;
+          location.href=`mailto:${encodeURIComponent(chosen.email)}?subject=${encodeURIComponent('Driver Message')}&body=${encodeURIComponent(text+'\n\n(Photo downloaded separately to your device — please attach it to this email.)')}`;
         }
       } else {
-        location.href=`mailto:${encodeURIComponent(chosen.email)}?subject=${encodeURIComponent('Warehouse Alert')}&body=${encodeURIComponent(text)}`;
+        location.href=`mailto:${encodeURIComponent(chosen.email)}?subject=${encodeURIComponent('Driver Message')}&body=${encodeURIComponent(text)}`;
       }
     };
   }
