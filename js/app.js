@@ -264,6 +264,18 @@ function initQuickLinks(){
     if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
     LWHStorage.set('quickLinksMigratedQARow',true);
   }
+  // One-time cleanup: an old storage fix copied the Warehouse Toolkit's Quick
+  // Links into this app on computers that use both. Drop any link that's also
+  // in the Warehouse Toolkit's own list (flagged; runs once).
+  if(!LWHStorage.get('quickLinksMigratedNoWarehouse',false)){
+    let wh=[]; try{ wh=(JSON.parse(localStorage.getItem('lwh_quickLinks')||'[]')||[]).map(l=>l&&l.url).filter(Boolean); }catch(e){}
+    if(wh.length){
+      const links=LWHStorage.get('quickLinks',[]);
+      const kept=links.filter(l=>!wh.includes(l.url));
+      if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
+    }
+    LWHStorage.set('quickLinksMigratedNoWarehouse',true);
+  }
   renderQuickLinksList=function render(){
     const links=LWHStorage.get('quickLinks',[]);
     list.innerHTML=links.length?links.map((l,i)=>`<div class="grid-2" style="align-items:center;margin-bottom:6px"><input data-idx="${i}" data-field="name" value="${String(l.name||'').replace(/"/g,'&quot;')}" placeholder="Name (e.g. Forklift Inspection)" /><input data-idx="${i}" data-field="url" value="${String(l.url||'').replace(/"/g,'&quot;')}" placeholder="https://..." /></div><div class="actions" style="margin-bottom:12px"><button type="button" class="ghost" data-remove="${i}">Remove</button></div>`).join(''):'<p class="hint">No quick links yet.</p>';
