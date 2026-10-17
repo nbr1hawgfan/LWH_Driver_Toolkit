@@ -120,7 +120,18 @@ function applySettings(){
   if(window.statLookups) statLookups.textContent=LWHStorage.get('lookupCount',0);
   if(window.statVisitors) statVisitors.textContent=(LWHStorage.get('visitorLog',[])||[]).length;
 }
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;installBtn.hidden=false});
+// Install App: the header button shows on every device until the app is
+// installed. Android/Chrome/Edge get the real install prompt; iPhone (and any
+// browser without one) gets simple step-by-step instructions instead.
+function isInstalledApp(){ return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true; }
+function refreshInstallBtn(){
+  const inst=isInstalledApp();
+  if(window.installBtn) installBtn.hidden=inst;
+  const bar=document.getElementById('installBar');
+  if(bar) bar.hidden=inst||LWHStorage.get('installBarHidden',false)===true;
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;refreshInstallBtn()});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;if(window.installBtn)installBtn.hidden=true;const ib=document.getElementById('installBar');if(ib)ib.hidden=true;LWHUI.toast('Installed — look for Driver Toolkit on your home screen')});
 let renderManagersList=()=>{};
 // Deliberately self-contained and independent of inventory.js's master-sheet
 // parser — this is a plain two-column CSV (Name, Email), nothing like the
@@ -429,7 +440,25 @@ window.addEventListener('load',()=>{
 });
 document.addEventListener('click',e=>{const v=e.target.closest('[data-view]'); if(v){LWHUI.show(v.dataset.view); document.querySelector('.nav').classList.remove('open'); return}});
 if(window.navToggle){navToggle.onclick=()=>document.querySelector('.nav').classList.toggle('open');}
-installBtn.onclick=async()=>{if(!deferredInstallPrompt)return;deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installBtn.hidden=true};
+installBtn.onclick=async()=>{
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const choice=await deferredInstallPrompt.userChoice.catch(()=>null);
+    deferredInstallPrompt=null;
+    if(choice&&choice.outcome==='accepted'){ installBtn.hidden=true; const ib=document.getElementById('installBar'); if(ib) ib.hidden=true; }
+    return;
+  }
+  const ua=navigator.userAgent||'';
+  const ios=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  document.getElementById('installStepsIos').hidden=!ios;
+  document.getElementById('installStepsOther').hidden=ios;
+  document.getElementById('installHelp').hidden=false;
+};
+document.getElementById('installBarBtn').onclick=()=>installBtn.click();
+document.getElementById('installBarHide').onclick=()=>{LWHStorage.set('installBarHidden',true);refreshInstallBtn();LWHUI.toast('You can still install from the button at the top')};
+document.getElementById('installHelpClose').onclick=()=>{document.getElementById('installHelp').hidden=true};
+document.getElementById('installHelp').addEventListener('click',e=>{if(e.target.id==='installHelp')e.currentTarget.hidden=true});
+refreshInstallBtn();
 
 if(window.custScanBtn){custScanBtn.onclick=()=>LWHScanner.start(value=>{custSearch.value=value; custSearchBtn.click();});}
 conGenerate.onclick=()=>{LWHLabels.generateContact();applySettings()}; conSample.onclick=()=>{conName.value='Tim Jennings';conTitle.value='Operations';conCompany.value='Logistics Warehouse';conPhone.value='';conEmail.value='tjennings@logistics-warehouse.com';conWebsite.value='https://logistics-warehouse.com';conStreet.value='';conCity.value='';conState.value='';conZip.value=''};

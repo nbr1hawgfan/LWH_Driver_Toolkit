@@ -839,3 +839,23 @@ body:not(.mgr-on) .mgr-only{display:none!important}
 
   .toast{background:#111;border-left:5px solid var(--brand)}
 }
+
+/* ---- Install App (v1.29.0) ---- */
+.install-btn{display:inline-flex;align-items:center;gap:6px}
+.install-modal{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.install-card{background:#fff;width:min(440px,100%);border-top:5px solid var(--brand)}
+.install-head{background:#111;color:#fff;padding:12px 16px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+.install-body{padding:16px;font-size:16px}
+.install-body p{margin:0 0 10px}
+.install-body ol{margin:0;padding-left:22px}
+.install-body li{margin:8px 0;line-height:1.4}
+.install-ico{display:inline-block;border:1px solid var(--line);padding:0 6px;font-weight:700}
+.install-body .actions button{width:100%;min-height:50px}
+@media(max-width:640px){.install-btn span{display:none}.install-btn{padding:8px}}
+.install-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#111;color:#fff;border-left:6px solid var(--brand);padding:14px 16px;margin:0 0 18px}
+.install-bar b{display:block;font-size:16px}
+.install-bar span{display:block;color:#c9c9c9;font-size:14px;margin-top:2px}
+.install-bar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.install-bar .ghost{background:transparent;color:#fff;border-color:#777}
+.install-bar .ghost:hover{background:#222;color:#fff}
+@media(max-width:640px){.install-bar-actions{width:100%}.install-bar-actions button{flex:1}}
