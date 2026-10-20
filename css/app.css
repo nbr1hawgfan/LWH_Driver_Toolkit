@@ -979,3 +979,6 @@ body:not(.mgr-on) .mgr-only{display:none!important}
   .nb-scale-btns{margin-left:0;width:100%}
   .nb-scale-btns .nb-rep{flex:1}
 }
+.nb-add{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 12px;margin-top:8px;border:1.5px dashed #1c1c1c;background:#fff}
+.nb-add #nbAddForm{flex-basis:100%}
+.nb-add #nbAddForm label{margin:6px 0 0}

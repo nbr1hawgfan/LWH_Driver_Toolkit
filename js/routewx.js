@@ -109,18 +109,8 @@
   }
 
   // ---------- scales on the route ----------
-  async function scalesAlong(coords,cum){
-    // Thin the line to ~1 point per 1.5 mi (Overpass "around" accepts a polyline).
-    const line=[]; let lastMi=-99;
-    coords.forEach((c,i)=>{ if(cum[i]-lastMi>=1.5||i===coords.length-1){ line.push(c); lastMi=cum[i]; } });
-    const around=`(around:450,${line.map(c=>`${c.lat.toFixed(4)},${c.lon.toFixed(4)}`).join(',')})`;
-    const els=await LWHScales.overpass(LWHScales.query(LWHScales.SCALE_Q,around,80));
-    const seen=new Set();
-    return els.filter(e=>!seen.has(e.id)&&seen.add(e.id)&&LWHScales.isPublicScale(e.tags)).map(e=>{
-      let bi=0,bd=Infinity; coords.forEach((c,i)=>{ const d=Math.abs(c.lat-e.lat)+Math.abs(c.lon-e.lon); if(d<bd){bd=d;bi=i;} });
-      return {...e,name:LWHScales.scaleName(e.tags),mi:cum[bi]};
-    }).filter((s,i,arr)=>!arr.slice(0,i).some(p=>Math.abs(p.mi-s.mi)<0.3&&p.name===s.name)).sort((a,b)=>a.mi-b.mi);
-  }
+  // Bundled + driver-added scales within ~0.5 mi of the route line (no network needed).
+  function scalesAlong(coords,cum){ return LWHScales.along(coords,cum,0.5); }
 
   // ---------- render ----------
   const LVL=[{cls:'rw-ok',txt:'OK'},{cls:'rw-warn',txt:'CAUTION'},{cls:'rw-bad',txt:'DANGER'}];
@@ -156,10 +146,10 @@
   function renderScales(err){
     const box=el('rwScales'); if(!box) return;
     if(err){ box.innerHTML=`<p class="hint">${safe(err)}</p>`; return; }
-    if(!scales.length){ box.innerHTML='<p class="hint">No state weigh stations found on this route in OpenStreetMap.</p>'; return; }
+    if(!scales.length){ box.innerHTML='<p class="hint">No listed scales on this route yet. Not every scale is in the list — add any you pass from Road &amp; Nearby → Weigh Stations.</p>'; return; }
     box.innerHTML=scales.map(s=>`<div class="nb-item"><div class="nb-main"><div class="nb-name">${safe(s.name)}</div>${LWHScales.controls(s,scaleReports[s.id])}</div>
       <div class="nb-side"><div class="nb-dist">Mile ${Math.round(s.mi)}</div><a class="btn-link ghost nb-go" href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lon}" target="_blank" rel="noopener">Map</a></div></div>`).join('')
-      +'<p class="hint">Open/Closed comes from LWH drivers — tap Report when you pass one. Reports older than 24 hours drop off. Scale locations © OpenStreetMap contributors.</p>';
+      +'<p class="hint">Open/Closed comes from LWH drivers — tap Report when you pass one. Reports older than 24 hours drop off. Not every scale is listed yet; add missing ones from Road &amp; Nearby → Weigh Stations. Scale locations © OpenStreetMap contributors and LWH drivers.</p>';
   }
   function drawMap(pts){
     const map=window.LWHDistance&&LWHDistance.getMap&&LWHDistance.getMap();
@@ -198,7 +188,7 @@
     const scP=scalesAlong(coords,cum).then(async list=>{
       if(id!==runId) return; scales=list; scaleReports=await LWHScales.latest(list.map(s=>s.id));
       if(id!==runId) return; renderScales(); drawMap(pts);
-    }).catch(e=>{ if(id===runId){ scales=[]; renderScales('Weigh station lookup unavailable right now ('+e.message+').'); } });
+    }).catch(e=>{ if(id===runId){ scales=[]; renderScales('Weigh station list unavailable right now.'); } });
 
     await Promise.all([wxP,alP,scP]);
   }
@@ -219,6 +209,6 @@
     el('rwDepart').addEventListener('change',e=>{ e.target.dataset.touched='1'; run(); });
     el('rwEmpty').checked=LWHStorage.get('rwEmpty',false);
     el('rwEmpty').addEventListener('change',e=>{ LWHStorage.set('rwEmpty',e.target.checked); run(); });
-    LWHScales.wire(el('rwScales'),sid=>scales.find(s=>s.id===sid),async()=>{ renderScales(); scaleReports=await LWHScales.latest(scales.map(s=>s.id)); renderScales(); });
+    LWHScales.wire(el('rwScales'),sid=>scales.find(s=>s.id===sid),async()=>{ scaleReports=await LWHScales.latest(scales.map(s=>s.id)); renderScales(); });
   });
 })();

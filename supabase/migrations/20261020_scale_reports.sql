@@ -16,3 +16,17 @@ create table if not exists public.scale_reports (
 create index if not exists scale_reports_osm_idx on public.scale_reports (osm_id, reported_at desc);
 create index if not exists scale_reports_time_idx on public.scale_reports (reported_at desc);
 alter table public.scale_reports enable row level security;
+
+-- Scales added by LWH drivers ("Add a scale here") — fills gaps in OpenStreetMap.
+-- id = "lwh/<random>"; reports reference it in scale_reports.osm_id.
+-- Set hidden = true to remove a bad entry from the app.
+create table if not exists public.scale_sites (
+  id          text primary key,
+  name        text not null,
+  lat         double precision not null,
+  lon         double precision not null,
+  added_by    text not null default '',
+  hidden      boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+alter table public.scale_sites enable row level security;
