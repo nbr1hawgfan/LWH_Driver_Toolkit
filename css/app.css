@@ -50,7 +50,7 @@ button.ghost:hover{background:var(--brand-tint)}
 .brand-row{display:flex;align-items:center;gap:14px}
 .brand-logo{width:52px;height:52px;border-radius:12px;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#fff}
 
-.app-shell{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:20px;max-width:1400px;margin:0 auto}
+.app-shell{display:grid;grid-template-columns:236px 1fr;gap:20px;padding:20px 28px;max-width:none;width:100%;margin:0}
 .nav{background:#1c1c2b;border:1px solid #1c1c2b;border-radius:var(--radius);padding:10px;height:max-content;position:sticky;top:16px}
 .nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;color:#c7c7d6;border-radius:var(--radius-sm);margin-bottom:4px;padding:10px 12px;font-weight:600;border-left:3px solid transparent}
 .nav-btn .icon{color:#8686a0}
