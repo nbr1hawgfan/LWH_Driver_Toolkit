@@ -185,7 +185,7 @@
 
     const alP=alertsAlong(pts).then(l=>{ if(id===runId) renderAlerts(l); }).catch(e=>{ if(id===runId) renderAlerts([],e.message); });
 
-    const scP=scalesAlong(coords,cum).then(async list=>{
+    const scP=Promise.resolve().then(()=>scalesAlong(coords,cum)).then(async list=>{
       if(id!==runId) return; scales=list; scaleReports=await LWHScales.latest(list.map(s=>s.id));
       if(id!==runId) return; renderScales(); drawMap(pts);
     }).catch(e=>{ if(id===runId){ scales=[]; renderScales('Weigh station list unavailable right now.'); } });
