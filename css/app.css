@@ -924,3 +924,58 @@ body:not(.mgr-on) .mgr-only{display:none!important}
 }
 .mgr-fixed{display:flex;flex-direction:column;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--brand);margin-bottom:8px;background:#fff}
 .mgr-fixed span{color:var(--muted);font-size:14px}
+
+/* ===== v1.34 Route Conditions + Near Me Now ===== */
+#rwCard{margin-top:14px;border-top:4px solid var(--brand);padding-top:10px}
+.rw-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px}
+.rw-head h3{margin:0}
+.rw-ctl{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.rw-ctl label{margin:0}
+.rw-check{display:flex;align-items:center;gap:8px;min-height:44px;font-weight:700}
+.rw-check input{width:22px;height:22px;margin:0}
+.rw-sub{margin:18px 0 8px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-left:4px solid var(--brand);padding-left:8px}
+.rw-banner{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-left:6px solid var(--good);background:#fff;margin-bottom:8px}
+.rw-banner b{font-size:17px}
+.rw-banner span{color:var(--muted);font-size:14px}
+.rw-banner.rw-warn{border-left-color:#b8860b;background:#fff8e6}
+.rw-banner.rw-bad{border-left-color:var(--bad);background:#fdecec}
+.rw-table{border:1px solid var(--line);background:#fff}
+.rw-tr{display:grid;grid-template-columns:60px 110px 130px 90px 64px 1fr;gap:8px;padding:8px 10px;border-top:1px solid var(--line);align-items:center;font-size:15px;border-left:5px solid transparent}
+.rw-th{border-top:0;background:#1c1c1c;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-left-color:#1c1c1c}
+.rw-tr.rw-warn{border-left-color:#b8860b;background:#fffaf0}
+.rw-tr.rw-bad{border-left-color:var(--bad);background:#fdf1f1}
+.rw-tr em{display:block;font-style:normal;font-weight:700;font-size:13px;color:var(--bad)}
+.rw-tr.rw-warn em{color:#8a6408}
+.rw-alert{border:1px solid var(--line);border-left:6px solid #b8860b;background:#fff;margin-bottom:6px;padding:0 12px}
+.rw-alert.rw-bad{border-left-color:var(--bad)}
+.rw-alert.rw-ok{border-left-color:var(--muted)}
+.rw-alert summary{cursor:pointer;padding:12px 0;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;list-style:none;min-height:44px}
+.rw-alert summary::-webkit-details-marker{display:none}
+.rw-alert summary b{font-size:16px}
+.rw-alert summary span{color:var(--muted);font-size:14px}
+.rw-alert p{margin:0 0 10px}
+.nb-cats .seg{min-width:120px}
+.nb-item{display:flex;gap:12px;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-left:5px solid #1c1c1c;padding:10px 12px;margin-top:8px}
+.nb-main{min-width:0;flex:1}
+.nb-name{font-weight:800;font-size:17px}
+.nb-side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto;text-align:right}
+.nb-dist{font-weight:900;font-size:18px;color:var(--brand)}
+.nb-go{min-height:40px;padding:6px 16px}
+.nb-scale-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:6px}
+.nb-pill{display:inline-block;font-weight:800;font-size:13px;letter-spacing:.06em;padding:4px 10px;border:1.5px solid currentColor}
+.nb-open{color:#fff;background:var(--bad);border-color:var(--bad)}
+.nb-closed{color:#fff;background:var(--good);border-color:var(--good)}
+.nb-unk{color:var(--muted)}
+.nb-cat{color:var(--muted);font-weight:700;letter-spacing:0}
+.nb-scale-btns{display:flex;gap:6px;margin-left:auto}
+.nb-rep{min-height:40px;padding:6px 12px;font-size:14px}
+@media(max-width:760px){
+  .rw-tr.rw-th{display:none}
+  .rw-tr{display:flex;flex-wrap:wrap;gap:2px 14px}
+  .rw-tr span:nth-child(1)::before{content:"Mile "}
+  .rw-tr span:nth-child(3)::before{content:"Wind "}
+  .rw-tr span:nth-child(4)::before{content:"Cross "}
+  .rw-tr span:nth-child(6){flex-basis:100%}
+  .nb-scale-btns{margin-left:0;width:100%}
+  .nb-scale-btns .nb-rep{flex:1}
+}

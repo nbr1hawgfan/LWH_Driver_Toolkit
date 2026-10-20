@@ -96,6 +96,7 @@
     status.textContent='Looking up locations…';
     totalMiles.textContent='—'; totalDetail.textContent='—'; legsWrap.innerHTML='';
     if(dayTotal){ dayTotal.textContent='—'; dayDetail.textContent='—'; dayTotal.style.color=''; }
+    if(window.LWHRouteWx) LWHRouteWx.clear();
     try{
       const points=await geocodeAll(queries);
       status.textContent='Calculating route…';
@@ -142,10 +143,13 @@
 
       status.textContent=`${points.length} stop(s) found.`;
       renderMap(points,route?route.geometry:null);
+      if(window.LWHRouteWx){ if(route) LWHRouteWx.run(route,usableStops.map(s=>parseInt(s.dwell)||0)); else LWHRouteWx.clear(); }
     }catch(e){
       status.textContent='Error: '+e.message;
     }
   }
+
+  window.LWHDistance={getMap:()=>map};
 
   window.addEventListener('load',()=>{
     if(!el('distStops')) return;
@@ -175,7 +179,8 @@
       lastMiles=null;
       const ids=['distStatus','distTotalMiles','distTotalDetail','distDayTotal','distDayDetail','distFuelCost','distFuelDetail','distLegs'];
       ids.forEach(id=>{ const e=el(id); if(e) e.textContent = id==='distStatus' ? 'Enter at least a From and To.' : (id==='distLegs' ? '' : '—'); });
-      const mapEl=el('distMap'); if(mapEl){ mapEl.style.display='none'; mapEl.innerHTML=''; }
+      if(window.LWHRouteWx) LWHRouteWx.clear();
+      const mapEl=el('distMap'); if(mapEl){ mapEl.style.display='none'; }
     };
   });
 })();
