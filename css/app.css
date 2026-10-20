@@ -982,3 +982,12 @@ body:not(.mgr-on) .mgr-only{display:none!important}
 .nb-add{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 12px;margin-top:8px;border:1.5px dashed #1c1c1c;background:#fff}
 .nb-add #nbAddForm{flex-basis:100%}
 .nb-add #nbAddForm label{margin:6px 0 0}
+
+/* ===== v1.35 ★ My Tools stars (same as Warehouse Toolkit) ===== */
+#home .module-card,#home .qa-tile{position:relative}
+#home .fav-star{position:absolute;top:6px;right:6px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:400;line-height:1;color:#9a9aa8;cursor:pointer;border-radius:50%;user-select:none;-webkit-tap-highlight-color:transparent}
+#home .fav-star:hover{color:var(--brand);background:var(--brand-tint)}
+#home .fav-star.on{color:var(--brand)}
+#home .qa-tile .fav-star{top:2px;right:2px;width:32px;height:32px;font-size:22px}
+.fav-star:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+#home .module-card b{padding-right:30px}

@@ -239,6 +239,14 @@ function initQuickLinks(){
     if(kept.length!==links.length) LWHStorage.set('quickLinks',kept);
     LWHStorage.set('quickLinksMigratedPTOPwa',true);
   }
+  // One-time: add Office Chair QB (Tim's sports scores app) to Quick Links for
+  // everyone. Flagged, so a driver who removes it won't get it back.
+  if(!LWHStorage.get('quickLinksAddedOCQB',false)){
+    const OCQB='https://nbr1hawgfan.github.io/Office-Chair-Quarterback/';
+    const links=LWHStorage.get('quickLinks',[]);
+    if(!links.some(l=>String(l.url||'').replace(/\/+$/,'').toLowerCase()===OCQB.replace(/\/+$/,'').toLowerCase())){ links.push({name:'Office Chair QB',url:OCQB}); LWHStorage.set('quickLinks',links); }
+    LWHStorage.set('quickLinksAddedOCQB',true);
+  }
   // One-time cleanup: an old storage fix copied the Warehouse Toolkit's Quick
   // Links into this app on computers that use both. Drop any link that's also
   // in the Warehouse Toolkit's own list (flagged; runs once).
