@@ -12,62 +12,51 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" />
-  <link rel="stylesheet" href="./css/app.css?v=1.35.0" />
-  <link rel="stylesheet" href="./css/print.css?v=1.35.0" media="print" />
+  <link rel="stylesheet" href="./css/app.css?v=1.36.0" />
+  <link rel="stylesheet" href="./css/print.css?v=1.36.0" media="print" />
   <script defer src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script defer src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script>
-    // OpenCV.js checks for a pre-existing Module object and calls
-    // onRuntimeInitialized once the WASM runtime (not just the JS file) is
-    // actually ready — this must be defined before opencv.js loads, and
-    // opencv.js can't be `defer` since Module needs to exist first regardless
-    // of parse order. Powers Doc Scanner's auto edge detection only; nothing
-    // else in the app depends on it.
-    window.Module = {
-      onRuntimeInitialized() { window.dispatchEvent(new Event("opencv-ready")); }
-    };
-  </script>
-  <script async src="https://docs.opencv.org/4.8.0/opencv.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script defer src="./js/storage.js?v=1.35.0"></script>
-  <script defer src="./js/qr.js?v=1.35.0"></script>
-  <script defer src="./js/barcode.js?v=1.35.0"></script>
-  <script defer src="./js/ui.js?v=1.35.0"></script>
-  <script defer src="./js/labels.js?v=1.35.0"></script>
-  <script defer src="./js/distance.js?v=1.35.0"></script>
-  <script defer src="./js/scales-data.js?v=1.35.0"></script>
-  <script defer src="./js/nearby.js?v=1.35.0"></script>
-  <script defer src="./js/routewx.js?v=1.35.0"></script>
-  <script defer src="./js/trailerinspect.js?v=1.35.0"></script>
-  <script defer src="./js/timesheet.js?v=1.35.0"></script>
-  <script defer src="./js/spottertimesheets.js?v=1.35.0"></script>
-  <script defer src="./js/hos.js?v=1.35.0"></script>
-  <script defer src="./js/fuelcost.js?v=1.35.0"></script>
-  <script defer src="./js/eia.js?v=1.35.0"></script>
-  <script defer src="./js/fsc.js?v=1.35.0"></script>
-  <script defer src="./js/fuelboard.js?v=1.35.0"></script>
-  <script defer src="./js/timeoff.js?v=1.35.0"></script>
-  <script defer src="./js/loadsecure.js?v=1.35.0"></script>
-  <script defer src="./js/radar.js?v=1.35.0"></script>
-  <script defer src="./js/paperlog.js?v=1.35.0"></script>
-  <script defer src="./js/detention.js?v=1.35.0"></script>
-  <script defer src="./js/yardcheck.js?v=1.35.0"></script>
-  <script defer src="./js/yardboard.js?v=1.35.0"></script>
-  <script defer src="./js/status.js?v=1.35.0"></script>
-  <script defer src="./js/recruit.js?v=1.35.0"></script>
-  <script defer src="./js/dvir.js?v=1.35.0"></script>
-  <script defer src="./js/trailerdefect.js?v=1.35.0"></script>
-  <script defer src="./js/incident.js?v=1.35.0"></script>
-  <script defer src="./js/scanner.js?v=1.35.0"></script>
-  <script defer src="./js/doc-auto-detect.js?v=1.35.0"></script>
-  <script defer src="./js/utilities.js?v=1.35.0"></script>
-  <script defer src="./js/favorites.js?v=1.35.0"></script>
-  <script defer src="./js/app.js?v=1.35.0"></script>
+  <script defer src="./js/storage.js?v=1.36.0"></script>
+  <script defer src="./js/qr.js?v=1.36.0"></script>
+  <script defer src="./js/barcode.js?v=1.36.0"></script>
+  <script defer src="./js/ui.js?v=1.36.0"></script>
+  <script defer src="./js/labels.js?v=1.36.0"></script>
+  <script defer src="./js/distance.js?v=1.36.0"></script>
+  <script defer src="./js/scales-data.js?v=1.36.0"></script>
+  <script defer src="./js/nearby.js?v=1.36.0"></script>
+  <script defer src="./js/routewx.js?v=1.36.0"></script>
+  <script defer src="./js/trailerinspect.js?v=1.36.0"></script>
+  <script defer src="./js/timesheet.js?v=1.36.0"></script>
+  <script defer src="./js/spottertimesheets.js?v=1.36.0"></script>
+  <script defer src="./js/hos.js?v=1.36.0"></script>
+  <script defer src="./js/fuelcost.js?v=1.36.0"></script>
+  <script defer src="./js/eia.js?v=1.36.0"></script>
+  <script defer src="./js/fsc.js?v=1.36.0"></script>
+  <script defer src="./js/fuelboard.js?v=1.36.0"></script>
+  <script defer src="./js/timeoff.js?v=1.36.0"></script>
+  <script defer src="./js/loadsecure.js?v=1.36.0"></script>
+  <script defer src="./js/radar.js?v=1.36.0"></script>
+  <script defer src="./js/paperlog.js?v=1.36.0"></script>
+  <script defer src="./js/detention.js?v=1.36.0"></script>
+  <script defer src="./js/yardcheck.js?v=1.36.0"></script>
+  <script defer src="./js/yardboard.js?v=1.36.0"></script>
+  <script defer src="./js/status.js?v=1.36.0"></script>
+  <script defer src="./js/recruit.js?v=1.36.0"></script>
+  <script defer src="./js/dvir.js?v=1.36.0"></script>
+  <script defer src="./js/trailerdefect.js?v=1.36.0"></script>
+  <script defer src="./js/incident.js?v=1.36.0"></script>
+  <script defer src="./js/scanner.js?v=1.36.0"></script>
+  <script defer src="./js/doc-auto-detect.js?v=1.36.0"></script>
+  <script defer src="./js/docscan.js?v=1.36.0"></script>
+  <script defer src="./js/utilities.js?v=1.36.0"></script>
+  <script defer src="./js/favorites.js?v=1.36.0"></script>
+  <script defer src="./js/app.js?v=1.36.0"></script>
 </head>
 <body>
   <div class="lw-topbar no-print">
@@ -81,7 +70,7 @@
       <div class="lw-brand-text">
         <h1 id="companyTitle" class="lw-title"><span id="companyName">Logistics Warehouse</span></h1>
         <div class="lw-sub"><span id="companyTitleText">Driver Toolkit</span> <span class="lw-sub-sep">·</span> <span id="companyEyebrow">Transportation</span></div>
-        <div class="version">v1.35.0</div>
+        <div class="version">v1.36.0</div>
       </div>
     </div>
     <div class="lw-hdr-right">
@@ -175,7 +164,7 @@
         <button class="module-card" data-view="detention"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><b>Detention Tracker</b><span>Log arrival/departure and estimate detention time.</span></button>
         <button class="module-card" data-view="dvir"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/><path d="M8 3v2h8V3"/></svg></div><b>DVIR Inspection</b><span>Backup only — use Samsara e-DVIR first. Paper form for when it's down.</span></button>
         <button class="module-card" data-view="incident"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.01"/></svg></div><b>Incident Report</b><span>Accident or damage report with photos — saved on your phone, sent by text or email.</span></button>
-        <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Auto-detects and straightens paperwork as you scan, extract text, and share or download as a PDF — multi-page.</span></button>
+        <button class="module-card" data-view="docscan"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><b>Doc Scanner</b><span>Scan paperwork, clean it up, and send it as one PDF — multi-page.</span></button>
         <button class="module-card" data-view="trailerinspect"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 3h6v2H9z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Trailer Inspection</b><span>Backup only — for a trailer swap or when the usual app's down.</span></button>
         <button class="module-card" data-view="recruiter"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M18 8v6M15 11h6"/></svg></div><b>Recruiter</b><span>Your personal QR code for our driver application. Earn points when someone you send applies or gets hired.</span></button>
         <button class="module-card" data-view="contact"><div class="icon-badge"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c0-1.7 1.5-3 3-3s3 1.3 3 3M14 9h4M14 13h4"/></svg></div><b>Contact QR</b><span>Shareable QR / vCard for dispatch, safety, or customer contacts.</span></button>
@@ -1210,47 +1199,101 @@
       </div>
     </section>
 
-    <section id="docscan" class="view no-print">
-      <div class="card">
+    <section id="docscan" class="view no-print" data-mode="driver" data-db="lwh-driver-docscan" data-prefix="drvDocscan">
+      <div class="card ds-card">
         <h2>Doc Scanner</h2>
-        <p class="hint">Snap photos of paperwork, crop and straighten them, extract the text to copy elsewhere, or share/download as a PDF. Supports multiple pages. Text extraction works best on printed text — it's not meant for handwriting.</p>
-        <div class="actions"><button type="button" id="scanCaptureBtn">Open Camera</button><button type="button" id="scanUploadBtn" class="ghost">Choose Photo</button><input type="file" id="scanFileInput" accept="image/*" hidden /></div>
-        <div id="scanCameraWrap" class="scan-camera-fullscreen" hidden>
-          <div class="scan-camera-inner">
-            <video id="scanVideo" playsinline muted autoplay></video>
-            <canvas id="scanLiveOverlay" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
-            <button type="button" id="scanCloseBtn" class="scan-camera-close" aria-label="Close camera">&times;</button>
-            <div class="scan-camera-controls"><button type="button" id="scanSnapBtn">Capture Page</button></div>
-          </div>
+        <p class="hint">Scan your paperwork with the camera. Pages are straightened and cleaned up, then send them as one PDF. Multi-page is fine.</p>
+        <div class="ds-start">
+          <button type="button" id="dsCameraBtn" class="ds-big"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan with Camera</button>
+          <button type="button" id="dsUploadBtn" class="ds-big ghost"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></svg>Choose Photos</button>
+          <input type="file" id="dsFileInput" accept="image/*,application/pdf,.pdf" multiple hidden />
         </div>
+        <div id="dsDrop" class="ds-drop" role="button" tabindex="0">Drop photos or PDFs here &mdash; or paste a screenshot (Ctrl+V). Several files at once is fine.</div>
+      </div>
 
-        <div id="scanEditWrap" hidden style="margin-top:14px">
-          <p id="scanEditHint" class="hint">Drag the corner handles to crop, straighten, and cut out anything that isn't the document.</p>
-          <div style="position:relative;display:inline-block;max-width:100%">
-            <canvas id="scanCropCanvas" style="max-width:100%;touch-action:none;border-radius:8px;border:1px solid var(--line);display:block;margin:0 auto"></canvas>
-            <canvas id="scanCropLoupe" width="160" height="160" class="scan-loupe" hidden></canvas>
-          </div>
-          <div class="actions" style="margin-top:10px;justify-content:center">
-            <button type="button" id="scanRedetectBtn" class="ghost">Re-scan Edges</button>
-            <button type="button" id="scanRotateBtn" class="ghost">Rotate 90°</button>
-            <button type="button" id="scanFilterNone" class="seg active" data-filter="none">Original</button>
-            <button type="button" id="scanFilterBw" class="seg" data-filter="bw">B&amp;W</button>
-            <button type="button" id="scanFilterSharp" class="seg" data-filter="contrast">Sharpen</button>
-          </div>
-          <div class="actions" style="margin-top:10px"><button type="button" id="scanUseCropBtn">Use This Scan</button><button type="button" id="scanRetakeBtn" class="ghost">Retake</button></div>
+      <div id="dsCamera" class="ds-camera" hidden>
+        <video id="dsVideo" playsinline muted autoplay></video>
+        <canvas id="dsOverlay"></canvas>
+        <div id="dsFlash" class="ds-flash" hidden></div>
+        <div class="ds-cam-top">
+          <button type="button" id="dsCamClose" class="ds-cam-icon" aria-label="Close camera">&times;</button>
+          <div id="dsCamStatus" class="ds-cam-status">Fit the page inside the screen</div>
+          <button type="button" id="dsTorchBtn" class="ds-cam-pill" hidden>Light: Off</button>
         </div>
-
-        <div id="scanPages" class="cust-grid" style="margin-top:14px"></div>
-        <div id="scanBulkActions" hidden style="margin-top:10px">
-          <label>PDF filename (optional)<input type="text" id="scanPdfName" placeholder="scanned-document" /></label>
-          <div class="actions"><button type="button" id="scanDownloadPdf">Download as PDF</button><button type="button" id="scanShareAll" class="ghost">Share All Pages</button><button type="button" id="scanClearAll" class="ghost">Clear All</button></div>
+        <div class="ds-cam-bottom">
+          <div class="ds-cam-toggles"><button type="button" id="dsAutoBtn" class="ds-cam-pill">Auto capture: On</button><button type="button" id="dsBatchBtn" class="ds-cam-pill">Quick batch: Off</button></div>
+          <div class="ds-cam-row">
+            <div class="ds-cam-last"><img id="dsLastThumb" alt="Last page" hidden /><span id="dsCamCount" class="ds-cam-count">0</span></div>
+            <button type="button" id="dsSnapBtn" class="ds-shutter" aria-label="Capture page"></button>
+            <button type="button" id="dsCamDone" class="ds-cam-done">Done</button>
+          </div>
         </div>
       </div>
+
+      <div id="dsEditor" class="card ds-editor" hidden>
+        <h2 id="dsEdTitle">Adjust page</h2>
+        <p id="dsEdHint" class="hint"></p>
+        <div class="ds-ed-grid">
+          <div class="ds-ed-crop">
+            <div class="ds-crop-wrap"><canvas id="dsCrop"></canvas><canvas id="dsLoupe" width="150" height="150" class="ds-loupe" hidden></canvas></div>
+            <div class="ds-tools"><button type="button" id="dsDetect" class="ghost">Find Edges</button><button type="button" id="dsFull" class="ghost">Whole Image</button><button type="button" id="dsRotL" class="ghost" aria-label="Rotate left">&#10226; Left</button><button type="button" id="dsRotR" class="ghost" aria-label="Rotate right">&#10227; Right</button></div>
+          </div>
+          <div class="ds-ed-side">
+            <div class="ds-label">Look</div>
+            <div id="dsFilters" class="ds-chips"></div>
+            <div class="ds-label">Result</div>
+            <div class="ds-preview-wrap"><canvas id="dsPreview"></canvas></div>
+          </div>
+        </div>
+        <div class="actions"><button type="button" id="dsSave">Add Page</button><button type="button" id="dsSaveFinish" class="ghost" hidden>Keep &amp; Finish</button><button type="button" id="dsCancel" class="ghost">Cancel</button></div>
+      </div>
+
+      <div id="dsPagesCard" class="card" hidden>
+        <div class="ds-pages-head">
+          <h2>Pages <span id="dsCount" class="ds-count"></span></h2>
+          <div class="ds-sel"><button type="button" id="dsSelAll" class="ghost ds-sm">Select All</button><button type="button" id="dsSelNone" class="ghost ds-sm" hidden>Clear Selection</button><button type="button" id="dsDelSel" class="ghost ds-sm" hidden>Remove Selected</button></div>
+        </div>
+        <p id="dsSelHint" class="hint"></p>
+        <div id="dsPages" class="ds-pages"></div>
+        <div class="actions"><button type="button" id="dsClear" class="ghost">Start Over</button></div>
+      </div>
+
+      <div id="dsExportCard" class="card" hidden>
+        <h2>Send or Save</h2>
+        <div class="actions"><button type="button" id="dsPdfDownload">Download PDF</button><button type="button" id="dsPdfShare" class="ghost" hidden>Share PDF</button><button type="button" id="dsPrint" class="ghost">Print</button><button type="button" id="dsImgDownload" class="ghost">Download Images</button><button type="button" id="dsImgShare" class="ghost" hidden>Share Images</button></div>
+        <details class="ds-more"><summary>More options &mdash; file name, page size, file size, searchable PDF</summary>
+          <div class="grid-3">
+            <label>File name<input type="text" id="dsName" autocomplete="off" /></label>
+            <label>Page size<select id="dsSize"><option value="letter">Letter 8.5 &times; 11 (fit)</option><option value="fit">Same shape as the scan</option><option value="legal">Legal 8.5 &times; 14</option><option value="a4">A4</option></select></label>
+            <label>File size<select id="dsQuality"><option value="small">Small &mdash; best for email</option><option value="standard">Standard</option><option value="high">High detail</option></select></label>
+          </div>
+          <label class="ds-check"><input type="checkbox" id="dsSearchable" /> <span><b>Searchable PDF</b> &mdash; reads the text first so search (Ctrl+F) and copy work in Adobe, Edge or Chrome. Takes a little longer.</span></label>
+        </details>
+        <p id="dsExportNote" class="hint"></p>
+      </div>
+
+      <div id="dsTextCard" class="card" hidden>
+        <details class="ds-more"><summary>Read the text &amp; numbers (BOL, PO, PRO, seal…)</summary>
+        <p class="hint">Reads printed text from the pages. Handwriting usually won't read. Always check numbers against the page before using them.</p>
+        <div class="ds-text-row"><label>Language<select id="dsLang"><option value="eng">English</option><option value="spa">Spanish</option><option value="eng+spa">English + Spanish</option></select></label><button type="button" id="dsOcrBtn">Read Text</button></div>
+        <p id="dsOcrNote" class="hint"></p>
+        <div id="dsTextOut" hidden>
+          <div class="segmented"><button type="button" class="seg active" data-dstab="fields">Key Fields</button><button type="button" class="seg" data-dstab="text">Full Text</button></div>
+          <div id="dsFieldsPane"></div>
+          <div id="dsTextPane" hidden>
+            <textarea id="dsText" rows="14" placeholder="Read text appears here — fix any misreads before copying"></textarea>
+            <div class="actions"><button type="button" id="dsCopyText" class="ghost">Copy Text</button><button type="button" id="dsTxtDownload" class="ghost">Download .txt</button><button type="button" id="dsToNotes" class="ghost">Add to Notepad</button></div>
+          </div>
+        </div>
+        </details>
+      </div>
+
+      <div id="dsBusy" class="ds-busy" hidden aria-live="polite"><div class="ds-bar"><span id="dsBusyBar"></span></div><div id="dsBusyText"></div></div>
     </section>
 
     <section id="settings" class="view no-print"><div class="settings-grid"><div class="card"><h2>App Settings</h2><label>Company name<input id="setCompany" value="Logistics Warehouse" /></label><label>Company logo<input id="setLogo" type="file" accept="image/*" /></label><label>Company tagline (optional)<input id="setTagline" placeholder="e.g. Safe miles, every mile." /></label><label>Primary color<input id="setColor" type="color" value="#c8102e" /></label><label>Weather location (lat,lon)<input id="setWeatherLoc" placeholder="35.3859,-94.3985 (Fort Smith, AR default)" /></label><div class="actions"><button id="saveBrand" type="button">Save Branding</button><button id="clearLogo" type="button" class="ghost">Clear Logo</button></div></div><div class="card"><h2>Print Calibration</h2><p class="hint">These apply to screen preview and print output. Use small values like -10, 0, 10.</p><div class="grid-3"><label>Offset X px<input id="calX" type="number" value="0" /></label><label>Offset Y px<input id="calY" type="number" value="0" /></label><label>Scale %<input id="calScale" type="number" value="100" /></label></div><div class="actions"><button id="saveCalibration" type="button">Save Calibration</button></div></div><div class="card"><h2>Quick Message Contacts</h2><p class="hint">Quick Message (in Calculators &amp; Tools) sends only to your transportation managers.</p><div id="mgrList" style="margin-top:12px"></div></div><div class="card"><h2>Quick Links</h2><p class="hint">Extra shortcuts shown at the bottom of the Home screen. PTO Request, Safety Training and Unpaid Time Off are already in Quick Access. These open in a new tab; Google Apps Script web apps generally can't be embedded directly in another app due to Google's own security restrictions, so this is a fast link instead of a true embed.</p><div id="qlList"></div><div class="actions"><button id="qlAddBtn" type="button" class="ghost">Add Link</button><button id="qlResetBtn" type="button" class="ghost">Reset to Defaults</button></div></div><div class="card"><h2>Usage Tracking</h2><p class="hint">Simple usage counter — logs your name once per day to a Google Sheet, so your team lead can see who's using the app and how often (e.g. "John Smith — 12 days this month"). Not a login system, just self-reported. The logging endpoint is already baked in — just enter your name below and you're set. Editable here if it ever needs to point somewhere else.</p><label>Your Name<input id="setUserName" placeholder="Jane Smith" /></label><label>Usage Log URL<input id="setUsageLogUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label><div class="actions"><button id="saveUsageSettings" type="button" class="ghost">Save</button></div></div><div class="card"><h2>Manager Tools</h2><p class="hint">Dispatch Board, All Timesheets and Fuel Price Board are hidden for drivers. Managers can turn them on for this phone with the manager code.</p><div id="mgrToolsOff"><label>Manager code<input id="mgrToolsCode" type="password" inputmode="numeric" autocomplete="off" placeholder="Code" /></label><div class="actions"><button id="mgrToolsOn" type="button">Turn On</button></div></div><div id="mgrToolsOnBox" hidden><p><b>On for this phone.</b></p><div class="actions"><button id="mgrToolsOffBtn" type="button" class="ghost">Turn Off</button></div></div></div><div class="card"><h2>PWA Status</h2><p id="pwaStatus">Checking...</p><div class="actions"><button id="clearStorage" type="button" class="ghost">Clear Saved Settings</button></div></div></div></section>
 
-    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.35.0</p><p>Built for Logistics Warehouse drivers — trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner (with route wind, weather alerts, and scales), Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Road &amp; Nearby, Yard Check, Trailer Inspection, Unpaid Time Off, Incident Report, Weekly Timesheet, All Timesheets (Manager), Dispatch Board (Manager), Fuel Price Board (Manager), Recruiter, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
+    <section id="about" class="view no-print"><div class="card"><h2>LWH Driver Toolkit</h2><p><b>Version:</b> 1.36.0</p><p>Built for Logistics Warehouse drivers — trip fuel cost, load securement reference, documents, and weather in one place.</p><h3>Modules</h3><p>Calculator, Quick Call, Distance/Route Planner (with route wind, weather alerts, and scales), Trip Fuel Cost, Fuel Surcharge, Load Securement, Weather Radar, Road &amp; Nearby, Yard Check, Trailer Inspection, Unpaid Time Off, Incident Report, Weekly Timesheet, All Timesheets (Manager), Dispatch Board (Manager), Fuel Price Board (Manager), Recruiter, Doc Scanner, Calculators &amp; Tools (unit converter, date/loan/axle-weight calculators, notepad, Quick Message, timer, tip calc, random picker, password generator, health/BMI, translate), Settings, Print Calibration.</p></div></section>
   </main>
   <div id="scannerModal" class="scanner-modal no-print" hidden>
     <div class="scanner-card">
