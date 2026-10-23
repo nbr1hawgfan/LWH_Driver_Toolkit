@@ -1,4 +1,4 @@
-const CACHE_NAME='lwh-driver-toolkit-v1-36-0';
+const CACHE_NAME='lwh-driver-toolkit-v1-37-0';
 // Pinned-version outside libraries are cached once and kept across updates
 // (shared with the Warehouse Toolkit, same site) instead of re-downloaded every visit.
 const LIB_CACHE='lwh-shared-libs-v1';

@@ -965,48 +965,136 @@
     calc();
   }
 
-  // ---------- Axle Weight Check ----------
+  // ---------- Axle Weight & Slide ----------
+  // Scale-ticket check plus a slide plan. Sign convention for the plan:
+  //   tandems  +n = slide trailer tandems FORWARD n holes (weight moves off the drives onto the trailer tandems)
+  //            -n = slide them BACK (weight moves off the trailer tandems onto the drives)
+  //   fifth    +n = slide fifth wheel FORWARD n notches (weight moves off the drives onto the steer)
+  //            -n = slide it BACK (weight moves off the steer onto the drives)
+  // The pounds moved per hole/notch are rules of thumb the driver can change (saved per phone).
+  const AXLE_RATES_KEY='axleSlideRates';
+  function axleSlidePlan(w,lim,rates,opts){
+    const maxT=(opts&&opts.maxTandem)||12, maxF=(opts&&opts.maxFifth)||8;
+    const useFifth=w.steer!=null&&w.drive!=null;
+    const useTandem=w.drive!=null&&w.trailer!=null;
+    let best=null;
+    for(let t=(useTandem?-maxT:0); t<=(useTandem?maxT:0); t++){
+      for(let f=(useFifth?-maxF:0); f<=(useFifth?maxF:0); f++){
+        const after={
+          steer: w.steer==null?null:w.steer+f*rates.fifth,
+          drive: w.drive==null?null:w.drive-f*rates.fifth-t*rates.tandem,
+          trailer: w.trailer==null?null:w.trailer+t*rates.tandem
+        };
+        let over=0;
+        ['steer','drive','trailer'].forEach(k=>{ if(after[k]!=null) over+=Math.max(0,after[k]-lim[k]); });
+        // Prefer: legal > least overweight > tandem-only (fifth-wheel moves weigh more) > fewest moves
+        const cost=over*1000+Math.abs(t)+10*Math.abs(f);
+        if(!best||cost<best.cost) best={tandem:t,fifth:f,after,over,cost};
+      }
+    }
+    return best;
+  }
+  window.LWHAxleSlidePlan=axleSlidePlan; // exposed for testing
+
   function initAxleWeight(){
     const steer=el('awSteer'), steerLim=el('awSteerLimit');
     const drive=el('awDrive'), driveLim=el('awDriveLimit');
     const trailer=el('awTrailer'), trailerLim=el('awTrailerLimit');
     const gross=el('awGross'), grossLim=el('awGrossLimit');
-    const results=el('awResults'), overall=el('awOverall');
+    const tRate=el('awTandemRate'), fRate=el('awFifthRate');
+    const results=el('awResults'), overall=el('awOverall'), plan=el('awPlan'), truck=el('awTruck');
     if(!steer) return;
+    const saved=LWHStorage.get(AXLE_RATES_KEY,null);
+    if(saved&&tRate&&fRate){ if(saved.tandem) tRate.value=saved.tandem; if(saved.fifth) fRate.value=saved.fifth; }
+    const num=f=>{ const v=String(f.value||'').replace(/[^0-9.]/g,''); return v===''?null:parseFloat(v); };
+    const fmt=n=>Math.round(n).toLocaleString();
     function row(label,val,lim){
-      if(!val && val!==0) return '';
+      if(val==null) return '';
       const over=val>lim;
       const color=over?'var(--bad)':'var(--good)';
-      const diff=Math.abs(val-lim).toLocaleString();
+      const diff=fmt(Math.abs(val-lim));
       const status=over?`OVER by ${diff} lb`:`OK — ${diff} lb under`;
-      return `<div class="result-card" style="border-left:4px solid ${color}"><div><b>${label}</b></div><div>${val.toLocaleString()} lb / ${lim.toLocaleString()} lb limit</div><div style="color:${color};font-weight:700">${status}</div></div>`;
+      return `<div class="result-card" style="border-left:4px solid ${color}"><div><b>${label}</b></div><div>${fmt(val)} lb / ${fmt(lim)} lb limit</div><div style="color:${color};font-weight:700">${status}</div></div>`;
+    }
+    function truckSvg(w,lim){
+      const box=(x,label,v,l)=>{
+        const has=v!=null, over=has&&v>l;
+        const c=!has?'#9ca3af':over?'#b91c1c':'#1a7a1a';
+        return `<g><rect x="${x-46}" y="78" width="92" height="30" rx="4" fill="${c}"/><text x="${x}" y="98" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">${has?fmt(v):'—'}</text><text x="${x}" y="124" text-anchor="middle" font-size="11" fill="currentColor">${label}</text></g>`;
+      };
+      return `<svg viewBox="0 0 360 132" width="100%" style="max-width:520px;display:block;margin:0 auto;color:var(--ink)" role="img" aria-label="Axle weights">
+        <rect x="104" y="14" width="246" height="38" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M14 52V28h22l14 12h40v12z" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="34" cy="60" r="7" fill="currentColor"/><circle cx="92" cy="60" r="7" fill="currentColor"/><circle cx="108" cy="60" r="7" fill="currentColor"/>
+        <circle cx="300" cy="60" r="7" fill="currentColor"/><circle cx="318" cy="60" r="7" fill="currentColor"/>
+        ${box(50,'Steer',w.steer,lim.steer)}${box(170,'Drives',w.drive,lim.drive)}${box(300,'Trailer',w.trailer,lim.trailer)}
+      </svg>`;
+    }
+    function step(n,what,fwd,back,unit,moveTxt){
+      if(!n) return '';
+      const dir=n>0?fwd:back, k=Math.abs(n);
+      return `<li><b>Slide the ${what} ${dir} ${k} ${unit}${k===1?'':'s'}</b><br><span class="hint">${moveTxt(n)}</span></li>`;
     }
     function calc(){
-      const s=parseFloat(steer.value)||0, sL=parseFloat(steerLim.value)||12000;
-      const d=parseFloat(drive.value)||0, dL=parseFloat(driveLim.value)||34000;
-      const t=parseFloat(trailer.value)||0, tL=parseFloat(trailerLim.value)||34000;
-      const g=parseFloat(gross.value)||0, gL=parseFloat(grossLim.value)||80000;
+      const w={steer:num(steer),drive:num(drive),trailer:num(trailer)};
+      const lim={steer:num(steerLim)||12000,drive:num(driveLim)||34000,trailer:num(trailerLim)||34000};
+      const gL=num(grossLim)||80000;
+      const rates={tandem:num(tRate)||250,fifth:num(fRate)||500};
+      LWHStorage.set(AXLE_RATES_KEY,rates);
+      const allThree=w.steer!=null&&w.drive!=null&&w.trailer!=null;
+      const autoGross=allThree?w.steer+w.drive+w.trailer:null;
+      const g=num(gross)!=null?num(gross):autoGross;
+      gross.placeholder=autoGross!=null?fmt(autoGross)+' (added up)':'Adds up automatically';
 
-      const rows=[
-        steer.value?row('Steer Axle',s,sL):'',
-        drive.value?row('Drive Axle(s)',d,dL):'',
-        trailer.value?row('Trailer Axle(s)',t,tL):'',
-        gross.value?row('Gross Vehicle Weight',g,gL):''
-      ].filter(Boolean);
-      results.innerHTML=rows.join('');
+      truck.innerHTML=(w.steer!=null||w.drive!=null||w.trailer!=null)?truckSvg(w,lim):'';
+      results.innerHTML=[row('Steer Axle',w.steer,lim.steer),row('Drive Axles',w.drive,lim.drive),row('Trailer Tandems',w.trailer,lim.trailer),row('Gross Weight',g,gL)].filter(Boolean).join('');
 
-      const checks=[];
-      if(steer.value) checks.push(s<=sL);
-      if(drive.value) checks.push(d<=dL);
-      if(trailer.value) checks.push(t<=tL);
-      if(gross.value) checks.push(g<=gL);
-      if(!checks.length){ overall.textContent='—'; overall.style.color=''; return; }
-      const allOk=checks.every(Boolean);
-      overall.textContent=allOk?'Legal':'Overweight — adjust load';
-      overall.style.color=allOk?'var(--good)':'var(--bad)';
+      const entered=['steer','drive','trailer'].filter(k=>w[k]!=null);
+      if(!entered.length&&g==null){ overall.textContent='—'; overall.style.color=''; plan.innerHTML=''; return; }
+      const axlesOk=entered.every(k=>w[k]<=lim[k]);
+      const grossOk=g==null||g<=gL;
+      if(axlesOk&&grossOk){
+        overall.textContent='Legal'; overall.style.color='var(--good)';
+        plan.innerHTML=entered.length?'<div class="result-card" style="border-left:4px solid var(--good)"><b>No slide needed.</b> Every axle group is under its limit as weighed.</div>':'';
+        return;
+      }
+      overall.textContent='Overweight — adjust'; overall.style.color='var(--bad)';
+      if(!grossOk){
+        plan.innerHTML=`<div class="result-card" style="border-left:4px solid var(--bad)"><b>Gross is over by ${fmt(g-gL)} lb.</b><br>Sliding moves weight between axles but can't lower the total. The load needs to be lightened or reworked. Call dispatch.</div>`;
+        return;
+      }
+      if(entered.length<2){
+        plan.innerHTML='<div class="result-card" style="border-left:4px solid var(--bad)"><b>Enter at least the drive and trailer weights</b> to get a slide plan.</div>';
+        return;
+      }
+      const p=axleSlidePlan(w,lim,rates);
+      const steps=[
+        step(p.tandem,'trailer tandems','FORWARD','BACK','hole',n=>n>0?`Moves about ${fmt(n*rates.tandem)} lb off the drives onto the trailer tandems.`:`Moves about ${fmt(-n*rates.tandem)} lb off the trailer tandems onto the drives.`),
+        step(p.fifth,'fifth wheel','FORWARD','BACK','notch',n=>n>0?`Moves about ${fmt(n*rates.fifth)} lb off the drives onto the steer axle.`:`Moves about ${fmt(-n*rates.fifth)} lb off the steer axle onto the drives.`)
+      ].join('');
+      const afterTxt=['steer','drive','trailer'].filter(k=>p.after[k]!=null).map(k=>`${{steer:'Steer',drive:'Drives',trailer:'Trailer'}[k]} ≈ ${fmt(p.after[k])}`).join(' · ');
+      if(p.over===0){
+        plan.innerHTML=`<div class="result-card" style="border-left:4px solid var(--brand)"><h3>Slide plan</h3><ol style="margin:6px 0 6px 18px">${steps}</ol><div class="hint">After the slide (estimate): ${afterTxt}</div><div class="hint" style="margin-top:6px">Then reweigh to confirm.</div></div>`;
+      }else{
+        plan.innerHTML=`<div class="result-card" style="border-left:4px solid var(--bad)"><h3>Sliding alone won't get this legal</h3><p>There isn't enough room on the other axles to move the extra weight to. The load likely needs to be shifted inside the trailer or lightened. Call dispatch.</p></div>`;
+      }
     }
-    [steer,steerLim,drive,driveLim,trailer,trailerLim,gross,grossLim].forEach(f=>f.addEventListener('input',calc));
+    [steer,steerLim,drive,driveLim,trailer,trailerLim,gross,grossLim,tRate,fRate].forEach(f=>f&&f.addEventListener('input',calc));
+    // "Clear This Tool": wipe the weights and reset limits, but keep the driver's saved slide settings
+    window.LWHToolClear=window.LWHToolClear||{};
+    window.LWHToolClear.axleweight=()=>{
+      [steer,drive,trailer,gross].forEach(f=>f.value='');
+      [steerLim,driveLim,trailerLim,grossLim].forEach(f=>f.value=f.defaultValue);
+      calc();
+    };
+    calc();
   }
+  // Home-screen shortcut: open Calculators & Tools straight to a specific tool (data-util-open)
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('[data-util-open]'); if(!b) return;
+    const name=b.dataset.utilOpen;
+    setTimeout(()=>{ const seg=document.querySelector(`#utilTabs .seg[data-util="${name}"]`); if(seg) seg.click(); },0);
+  });
 
   // ---------- Margin Calculator ----------
   function initMarginCalc(){
