@@ -65,15 +65,67 @@
   function need(cond,msg){ if(!cond){ LWHUI.toast(msg); return false; } return true; }
 
   /* ---------- driver / location chips ---------- */
+  /* Driver names come only from the master driver list (synced hourly to the
+     Drivers tab). Drivers type a few letters and the closest names come up:
+     first or last name, initials ("aj"), and small typos ("micheal") all work. */
+  const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  function near(a,b){              // true if a and b differ by at most one letter
+    if(a===b) return true;
+    if(Math.abs(a.length-b.length)>1) return false;
+    let i=0,j=0,edits=0;
+    while(i<a.length&&j<b.length){
+      if(a[i]===b[j]){i++;j++;continue;}
+      if(++edits>1) return false;
+      if(a.length>b.length) i++; else if(b.length>a.length) j++;
+      else if(a[i+1]===b[j]&&a[i]===b[j+1]){i+=2;j+=2;} else {i++;j++;}
+    }
+    return edits+(a.length-i)+(b.length-j)<=1;
+  }
+  function score(name,q){
+    const n=norm(name), words=n.split(' '), parts=norm(q).split(' ').filter(Boolean);
+    if(!parts.length) return 1;
+    if(n.startsWith(norm(q))) return 100;
+    if(parts.length===1&&parts[0].length>=2&&words.map(w=>w[0]).join('')===parts[0]) return 90;   // initials
+    let total=0;
+    for(const p of parts){
+      let best=0;
+      for(const w of words){
+        if(w.startsWith(p)) best=Math.max(best,60);
+        else if(w.includes(p)&&p.length>=3) best=Math.max(best,35);
+        else if(p.length>=3&&(near(w.slice(0,p.length),p)||near(w.slice(0,p.length+1),p)||near(w,p))) best=Math.max(best,25);
+      }
+      if(!best) return 0;
+      total+=best;
+    }
+    return total/parts.length;
+  }
+  function renderDriverChips(){
+    const grid=$('tdDriverGrid'), q=$('tdDriverFind').value, msg=$('tdDriverFindMsg');
+    $('tdDriverFindX').hidden=!q;
+    if(!st.loaded){ return; }
+    let list=st.drivers.map(n=>({n,s:score(n,q)})).filter(x=>x.s>0);
+    list.sort((a,b)=>b.s-a.s||a.n.localeCompare(b.n));
+    const last=LWHStorage.get('tdLastDriver','');
+    if(!q.trim()&&last&&st.drivers.includes(last)) list=[{n:last}].concat(list.filter(x=>x.n!==last));
+    msg.hidden=!q.trim();
+    msg.textContent=!list.length?'No name matches "'+q.trim()+'". Check the spelling or try your last name.':list.length===1?'Is this you? Tap your name.':list.length+' names match';
+    msg.className='td-findmsg'+(list.length?'':' none');
+    grid.innerHTML=list.map((x,i)=>`<button type="button" class="td-chip${q.trim()&&i===0?' td-chip-top':''}" data-pick="driver" data-val="${safe(x.n)}">${safe(x.n)}${!q.trim()&&x.n===last?' <span class="td-chip-tag">last time</span>':''}</button>`).join('');
+  }
   function renderChips(type){
-    const items=type==='driver'?st.drivers:st.locations;
-    const grid=$(type==='driver'?'tdDriverGrid':'tdLocGrid');
+    if(type==='driver'){
+      // a remembered name that's no longer on the list (renamed / left) is dropped
+      if(st.driver&&st.drivers.length&&!st.drivers.includes(st.driver)){ st.driver=''; LWHStorage.set('tdLastDriver',''); }
+      renderDriverChips(); showPicked('driver'); return;
+    }
+    const items=st.locations;
+    const grid=$('tdLocGrid');
     grid.innerHTML=items.map(n=>`<button type="button" class="td-chip" data-pick="${type}" data-val="${safe(n)}">${safe(n)}</button>`).join('')+
-      `<button type="button" class="td-chip td-chip-new" data-new="${type}">＋ ${type==='driver'?'My name is not here':'Different / new location'}</button>`;
+      `<button type="button" class="td-chip td-chip-new" data-new="${type}">＋ Different / new location</button>`;
     showPicked(type);
   }
   function pick(type,val){
-    if(type==='driver'){ st.driver=val; LWHStorage.set('tdLastDriver',val); }
+    if(type==='driver'){ st.driver=val; LWHStorage.set('tdLastDriver',val); $('tdDriverFind').value=''; renderDriverChips(); }
     else st.location=val;
     showPicked(type);
   }
@@ -82,11 +134,13 @@
     const p=type==='driver'?'tdDriver':'tdLoc';
     $(p+'Banner').hidden=!val;
     $(p+'BannerText').textContent=(type==='driver'?'👤 ':'📍 ')+val;
+    if(type==='driver'){ $('tdDriverPick').hidden=!!val; return; }
     $(p+'Grid').hidden=!!val;
     $(p+'New').hidden=true;
   }
   function changePick(type){
-    if(type==='driver') st.driver=''; else st.location='';
+    if(type==='driver'){ st.driver=''; $('tdDriverFind').value=''; renderDriverChips(); showPicked(type); setTimeout(()=>$('tdDriverFind').focus(),50); return; }
+    st.location='';
     showPicked(type);
   }
   function showNew(type){
@@ -256,7 +310,7 @@
       if(t.dataset.back) return go(Number(t.dataset.back));
     });
     $('tdN1').onclick=()=>need($('tdDate').value,'Please confirm the date.')&&go(2);
-    $('tdN2').onclick=()=>need(st.driver,'Please tap your name.')&&go(3);
+    $('tdN2').onclick=()=>need(st.driver&&(!st.drivers.length||st.drivers.includes(st.driver)),'Please find and tap your name.')&&go(3);
     $('tdN3').onclick=()=>need($('tdTrailer').value.trim(),'Please enter the trailer number.')&&go(4);
     $('tdN4').onclick=()=>need(st.location,'Please tap a location.')&&go(5);
     $('tdN5').onclick=()=>need(st.selected.length||customs().length||st.clear,'Tap any defects found, or confirm the trailer is clear.')&&go(6);
@@ -264,7 +318,9 @@
     $('tdSkip6').onclick=()=>go(7);
     $('tdDriverChange').onclick=()=>changePick('driver');
     $('tdLocChange').onclick=()=>changePick('location');
-    $('tdDriverNewOk').onclick=()=>confirmNew('driver');   $('tdDriverNewCancel').onclick=()=>cancelNew('driver');
+    $('tdDriverFind').addEventListener('input',renderDriverChips);
+    $('tdDriverFind').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); const top=$('tdDriverGrid').querySelector('[data-pick]'); if(top&&$('tdDriverFind').value.trim()) top.click(); } });
+    $('tdDriverFindX').onclick=()=>{ $('tdDriverFind').value=''; renderDriverChips(); $('tdDriverFind').focus(); };
     $('tdLocNewOk').onclick=()=>confirmNew('location');    $('tdLocNewCancel').onclick=()=>cancelNew('location');
     $('tdClearBtn').onclick=()=>{
       if(!st.clear&&(st.selected.length||customs().length)) return LWHUI.toast('You have defects selected — remove them first.');
@@ -280,7 +336,7 @@
     $('tdRetrySubmit').onclick=()=>{ $('tdSubmitErr').hidden=true; submit(); };
     $('tdRetryLoad').onclick=loadLists;
     $('tdNew').onclick=reset;
-    ['tdDriverNewInput','tdLocNewInput'].forEach(id=>$(id).addEventListener('keydown',e=>{ if(e.key==='Enter') $(id==='tdDriverNewInput'?'tdDriverNewOk':'tdLocNewOk').click(); }));
+    $('tdLocNewInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('tdLocNewOk').click(); });
 
     // Load lists the first time the screen is opened (and refresh on later opens)
     const obs=new MutationObserver(()=>{ if(root.classList.contains('active')) loadLists(); });
