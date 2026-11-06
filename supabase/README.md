@@ -44,3 +44,35 @@ All of this is live on project `tjivcqxnkftujceumdtx` (LWH Companion):
 
 All of these functions run with JWT verification off, like the timesheet ones.
 The Dispatch Board in the toolkit reads the two history functions.
+
+## Driver Messages (Nov 6, 2026) — deployed
+
+Migration `20261106_driver_messages.sql` is applied to LWH Companion. No Edge Functions —
+the app calls Postgres functions directly with the publishable key (same as the Warehouse
+Toolkit's employee PIN login). Tables have RLS on and no policies, so nothing is readable
+except through these functions.
+
+| Piece | What it does |
+|---|---|
+| `drv_auth`, `drv_setup_codes`, `drv_sessions` | Driver ID + PIN sign-in, keyed to `drivers.driver_id` (30-day sessions) |
+| `msg_messages`, `msg_recipients` | one row per message, one row per person (delivered / read / got it / reply) |
+| `drv_create_pin`, `drv_login`, `drv_logout`, `drv_me` | sign-in (Toolkit and Message Center) |
+| `msg_inbox`, `msg_mark` | driver inbox; read / ack / reply |
+| `msg_directory`, `msg_send`, `msg_sent`, `msg_detail`, `msg_recall` | Message Center (role = Manager only) |
+| `drv_setup_list`, `drv_reset_pin` | setup codes and PIN resets (role = Manager only) |
+
+**First sign-in for managers.** Every active person in `drivers` got a setup code. To get the
+managers' codes (one time), run this in the SQL Editor:
+
+```sql
+select d.name, c.driver_id, c.setup_code
+  from drv_setup_codes c join drivers d using (driver_id)
+ where d.role = 'Manager';
+```
+
+Then open `/dispatch/`, tap **First time sign-in**, and make a PIN. After that, the Message
+Center's **Driver Sign-in** tab lists every driver's code and can reset PINs. New drivers added
+to the `drivers` table get a code the next time that tab is opened.
+
+`recipient_kind`/`sender_kind` allow `'emp'` so the Warehouse Toolkit can use the same tables
+with its `emp_*` sign-in later.

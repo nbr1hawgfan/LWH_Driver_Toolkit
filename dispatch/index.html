@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Driver Message Center</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="../icons/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" />
+<style>
+:root{--brand:#c8102e;--brand-dark:#8f0b21;--brand-tint:#fbe7ea;--ink:#141414;--muted:#5c5c66;--line:#dedede;--bg:#f3f3f3;--card:#fff;--good:#1a7a1a;--warn:#a15c00;--bad:#b91c1c}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+h1,h2,h3,.tab,button{font-family:Oswald,"Arial Narrow",Arial,sans-serif;letter-spacing:.03em}
+h2{margin:0 0 10px;font-size:20px;text-transform:uppercase}
+h3{margin:18px 0 8px;font-size:15px;text-transform:uppercase;color:var(--muted)}
+header{background:var(--brand);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;border-bottom:4px solid #111}
+header img{width:44px;height:44px;background:#fff;border-radius:50%;object-fit:contain}
+header h1{margin:0;font-size:22px;text-transform:uppercase}
+header .sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85}
+header .who{margin-left:auto;text-align:right;font-size:13px}
+header .who b{display:block;font-family:Oswald,Arial,sans-serif;font-size:15px;text-transform:uppercase}
+header .who button{margin-top:4px;background:transparent;border:1px solid rgba(255,255,255,.7);color:#fff;min-height:30px;padding:2px 10px;font-size:12px}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--line);padding:18px;margin:0 0 16px}
+button{border:0;background:var(--brand);color:#fff;font-weight:600;text-transform:uppercase;font-size:14px;padding:9px 16px;min-height:42px;cursor:pointer}
+button:hover{background:var(--brand-dark)}
+button.ghost{background:#fff;color:#111;border:2px solid #111}
+button.ghost:hover{background:#f0f0f0}
+button.dark{background:#111}button.dark:hover{background:#333}
+button:disabled{opacity:.55;cursor:default}
+label{display:block;font-weight:600;margin:0 0 12px}
+input[type=text],input[type=password],input[type=search],select,textarea{display:block;width:100%;margin-top:5px;padding:10px 12px;border:1.5px solid #bbb;background:#fff;font:inherit;font-weight:400;border-radius:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:0;border-color:var(--brand)}
+textarea{min-height:120px;resize:vertical;font-size:17px}
+.hint{color:var(--muted);font-size:13px;margin:4px 0 0;font-weight:400}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.err{background:#fdecec;border:2px solid var(--bad);color:#7f1d1d;padding:10px 12px;margin:10px 0;font-weight:600}
+.ok{background:#e9f6e9;border:2px solid var(--good);color:#145f14;padding:10px 12px;margin:10px 0;font-weight:600}
+.tabs{display:flex;gap:0;margin:0 0 16px;border-bottom:3px solid #111}
+.tab{background:#fff;color:#111;border:2px solid #111;border-bottom:0;margin-right:-2px;min-height:44px;padding:8px 20px;font-size:15px}
+.tab.active{background:#111;color:#fff}
+.seg{display:flex;flex-wrap:wrap;gap:0;margin:6px 0 12px}
+.seg button{background:#fff;color:#111;border:2px solid #111;margin-right:-2px;flex:1 1 auto}
+.seg button.active{background:var(--brand);border-color:var(--brand);color:#fff;position:relative;z-index:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.chip{background:#fff;color:#111;border:1.5px solid #999;text-transform:none;font-family:inherit;font-weight:600;letter-spacing:0;min-height:38px;padding:6px 12px;font-size:14px}
+.chip.on{background:#111;color:#fff;border-color:#111}
+.chip small{font-weight:400;opacity:.75;margin-left:4px}
+.pick{max-height:300px;overflow:auto;border:1.5px solid #bbb;background:#fff}
+.pick label{display:flex;gap:10px;align-items:center;margin:0;padding:8px 12px;border-bottom:1px solid #eee;font-weight:500}
+.pick label span{color:var(--muted);font-size:13px;margin-left:auto}
+.pick input{width:18px;height:18px;accent-color:var(--brand)}
+.opt-row{display:flex;gap:8px;margin:0 0 8px}
+.opt-row input{margin:0}
+.opt-row button{min-height:40px;padding:4px 12px}
+.count{font-size:12.5px;color:var(--muted);text-align:right;margin-top:4px}
+.preview{background:#fafafa;border-left:5px solid var(--brand);padding:12px 14px;margin:8px 0 12px;font-size:16px;white-space:pre-wrap}
+.sent-item{display:grid;grid-template-columns:1fr auto;gap:6px 14px;padding:14px;border:1px solid var(--line);border-left:6px solid #111;background:#fff;margin:0 0 10px;cursor:pointer}
+.sent-item:hover{border-color:#111}
+.sent-item.sel{outline:3px solid var(--brand)}
+.sent-item.recalled{opacity:.55;border-left-color:#999}
+.sent-item.partial{border-left-color:var(--brand)}
+.sent-item.done{border-left-color:var(--good)}
+.sent-body{font-size:15.5px;white-space:pre-wrap;word-break:break-word}
+.meta{font-size:12.5px;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;background:#eee;margin-right:6px}
+.tag.urgent{background:var(--bad);color:#fff}
+.bar{height:8px;background:#e6e6e6;margin-top:6px;min-width:150px}
+.bar i{display:block;height:100%;background:var(--good)}
+.score{font-family:Oswald,Arial,sans-serif;font-size:20px;text-align:right;white-space:nowrap}
+.score small{display:block;font-family:inherit;font-size:12px;color:var(--muted);font-weight:400}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e6e6e6;vertical-align:top}
+th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px;letter-spacing:.05em;background:#111;color:#fff;position:sticky;top:0}
+.st{display:inline-block;font-weight:700;font-size:12px;text-transform:uppercase;padding:3px 8px}
+.st-none{background:#eee;color:#555}.st-dlv{background:#fff4dc;color:var(--warn)}.st-read{background:#e7eefc;color:#1d3f8f}.st-ok{background:#e3f4e3;color:#145f14}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;font-weight:700;letter-spacing:.12em}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
+.sticky{position:sticky;top:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;font-weight:600;z-index:9;max-width:90vw}
+.login{max-width:440px;margin:30px auto}
+@media(max-width:820px){.split,.grid2{grid-template-columns:1fr}.sticky{position:static}header .sub{display:none}}
+@media print{header,.tabs,.no-print{display:none!important}body{background:#fff}.card{border:0;padding:0}th{background:#fff;color:#000;border-bottom:2px solid #000}}
+</style>
+</head>
+<body>
+<header>
+  <img src="../icons/company-logo.png" alt="" />
+  <div><h1>Driver Message Center</h1><div class="sub">Logistics Warehouse · Transportation</div></div>
+  <div class="who" id="whoBox" hidden><span>Signed in</span><b id="whoName"></b><button type="button" id="logoutBtn">Sign out</button></div>
+</header>
+<main>
+  <!-- Sign in -->
+  <section id="loginView" class="card login">
+    <h2>Dispatch sign-in</h2>
+    <p class="hint" style="margin:0 0 14px">Use your Driver ID and 6-digit PIN — the same sign-in drivers use in the Driver Toolkit. Only people set as <b>Manager</b> in the driver list can send messages.</p>
+    <label>Driver ID<input type="text" id="lgId" autocomplete="username" autocapitalize="characters" spellcheck="false" /></label>
+    <div id="lgPinBox"><label>6-digit PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="6" autocomplete="current-password" /></label>
+      <button type="button" id="lgBtn">Sign in</button></div>
+    <div id="lgSetupBox" hidden>
+      <label>Setup code<input type="text" id="lgCode" autocapitalize="characters" autocomplete="off" /></label>
+      <div class="grid2"><label>New 6-digit PIN<input type="password" id="lgNew1" inputmode="numeric" maxlength="6" autocomplete="new-password" /></label>
+      <label>Type it again<input type="password" id="lgNew2" inputmode="numeric" maxlength="6" autocomplete="new-password" /></label></div>
+      <button type="button" id="lgSetupBtn">Create PIN &amp; sign in</button>
+    </div>
+    <div id="lgErr" class="err" hidden></div>
+    <p><button type="button" id="lgToggle" class="ghost">First time sign-in</button></p>
+  </section>
+
+  <section id="appView" hidden>
+    <div class="tabs no-print">
+      <button type="button" class="tab active" data-tab="send">Send</button>
+      <button type="button" class="tab" data-tab="sent">Sent &amp; Read Receipts</button>
+      <button type="button" class="tab" data-tab="pins">Driver Sign-in</button>
+    </div>
+
+    <!-- SEND -->
+    <div id="tab-send" class="split">
+      <div class="card">
+        <h2>New message</h2>
+        <h3 style="margin-top:0">1. Who gets it</h3>
+        <div class="seg" id="audSeg"><button type="button" class="active" data-aud="all">Everyone</button><button type="button" data-aud="locations">By location</button><button type="button" data-aud="drivers">Pick drivers</button></div>
+        <div id="audAll" class="hint">All active drivers (managers not included).</div>
+        <div id="audLoc" hidden><div class="chips" id="locChips"></div></div>
+        <div id="audDrv" hidden>
+          <input type="search" id="drvSearch" placeholder="Search name, ID or location" />
+          <div class="row" style="margin:6px 0"><button type="button" class="ghost" id="drvAll" style="min-height:34px;padding:2px 10px">Select shown</button><button type="button" class="ghost" id="drvNone" style="min-height:34px;padding:2px 10px">Clear</button><span class="hint" id="drvCount"></span></div>
+          <div class="pick" id="drvPick"></div>
+        </div>
+
+        <h3>2. What kind</h3>
+        <div class="seg" id="typeSeg"><button type="button" class="active" data-type="notice">Notice</button><button type="button" data-type="ack">Must acknowledge</button><button type="button" data-type="reply">Quick reply</button></div>
+        <p class="hint" id="typeHint">Just information. Shows up and can be read out loud.</p>
+        <div id="replyBox" hidden>
+          <div class="chips" id="presetChips"></div>
+          <div id="optList"></div>
+          <p class="hint">Up to 4 answers, 40 characters each. Drivers tap one — no typing.</p>
+        </div>
+
+        <h3>3. Message</h3>
+        <textarea id="body" maxlength="1000" placeholder="Keep it short — it may be read out loud to a driver on the road."></textarea>
+        <div class="count"><span id="bodyCount">0</span>/1000</div>
+        <div class="grid2">
+          <label>Remove from drivers' screens<select id="expires"><option value="">Never (after 30 days)</option><option value="eod">End of today</option><option value="24">In 24 hours</option><option value="72">In 3 days</option><option value="168">In 1 week</option></select></label>
+          <label style="display:flex;gap:10px;align-items:center;margin-top:26px"><input type="checkbox" id="urgent" style="width:20px;height:20px;accent-color:var(--brand)" /> Mark urgent</label>
+        </div>
+        <div id="sendErr" class="err" hidden></div>
+        <div class="row"><button type="button" id="sendBtn">Send message</button><button type="button" class="ghost" id="hearBtn">Hear it</button></div>
+      </div>
+      <div class="card sticky">
+        <h2>Preview</h2>
+        <div class="meta" id="pvTo">To: Everyone</div>
+        <div class="preview" id="pvBody">Your message will show here.</div>
+        <div class="meta" id="pvSpoken"></div>
+        <h3>Tips</h3>
+        <ul class="hint" style="padding-left:18px;margin:0">
+          <li>Drivers can't open message text while the truck is moving — it is read out loud instead, so write it the way you'd say it.</li>
+          <li>Use <b>Must acknowledge</b> for safety and policy notices. You'll see exactly who tapped Got It.</li>
+          <li>Back-and-forth conversations still belong in Samsara or a phone call.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SENT -->
+    <div id="tab-sent" class="split" hidden>
+      <div>
+        <div class="row no-print" style="margin:0 0 10px"><select id="sentDays" style="width:auto;margin:0"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option></select><button type="button" class="ghost" id="sentRefresh">Refresh</button><span class="hint" id="sentStatus"></span></div>
+        <div id="sentList"></div>
+      </div>
+      <div class="card sticky" id="detail">
+        <p class="hint" style="margin:0">Pick a message to see who got it, read it, and answered.</p>
+      </div>
+    </div>
+
+    <!-- PINS -->
+    <div id="tab-pins" hidden>
+      <div class="card">
+        <h2>Setup codes</h2>
+        <p class="hint" style="margin:0 0 10px">Each driver signs in once in the Driver Toolkit: <b>Messages → First time sign-in</b>, their Driver ID, this setup code, then a PIN they choose. A code disappears from this list once it is used. Hand codes out in person or by text — treat them like a key.</p>
+        <div class="row no-print" style="margin:0 0 10px"><button type="button" class="ghost" id="pinsRefresh">Refresh</button><button type="button" class="ghost" id="pinsPrint">Print</button><span class="hint" id="pinsStatus"></span></div>
+        <div style="overflow:auto"><table><thead><tr><th>Driver</th><th>Driver ID</th><th>Location</th><th>Setup code</th></tr></thead><tbody id="pinsBody"></tbody></table></div>
+      </div>
+      <div class="card no-print">
+        <h2>Reset a PIN</h2>
+        <p class="hint" style="margin:0 0 10px">Forgot their PIN, or a new phone? Resetting signs them out everywhere and gives a new setup code.</p>
+        <div class="row"><select id="resetSel" style="max-width:420px;margin:0"></select><button type="button" id="resetBtn">Reset PIN</button></div>
+        <div id="resetOut"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="toast" class="toast" hidden></div>
+<script>
+(function(){
+  const API='https://tjivcqxnkftujceumdtx.supabase.co/rest/v1/rpc/';
+  const KEY='sb_publishable_PYlWSW6-Gi-QZl91IXUq0Q_W5mO3sDT';
+  const TK='lwhdispatch_token';
+  const PRESETS=['On my way','Running late','Call me','Yes','No','Can do','Can’t do it'];
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+  let token=ls.get(TK)||'', dir=[], aud='all', type='notice', locSel=new Set(), drvSel=new Set(), opts=['',''], sent=[], selId=null, sentTimer=null;
+
+  function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2800)}
+  async function rpc(name,args){
+    const r=await fetch(API+name,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify(args||{}),cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(j&&j.ok===false&&(j.error==='signed_out'||j.error==='not_manager')){ signOut(j.error==='not_manager'?'This sign-in is not set up as a Manager in the driver list.':'Your sign-in ran out. Please sign in again.'); throw new Error('stop'); }
+    return j;
+  }
+  function when(iso){ if(!iso) return ''; const d=new Date(iso); const t=d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); return d.toDateString()===new Date().toDateString()?t:d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+t; }
+
+  // ------------------------------------------------ sign in
+  function lgErr(m){$('lgErr').textContent=m||'';$('lgErr').hidden=!m}
+  function signOut(msg){ token=''; ls.set(TK,null); clearInterval(sentTimer); $('appView').hidden=true; $('whoBox').hidden=true; $('loginView').hidden=false; lgErr(msg||''); }
+  async function start(){
+    try{ const d=await rpc('msg_directory',{p_token:token}); dir=d.drivers||[]; $('whoName').textContent=d.me||''; }
+    catch(e){ return; }
+    $('loginView').hidden=true; $('appView').hidden=false; $('whoBox').hidden=false;
+    renderAudience(); renderReply(); updatePreview(); renderResetSel();
+  }
+  async function doLogin(){
+    const id=$('lgId').value.trim().toUpperCase(), pin=$('lgPin').value.trim();
+    if(!id||!/^\d{6}$/.test(pin)) return lgErr('Enter your Driver ID and 6-digit PIN.');
+    $('lgBtn').disabled=true;
+    try{ const r=await fetch(API+'drv_login',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_driver_id:id,p_pin:pin})}).then(r=>r.json());
+      if(!r.ok){ lgErr(r.error); if(r.needs_setup) setSetup(true); return; }
+      token=r.token; ls.set(TK,token); ls.set('lwhdispatch_id',id); $('lgPin').value=''; lgErr(''); start();
+    }catch(e){ lgErr('Could not reach the server. Check your connection.'); } finally{ $('lgBtn').disabled=false; }
+  }
+  async function doSetup(){
+    const id=$('lgId').value.trim().toUpperCase(), code=$('lgCode').value.trim(), a=$('lgNew1').value.trim(), b=$('lgNew2').value.trim();
+    if(!id||!code) return lgErr('Enter your Driver ID and setup code.');
+    if(!/^\d{6}$/.test(a)) return lgErr('PIN must be exactly 6 digits.'); if(a!==b) return lgErr('The two PINs do not match.');
+    try{ const r=await fetch(API+'drv_create_pin',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_driver_id:id,p_setup_code:code,p_pin:a})}).then(r=>r.json());
+      if(!r.ok) return lgErr(r.error);
+      token=r.token; ls.set(TK,token); ls.set('lwhdispatch_id',id); setSetup(false); lgErr(''); start();
+    }catch(e){ lgErr('Could not reach the server. Check your connection.'); }
+  }
+  function setSetup(on){ $('lgSetupBox').hidden=!on; $('lgPinBox').hidden=on; $('lgToggle').textContent=on?'I already have a PIN':'First time sign-in'; }
+  $('lgBtn').onclick=doLogin; $('lgPin').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+  $('lgSetupBtn').onclick=doSetup; $('lgToggle').onclick=()=>setSetup($('lgSetupBox').hidden);
+  $('logoutBtn').onclick=async()=>{ const t=token; signOut(); try{ await fetch(API+'drv_logout',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:t})}); }catch(e){} };
+  $('lgId').value=ls.get('lwhdispatch_id')||'';
+
+  // ------------------------------------------------ tabs
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+    ['send','sent','pins'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    clearInterval(sentTimer);
+    if(b.dataset.tab==='sent'){ loadSent(); sentTimer=setInterval(()=>{ if(!document.hidden) loadSent(true); },30000); }
+    if(b.dataset.tab==='pins') loadPins();
+  });
+
+  // ------------------------------------------------ audience
+  const drivers=()=>dir.filter(d=>d.role!=='Manager');
+  function renderAudience(){
+    document.querySelectorAll('#audSeg button').forEach(b=>b.classList.toggle('active',b.dataset.aud===aud));
+    $('audAll').hidden=aud!=='all'; $('audLoc').hidden=aud!=='locations'; $('audDrv').hidden=aud!=='drivers';
+    $('audAll').textContent=`All ${drivers().length} active drivers (managers not included).`;
+    const locs={}; drivers().forEach(d=>{ const l=d.location||''; if(l) locs[l]=(locs[l]||0)+1; });
+    $('locChips').innerHTML=Object.keys(locs).sort().map(l=>`<button type="button" class="chip${locSel.has(l)?' on':''}" data-loc="${esc(l)}">${esc(l)}<small>${locs[l]}</small></button>`).join('')||'<span class="hint">No locations set in the driver list.</span>';
+    const q=($('drvSearch').value||'').toLowerCase();
+    const shown=dir.filter(d=>!q||(d.name+' '+d.driver_id+' '+d.location).toLowerCase().includes(q));
+    $('drvPick').innerHTML=shown.map(d=>`<label><input type="checkbox" data-drv="${esc(d.driver_id)}"${drvSel.has(d.driver_id)?' checked':''}/> ${esc(d.name)} <span>${esc(d.role==='Manager'?'Manager':d.location)}${d.has_pin?'':' · not signed up'}</span></label>`).join('');
+    $('drvCount').textContent=drvSel.size?`${drvSel.size} selected`:'';
+    updatePreview();
+  }
+  $('audSeg').onclick=e=>{ const b=e.target.closest('[data-aud]'); if(b){ aud=b.dataset.aud; renderAudience(); } };
+  $('locChips').onclick=e=>{ const b=e.target.closest('[data-loc]'); if(!b) return; const l=b.dataset.loc; locSel.has(l)?locSel.delete(l):locSel.add(l); renderAudience(); };
+  $('drvPick').onchange=e=>{ const c=e.target.closest('[data-drv]'); if(!c) return; c.checked?drvSel.add(c.dataset.drv):drvSel.delete(c.dataset.drv); $('drvCount').textContent=drvSel.size?`${drvSel.size} selected`:''; updatePreview(); };
+  $('drvSearch').oninput=renderAudience;
+  $('drvAll').onclick=()=>{ document.querySelectorAll('#drvPick [data-drv]').forEach(c=>drvSel.add(c.dataset.drv)); renderAudience(); };
+  $('drvNone').onclick=()=>{ drvSel.clear(); renderAudience(); };
+  function audienceLabel(){
+    if(aud==='all') return `Everyone (${drivers().length})`;
+    if(aud==='locations'){ const n=drivers().filter(d=>locSel.has(d.location)).length; return locSel.size?`${[...locSel].join(', ')} (${n})`:'Pick at least one location'; }
+    return drvSel.size?(drvSel.size===1?(dir.find(d=>d.driver_id===[...drvSel][0])||{}).name:`${drvSel.size} drivers`):'Pick at least one driver';
+  }
+
+  // ------------------------------------------------ type + replies
+  const TYPE_HINT={notice:'Just information. Shows up and can be read out loud.',ack:'Driver must tap Got It. You will see who has and hasn’t.',reply:'Driver taps one of your answers. You will see each answer.'};
+  $('typeSeg').onclick=e=>{ const b=e.target.closest('[data-type]'); if(!b) return; type=b.dataset.type; document.querySelectorAll('#typeSeg button').forEach(x=>x.classList.toggle('active',x===b)); $('typeHint').textContent=TYPE_HINT[type]; $('replyBox').hidden=type!=='reply'; updatePreview(); };
+  function renderReply(){
+    $('presetChips').innerHTML=PRESETS.map(p=>`<button type="button" class="chip${opts.includes(p)?' on':''}" data-preset="${esc(p)}">${esc(p)}</button>`).join('');
+    $('optList').innerHTML=opts.map((o,i)=>`<div class="opt-row"><input type="text" maxlength="40" data-opt="${i}" value="${esc(o)}" placeholder="Answer ${i+1}" /><button type="button" class="ghost" data-optdel="${i}" title="Remove">✕</button></div>`).join('')+(opts.length<4?'<button type="button" class="ghost" id="optAdd" style="min-height:36px">+ Add answer</button>':'');
+    const add=$('optAdd'); if(add) add.onclick=()=>{ opts.push(''); renderReply(); };
+    updatePreview();
+  }
+  $('presetChips').onclick=e=>{ const b=e.target.closest('[data-preset]'); if(!b) return; const p=b.dataset.preset;
+    if(opts.includes(p)) opts=opts.filter(o=>o!==p); else { const i=opts.indexOf(''); if(i>=0) opts[i]=p; else if(opts.length<4) opts.push(p); else return toast('4 answers max'); }
+    renderReply(); };
+  $('optList').oninput=e=>{ const i=e.target.dataset.opt; if(i!=null){ opts[+i]=e.target.value; updatePreview(); } };
+  $('optList').onclick=e=>{ const b=e.target.closest('[data-optdel]'); if(!b) return; opts.splice(+b.dataset.optdel,1); if(!opts.length) opts=['']; renderReply(); };
+
+  // ------------------------------------------------ preview + send
+  function cleanOpts(){ const seen=new Set(); return opts.map(o=>o.trim()).filter(o=>o&&!seen.has(o.toLowerCase())&&seen.add(o.toLowerCase())).slice(0,4); }
+  function spoken(){
+    const name=$('whoName').textContent||'Dispatch', b=$('body').value.trim(); if(!b) return '';
+    let t=`Message from ${name}. ${b}`;
+    if(type==='ack') t+=' When you are stopped, tap Got it.';
+    if(type==='reply'){ const o=cleanOpts(); if(o.length) t+=` Reply options: ${o.length>1?o.slice(0,-1).join(', ')+', or '+o[o.length-1]:o[0]}. Reply when you are stopped.`; }
+    return t;
+  }
+  function updatePreview(){
+    $('bodyCount').textContent=$('body').value.length;
+    $('pvTo').textContent='To: '+audienceLabel()+' · '+({notice:'Notice',ack:'Must acknowledge',reply:'Quick reply'})[type]+($('urgent').checked?' · URGENT':'');
+    $('pvBody').textContent=$('body').value.trim()||'Your message will show here.';
+    const s=spoken(); $('pvSpoken').textContent=s?'Read out loud as: “'+s+'”':'';
+  }
+  $('body').oninput=updatePreview; $('urgent').onchange=updatePreview;
+  $('hearBtn').onclick=()=>{ const s=spoken(); if(!s) return toast('Type a message first'); if(!('speechSynthesis' in window)) return toast('This browser cannot read out loud'); speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(s); u.lang='en-US'; u.rate=.95; speechSynthesis.speak(u); };
+  function expiresAt(){
+    const v=$('expires').value; if(!v) return null;
+    const d=new Date(); if(v==='eod'){ d.setHours(23,59,0,0); } else d.setTime(d.getTime()+(+v)*3600e3);
+    return d.toISOString();
+  }
+  function audiencePayload(){
+    if(aud==='all') return {all:true};
+    if(aud==='locations') return locSel.size?{locations:[...locSel]}:null;
+    return drvSel.size?{drivers:[...drvSel]}:null;
+  }
+  $('sendBtn').onclick=async()=>{
+    const e=$('sendErr'); e.hidden=true;
+    const a=audiencePayload(), body=$('body').value.trim(), o=cleanOpts();
+    const fail=m=>{ e.textContent=m; e.hidden=false; };
+    if(!a) return fail(aud==='locations'?'Pick at least one location.':'Pick at least one driver.');
+    if(!body) return fail('Type a message.');
+    if(type==='reply'&&!o.length) return fail('Add at least one quick-reply answer.');
+    if(aud==='all'&&!confirm(`Send this to all ${drivers().length} drivers?`)) return;
+    $('sendBtn').disabled=true;
+    try{
+      const r=await rpc('msg_send',{p_token:token,p_audience:a,p_type:type,p_body:body,p_reply_options:type==='reply'?o:[],p_urgent:$('urgent').checked,p_expires_at:expiresAt(),p_reminder_of:null});
+      if(!r.ok) return fail(r.error);
+      toast(`Sent to ${r.recipients} ${r.recipients===1?'driver':'drivers'}`);
+      $('body').value=''; $('urgent').checked=false; $('expires').value=''; updatePreview();
+    }catch(err){ if(err.message!=='stop') fail('Could not send. Check your connection and try again.'); }
+    finally{ $('sendBtn').disabled=false; }
+  };
+
+  // ------------------------------------------------ sent
+  function goal(m){ return m.msg_type==='notice'?m.read:m.msg_type==='ack'?m.acked:m.replied; }
+  function goalWord(m){ return m.msg_type==='notice'?'read':m.msg_type==='ack'?'got it':'replied'; }
+  async function loadSent(quiet){
+    if(!quiet) $('sentStatus').textContent='Loading…';
+    try{
+      const r=await rpc('msg_sent',{p_token:token,p_days:+$('sentDays').value});
+      sent=r.messages||[]; $('sentStatus').textContent='Updated '+when(new Date().toISOString());
+      $('sentList').innerHTML=sent.length?sent.map(m=>{
+        const g=goal(m), pct=m.total?Math.round(g/m.total*100):0, cls=m.recalled_at?' recalled':g>=m.total?' done':' partial';
+        return `<div class="sent-item${cls}${m.id===selId?' sel':''}" data-id="${m.id}">
+          <div><div class="meta">${when(m.created_at)} · ${esc(m.sender_name)} → <b>${esc(m.audience_label)}</b></div>
+          <div style="margin:4px 0">${m.urgent?'<span class="tag urgent">Urgent</span>':''}<span class="tag">${({notice:'Notice',ack:'Must acknowledge',reply:'Quick reply'})[m.msg_type]}</span>${m.reminder_of?'<span class="tag">Reminder</span>':''}${m.recalled_at?'<span class="tag">Recalled</span>':''}</div>
+          <div class="sent-body">${esc(m.body)}</div></div>
+          <div class="score">${g} of ${m.total}<small>${goalWord(m)}${m.msg_type!=='notice'?` · ${m.read} read`:''}</small><div class="bar"><i style="width:${pct}%"></i></div></div></div>`;
+      }).join(''):'<div class="card"><p class="hint" style="margin:0">Nothing sent in this window yet.</p></div>';
+      if(selId) loadDetail(selId,true);
+    }catch(e){ if(e.message!=='stop') $('sentStatus').textContent='Could not load. Retrying in 30 seconds.'; }
+  }
+  $('sentDays').onchange=()=>loadSent(); $('sentRefresh').onclick=()=>loadSent();
+  $('sentList').onclick=e=>{ const it=e.target.closest('.sent-item'); if(!it) return; selId=+it.dataset.id; document.querySelectorAll('.sent-item').forEach(x=>x.classList.toggle('sel',x===it)); loadDetail(selId); };
+  let detailRows=[];
+  function statusOf(r,m){
+    if(r.replied_at) return `<span class="st st-ok">Replied: ${esc(r.reply)}</span>`;
+    if(r.acked_at) return '<span class="st st-ok">Got it</span>';
+    if(r.read_at) return '<span class="st st-read">Read</span>';
+    if(r.delivered_at) return '<span class="st st-dlv">Delivered</span>';
+    return '<span class="st st-none">Not yet</span>';
+  }
+  async function loadDetail(id,quiet){
+    const m=sent.find(x=>x.id===id); if(!m) return;
+    if(!quiet) $('detail').innerHTML='<p class="hint">Loading…</p>';
+    try{
+      const r=await rpc('msg_detail',{p_token:token,p_message_id:id}); detailRows=r.recipients||[];
+      const pending=detailRows.filter(x=>m.msg_type==='notice'?!x.read_at:m.msg_type==='ack'?!x.acked_at:!x.replied_at);
+      let tally='';
+      if(m.msg_type==='reply'){ const c={}; detailRows.forEach(x=>{ if(x.reply) c[x.reply]=(c[x.reply]||0)+1; }); tally=Object.keys(c).length?'<div class="chips">'+Object.entries(c).map(([k,v])=>`<span class="chip on" style="cursor:default">${esc(k)}<small>${v}</small></span>`).join('')+'</div>':''; }
+      $('detail').innerHTML=`<h2>Read receipts</h2><div class="preview">${esc(m.body)}</div>${tally}
+        <div class="row no-print" style="margin:0 0 12px">
+          ${pending.length&&!m.recalled_at?`<button type="button" id="remindBtn">Remind ${pending.length} who haven't ${goalWord(m)==='got it'?'acknowledged':goalWord(m)}</button>`:''}
+          <button type="button" class="ghost" id="csvBtn">Export to Excel (CSV)</button>
+          ${!m.recalled_at?'<button type="button" class="ghost" id="recallBtn">Recall</button>':''}
+        </div>
+        <div style="max-height:520px;overflow:auto"><table><thead><tr><th>Driver</th><th>Location</th><th>Status</th><th>When</th></tr></thead><tbody>
+        ${detailRows.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.location)}</td><td>${statusOf(x,m)}</td><td class="meta">${when(x.replied_at||x.acked_at||x.read_at||x.delivered_at)}</td></tr>`).join('')}
+        </tbody></table></div>`;
+      const rb=$('remindBtn'); if(rb) rb.onclick=async()=>{
+        if(!confirm(`Send a reminder to ${pending.length} ${pending.length===1?'driver':'drivers'}?`)) return;
+        try{ const s=await rpc('msg_send',{p_token:token,p_audience:{drivers:pending.map(x=>x.driver_id)},p_type:m.msg_type,p_body:'Reminder: '+m.body.replace(/^Reminder:\s*/,''),p_reply_options:m.reply_options||[],p_urgent:m.urgent,p_expires_at:m.expires_at,p_reminder_of:m.reminder_of||m.id});
+          if(!s.ok) return toast(s.error); toast('Reminder sent to '+s.recipients); loadSent(true); }catch(e){}
+      };
+      $('csvBtn').onclick=()=>{
+        const rows=[['Driver','Driver ID','Location','Delivered','Read','Got it','Reply','Replied']].concat(detailRows.map(x=>[x.name,x.driver_id,x.location,when(x.delivered_at),when(x.read_at),when(x.acked_at),x.reply||'',when(x.replied_at)]));
+        const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+        const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`message-${m.id}-receipts.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+      };
+      const rc=$('recallBtn'); if(rc) rc.onclick=async()=>{ if(!confirm('Recall this message? It disappears from drivers’ screens. Read receipts stay here.')) return; try{ await rpc('msg_recall',{p_token:token,p_message_id:m.id}); toast('Recalled'); loadSent(true); }catch(e){} };
+    }catch(e){ if(e.message!=='stop') $('detail').innerHTML='<p class="err">Could not load read receipts.</p>'; }
+  }
+
+  // ------------------------------------------------ pins
+  async function loadPins(){
+    $('pinsStatus').textContent='Loading…';
+    try{ const r=await rpc('drv_setup_list',{p_token:token}); const c=r.codes||[];
+      $('pinsBody').innerHTML=c.length?c.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.driver_id)}</td><td>${esc(x.location)}</td><td class="code">${esc(x.setup_code)}</td></tr>`).join(''):'<tr><td colspan="4" class="hint">Everyone active has a PIN. 👍</td></tr>';
+      $('pinsStatus').textContent=c.length?`${c.length} not signed up yet`:'';
+      const d=await rpc('msg_directory',{p_token:token}); dir=d.drivers||dir; renderResetSel();
+    }catch(e){ if(e.message!=='stop') $('pinsStatus').textContent='Could not load.'; }
+  }
+  function renderResetSel(){ $('resetSel').innerHTML='<option value="">Pick a driver…</option>'+dir.map(d=>`<option value="${esc(d.driver_id)}">${esc(d.name)} (${esc(d.driver_id)})${d.has_pin?'':' — no PIN yet'}</option>`).join(''); }
+  $('pinsRefresh').onclick=loadPins; $('pinsPrint').onclick=()=>window.print();
+  $('resetBtn').onclick=async()=>{
+    const id=$('resetSel').value; if(!id) return toast('Pick a driver');
+    const d=dir.find(x=>x.driver_id===id);
+    if(!confirm(`Reset the PIN for ${d?d.name:id}? They will be signed out and need a new setup code.`)) return;
+    try{ const r=await rpc('drv_reset_pin',{p_token:token,p_driver_id:id}); if(!r.ok) return toast(r.error);
+      $('resetOut').innerHTML=`<div class="ok">${esc(r.name)}'s new setup code: <span class="code">${esc(r.setup_code)}</span></div>`; loadPins();
+    }catch(e){}
+  };
+
+  if(token) start(); else $('loginView').hidden=false;
+})();
+</script>
+</body>
+</html>
