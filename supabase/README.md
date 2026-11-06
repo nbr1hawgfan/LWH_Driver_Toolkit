@@ -76,3 +76,22 @@ to the `drivers` table get a code the next time that tab is opened.
 
 `recipient_kind`/`sender_kind` allow `'emp'` so the Warehouse Toolkit can use the same tables
 with its `emp_*` sign-in later.
+
+## Files and driver-to-dispatch messages (Nov 6, 2026) — deployed
+
+Migration `20261106b_messages_files_and_driver_replies.sql` (applied) plus Edge Function
+`msg-file` (deployed, JWT verification off like the others).
+
+| Piece | What it does |
+|---|---|
+| bucket `msg-files` (private, 10 MB, PDF/JPG/PNG/WebP) | message attachments, `YYYY-MM/<id>.<ext>` |
+| table `msg_attachments` | one row per file; `expires_at` = upload + 14 days |
+| `msg-file` `?action=upload` | raw file body + `x-msg-token` header → attachment id (drivers: photos only) |
+| `msg-file` `?action=url` | `{token,id}` → 10-minute signed link, only for managers, the uploader, or recipients |
+| `msg_driver_send` | driver → dispatch (topic, text, location, photo, optional reply-to) |
+| `msg_dispatch_inbox`, `msg_dispatch_mark` | Message Center Driver Inbox; read / done / reopen |
+| `msg_send` (new `p_reply_to`, `p_attachments`) | answer a driver in-thread; attach files |
+| `msg_mark(..., 'open')` | records when a driver opened a file (pre-downloading for offline doesn't count) |
+
+Every upload also removes files past 14 days (and abandoned uploads). To change the 14 days,
+change the default on `msg_attachments.expires_at` and the wording in the apps.
