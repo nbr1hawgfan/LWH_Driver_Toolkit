@@ -188,7 +188,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
         <div class="files-pick"><label class="attach-btn"><input type="file" id="sendFile" accept="application/pdf,image/*" multiple hidden>📎 Attach BOL / PDF / photo</label><span id="sendFiles" class="files-pick" style="margin:0"></span></div>
         <p class="hint" style="margin:-6px 0 12px">Up to 5 files, 10 MB each. Drivers' devices save them so they open with no signal. Files are removed after 14 days.</p>
         <div class="grid2">
-          <label>Remove from drivers' screens<select id="expires"><option value="">Never (after 30 days)</option><option value="eod">End of today</option><option value="24">In 24 hours</option><option value="72">In 3 days</option><option value="168">In 1 week</option></select></label>
+          <label>Remove from drivers' screens<select id="expires"><option value="24" selected>In 24 hours (default)</option><option value="eod">End of today</option><option value="72">In 3 days — important</option><option value="168">In 1 week — important</option><option value="">Keep 30 days — important</option></select></label>
           <label style="display:flex;gap:10px;align-items:center;margin-top:26px"><input type="checkbox" id="urgent" style="width:20px;height:20px;accent-color:var(--brand)" /> Mark urgent</label>
         </div>
         <div id="sendErr" class="err" hidden></div>
@@ -386,7 +386,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
       const r=await rpc('msg_send',{p_token:token,p_audience:a,p_type:type,p_body:body,p_reply_options:type==='reply'?o:[],p_urgent:$('urgent').checked,p_expires_at:expiresAt(),p_reminder_of:null,p_reply_to:null,p_attachments:sendFiles.map(f=>f.id)});
       if(!r.ok) return fail(r.error);
       toast(`Sent to ${r.recipients} ${r.recipients===1?'driver':'drivers'}`);
-      $('body').value=''; $('urgent').checked=false; $('expires').value=''; sendFiles=[]; renderSendFiles(); updatePreview();
+      $('body').value=''; $('urgent').checked=false; $('expires').value='24'; sendFiles=[]; renderSendFiles(); updatePreview();
     }catch(err){ if(err.message!=='stop') fail('Could not send. Check your connection and try again.'); }
     finally{ $('sendBtn').disabled=false; }
   };
@@ -440,7 +440,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
         </tbody></table></div>`;
       const rb=$('remindBtn'); if(rb) rb.onclick=async()=>{
         if(!confirm(`Send a reminder to ${pending.length} ${pending.length===1?'driver':'drivers'}?`)) return;
-        try{ const s=await rpc('msg_send',{p_token:token,p_audience:{drivers:pending.map(x=>x.driver_id)},p_type:m.msg_type,p_body:'Reminder: '+m.body.replace(/^Reminder:\s*/,''),p_reply_options:m.reply_options||[],p_urgent:m.urgent,p_expires_at:m.expires_at,p_reminder_of:m.reminder_of||m.id});
+        try{ const s=await rpc('msg_send',{p_token:token,p_audience:{drivers:pending.map(x=>x.driver_id)},p_type:m.msg_type,p_body:'Reminder: '+m.body.replace(/^Reminder:\s*/,''),p_reply_options:m.reply_options||[],p_urgent:m.urgent,p_expires_at:m.expires_at?new Date(Date.now()+24*3600e3).toISOString():null,p_reminder_of:m.reminder_of||m.id});
           if(!s.ok) return toast(s.error); toast('Reminder sent to '+s.recipients); loadSent(true); }catch(e){}
       };
       $('csvBtn').onclick=()=>{
@@ -563,7 +563,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
       if(replyFiles.some(f=>!f.id)) return toast('Wait for the files to finish uploading');
       if(!body&&!replyFiles.length) return toast('Type an answer first');
       $('rpSend').disabled=true;
-      try{ const r=await rpc('msg_send',{p_token:token,p_audience:{},p_type:$('rpAck').checked?'ack':'notice',p_body:body,p_reply_options:[],p_urgent:false,p_expires_at:null,p_reminder_of:null,p_reply_to:m.id,p_attachments:replyFiles.map(f=>f.id)});
+      try{ const r=await rpc('msg_send',{p_token:token,p_audience:{},p_type:$('rpAck').checked?'ack':'notice',p_body:body,p_reply_options:[],p_urgent:false,p_expires_at:new Date(Date.now()+24*3600e3).toISOString(),p_reminder_of:null,p_reply_to:m.id,p_attachments:replyFiles.map(f=>f.id)});
         if(!r.ok) return toast(r.error); toast('Answer sent to '+m.driver_name); replyFiles=[]; $('rpText').value=''; await loadInbox(true);
         const nm=inb.find(x=>x.id===m.id); if(nm) renderInbDetail(nm); else $('inbDetail').innerHTML='<p class="hint" style="margin:0">Answer sent. It moved out of “Needs attention”.</p>';
       }catch(e){} finally{ if($('rpSend')) $('rpSend').disabled=false; }
