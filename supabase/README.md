@@ -70,7 +70,7 @@ select d.name, c.driver_id, c.setup_code
  where d.role = 'Manager';
 ```
 
-Then open `/dispatch/`, tap **First time sign-in**, and make a PIN. After that, the Message
+Then open **Driver Messages** in the Transportation Manager app, tap **First time sign-in**, and make a PIN. After that, the Message
 Center's **Driver Sign-in** tab lists every driver's code and can reset PINs. New drivers added
 to the `drivers` table get a code the next time that tab is opened.
 

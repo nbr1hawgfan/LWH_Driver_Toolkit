@@ -112,6 +112,20 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
 @media(max-width:820px){.tabs{overflow-x:auto;scrollbar-width:none}.tab{flex:0 0 auto;padding:8px 12px;font-size:14px}.split,.grid2{grid-template-columns:1fr}.sticky{position:static}header .sub{display:none}}
 @media print{header,.tabs,.no-print{display:none!important}body{background:#fff}.card{border:0;padding:0}th{background:#fff;color:#000;border-bottom:2px solid #000}}
 </style>
+<script>
+/* Opened inside the Transportation Manager app (?embed=1) → no header. Opened on its own → go there instead. */
+(function(){ var e=window.parent!==window&&/[?&]embed=1/.test(location.search);
+  if(e) document.documentElement.classList.add('embed');
+  else if(!/[?&]standalone=1/.test(location.search)) location.replace('https://nbr1hawgfan.github.io/LWH_Transportation_Manager/#messages'); })();
+</script>
+<style>
+html.embed header{display:none}
+html.embed main{max-width:none;padding:12px 14px 24px}
+html.embed .who{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin:0 0 10px;font-size:13px;color:var(--muted)}
+html.embed .who b{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--ink);font-size:14px}
+html.embed .who button{min-height:32px;padding:2px 12px;font-size:12px;background:#fff;color:#111;border:2px solid #111}
+html.embed .login{margin:10px auto}
+</style>
 </head>
 <body>
 <header>
@@ -239,6 +253,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
 <div id="toast" class="toast" hidden></div>
 <script>
 (function(){
+  const EMBED=document.documentElement.classList.contains('embed');
   const API='https://tjivcqxnkftujceumdtx.supabase.co/rest/v1/rpc/';
   const KEY='sb_publishable_PYlWSW6-Gi-QZl91IXUq0Q_W5mO3sDT';
   const TK='lwhdispatch_token';
@@ -506,7 +521,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
     try{
       const r=await rpc('msg_dispatch_inbox',{p_token:token,p_view:inbView,p_days:7});
       inb=r.messages||[];
-      const u=r.unread||0; $('inbBadge').hidden=!u; $('inbBadge').textContent=u;
+      const u=r.unread||0; $('inbBadge').hidden=!u; $('inbBadge').textContent=u; if(EMBED){ try{ parent.postMessage({lwhmc:'unread',n:u},location.origin); }catch(e){} }
       document.title=(u?`(${u}) `:'')+'Driver Message Center';
       if(lastUnread>=0&&u>lastUnread){ beep(); toast('New message from a driver'); }
       lastUnread=u;
@@ -592,6 +607,7 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
     }catch(e){}
   };
 
+  if(EMBED) $('appView').insertBefore($('whoBox'),$('appView').firstChild);
   if(token) start(); else $('loginView').hidden=false;
 })();
 </script>
