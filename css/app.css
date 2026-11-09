@@ -1145,3 +1145,4 @@ body.msg-moving .msg-reply,body.msg-moving .msg-ack{display:none}
 .msg-viewer-note{color:#fff;font-size:17px;padding:30px 10px}
 body.msg-viewer-open{overflow:hidden}
 body.msg-moving .msg-replybtn{display:none}
+.qa-row-apps{grid-template-columns:repeat(2,1fr)}
