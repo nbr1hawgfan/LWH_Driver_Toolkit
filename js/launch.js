@@ -1,7 +1,7 @@
 /* App launcher — open the drivers' other apps (Samsara Driver, WEX CardControl) from the Toolkit.
    Order of tries:
    1) Fully Kiosk Browser on the truck tablets: fully.startApplication() (needs "Enable JavaScript Interface" in Fully).
-   2) Android Chrome / installed app: an intent link; if the app is missing, Android opens its Play Store page.
+   2) Android phone: Play Store "launch" link — opens the app if installed, its store page if not.
    3) iPhone/iPad: the App Store page (iOS doesn't let web pages open other apps by name).
    4) Computer: a short note. */
 (function(){
@@ -26,8 +26,10 @@
     }catch(e){}
     // 2) Android
     if(isAndroid){
-      location.href='intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+a.pkg+
-        ';S.browser_fallback_url='+encodeURIComponent(play(a.pkg))+';end';
+      // Ask the Play Store app to "launch" the app: if it's installed it opens straight into it (quick flash);
+      // if not, the store shows its install page.
+      location.href='intent://launch?id='+a.pkg+'#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url='+
+        encodeURIComponent(play(a.pkg))+';end';
       return;
     }
     // 3) iPhone / iPad

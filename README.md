@@ -1,4 +1,4 @@
-# LWH Driver Toolkit v1.41.0
+# LWH Driver Toolkit v1.41.1
 
 A driver-facing companion to the LWH Warehouse Toolkit, built for Logistics Warehouse drivers. Forked from the Warehouse Toolkit with inventory/transaction/warehouse-print tools removed, and driver-specific tools (HOS Countdown, Trip Fuel Cost, Load Securement reference) and an expanded weather section added.
 
@@ -12,7 +12,7 @@ A driver-facing companion to the LWH Warehouse Toolkit, built for Logistics Ware
 
 **Files and Message Dispatch (v1.40.0):** dispatch can attach a BOL/PDF or photo to any message (Send tab, or when answering a driver). The Toolkit saves files on the device as soon as the message arrives, so they open full screen with no signal — handy to show at a pickup. Drivers can tap **Message Dispatch** when stopped: pick a topic (Where to next?, Trailer not loaded, Running late, Waiting at customer, Equipment problem, Call me), add text or a photo, and their location goes along. Those land in the Message Center's **Driver Inbox** (unread badge, chime, map link, photos), and answers go back in the same thread. Files are removed after 14 days; messages and receipts stay.
 
-**Launch Samsara and WEX (v1.41.0):** Home → Quick Access and the menu have **Samsara Driver** and **WEX CardControl** buttons that open those apps (`js/launch.js`). On the truck tablets in Fully Kiosk Browser it uses Fully's app launcher — turn on *Advanced Web Settings → Enable JavaScript Interface* in Fully, and add both apps to Fully's allowed apps. On an Android phone it opens the app, or its Play Store page if it isn't installed. On an iPhone it opens the App Store page (iOS doesn't let a web app open another app by name). Package names: `com.samsara.driver`, `com.efsllc.efsmobileapp`.
+**Launch Samsara and WEX (v1.41.1):** Home → Quick Access and the menu have **Samsara Driver** and **WEX CardControl** buttons that open those apps (`js/launch.js`). On the truck tablets in Fully Kiosk Browser it uses Fully's app launcher — turn on *Advanced Web Settings → Enable JavaScript Interface* in Fully, and add both apps to Fully's allowed apps. On an Android phone it opens the app, or its Play Store page if it isn't installed. On an iPhone it opens the App Store page (iOS doesn't let a web app open another app by name). Package names: `com.samsara.driver`, `com.efsllc.efsmobileapp`.
 
 Branding matches the Logistics Warehouse company site (red/black/white) rather than the maroon internal or teal driver-doc-scan palettes.
 
