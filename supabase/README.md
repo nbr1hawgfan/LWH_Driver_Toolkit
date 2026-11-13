@@ -95,3 +95,21 @@ Migration `20261106b_messages_files_and_driver_replies.sql` (applied) plus Edge 
 
 Every upload also removes files past 14 days (and abandoned uploads). To change the 14 days,
 change the default on `msg_attachments.expires_at` and the wording in the apps.
+
+## Driver Time Clock (Nov 13, 2026) — deployed
+
+Migration `20261113_driver_timeclock.sql` is applied to LWH Companion. No Edge Functions; RLS on, no policies.
+
+| Piece | What it does |
+|---|---|
+| `tc_punches` | one row per clock in / out: time, GPS, nearest fleet site, sent-later flag, client id (no doubles) |
+| `tc_pins`, `tc_pin_map` | PTO tracker PINs (bcrypt) matched to `drivers.driver_id`; map only where names differ (BMARR = MARRS01) |
+| `tc_devices` | per-phone token so punches made with no signal are accepted later (120 days) |
+| `tc_roster`, `tc_check`, `tc_punch` | Time Clock screen (name list, PIN check, punch) |
+| `tc_board`, `tc_week` | Time Clock Board (Messages sign-in, role Manager) |
+| `tc_sync_pins` | PTO tracker Apps Script → PINs (key in `tc_sync_meta.pin_secret_hash`) |
+| `tc_export` | APP02 `Sync-DriverClock.ps1` → TLand, days rounded down to 0.05 with review flags (key in `tc_sync_meta.export_secret_hash`) |
+
+Hours rules live in `tc_shifts` / `tc_days`: an IN pairs with the OUT right after it; work date = the day the shift started
+(Central); needs checking = missing in/out (open over 16 hrs or followed by another IN) or a shift over 14 hrs.
+To change a key: `update tc_sync_meta set pin_secret_hash = encode(digest('NEW','sha256'),'hex') where id = 1;` and put NEW in the script.

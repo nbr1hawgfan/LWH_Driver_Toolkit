@@ -1,7 +1,7 @@
 {
   "name": "LWH Driver Toolkit",
   "short_name": "LWH Driver",
-  "description": "Trip fuel cost, load securement, docs, and weather for Logistics Warehouse drivers.",
+  "description": "Time clock, trip fuel cost, load securement, docs, and weather for Logistics Warehouse drivers.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -22,6 +22,19 @@
     }
   ],
   "shortcuts": [
+    {
+      "name": "Time Clock",
+      "short_name": "Time Clock",
+      "description": "Clock in or out",
+      "url": "./index.html?view=timeclock",
+      "icons": [
+        {
+          "src": "./icons/shortcut-tools.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
     {
       "name": "Trip Fuel Cost",
       "short_name": "Fuel Cost",

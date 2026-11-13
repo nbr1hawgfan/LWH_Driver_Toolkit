@@ -1,6 +1,8 @@
-# LWH Driver Toolkit v1.41.1
+# LWH Driver Toolkit v1.42.0
 
 A driver-facing companion to the LWH Warehouse Toolkit, built for Logistics Warehouse drivers. Forked from the Warehouse Toolkit with inventory/transaction/warehouse-print tools removed, and driver-specific tools (HOS Countdown, Trip Fuel Cost, Load Securement reference) and an expanded weather section added.
+
+**Time Clock (v1.42.0):** drivers clock in and out on their own phone (or a shared tablet): pick your name, type the same PIN as the PTO / time off app, tap the big **Clock In** / **Clock Out** button (`js/timeclock.js`). Lunch = Clock Out, then Clock In again. Each punch saves the GPS position and the nearest LWH site. With no signal the PIN is checked on the phone (against the last good sign-in there) and the punch is kept with the time it was tapped, then sent when there's signal. The screen forgets the PIN after each punch. **Time Clock Board** (Manager Tools, `js/timeclockboard.js`) shows who is on the clock now, every punch with a map link, and the Sun–Sat week with days that need checking; it uses the Messages sign-in and only role Manager gets data. PINs come from the PTO tracker (its Apps Script pushes Transportation PINs every 15 minutes; they're hashed on arrival). Hours reach TLand's Driver Hours tool through `Sync-DriverClock.ps1` on APP02, which pulls finished days every 15 minutes (nothing outside writes to TLand). Backend: `supabase/migrations/20261113_driver_timeclock.sql` (applied). The Weekly Timesheet stays as a backup.
 
 **Retired modules:** Paper Log Grid, DVIR Inspection, Trailer Inspection Report, HOS Countdown and Status Update (v1.21.0, drivers use Samsara for these), plus Detention Tracker, Contact QR, Generate Code and Scan Code (v1.24.0), and Fuel Surcharge (v1.31.0, now in the Transportation Manager app) are hidden to keep the app simple. Their code is still in the repo; remove a name from `RETIRED_VIEWS` in `js/app.js` to bring one back.
 

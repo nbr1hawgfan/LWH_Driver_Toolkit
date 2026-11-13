@@ -351,11 +351,11 @@ function retireModules(){
 
 // ---- Manager tools ----
 // "Managers stay managers and drivers stay drivers": Dispatch Board, All
-// Timesheets and Fuel Price Board are hidden unless a manager turns them on
+// Timesheets, Fuel Price Board and Time Clock Board are hidden unless a manager turns them on
 // for their own phone in Settings → Manager Tools. This only hides screens to
 // keep the app clean for drivers; it is not a security lock.
 // To change the code, edit MANAGER_TOOLS_CODE below.
-const MANAGER_VIEWS=['yardBoard','spotterTimesheets','fuelboard'];
+const MANAGER_VIEWS=['yardBoard','spotterTimesheets','fuelboard','timeclockBoard'];
 const MANAGER_TOOLS_CODE='2468';
 function managerToolsOn(){ return LWHStorage.get('managerToolsOn',false)===true; }
 function applyManagerTools(){
