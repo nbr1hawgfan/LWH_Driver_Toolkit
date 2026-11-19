@@ -1297,3 +1297,4 @@ button.lw-user:hover{background:none;text-decoration:underline}
 .nav-btn.nav-switch{border:1.5px dashed var(--brand);margin:4px 0 6px}
 .nav-btn.nav-switch>span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
 .nav-btn.nav-switch small{font-size:12px;font-weight:600;opacity:.8}
+.msg-setup{border:2px solid var(--brand);background:var(--brand-tint);padding:12px;margin-top:12px}
