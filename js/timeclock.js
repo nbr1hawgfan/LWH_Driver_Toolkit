@@ -206,6 +206,7 @@
     if(r&&r.ok){
       if(r.status){ st.status=r.status; saveLast(st.driver,r.status); }
       done(type, r.punch?r.punch.at:item.device_at, r.punch&&r.punch.site, false, !fix);
+      if(type==='out'&&window.LWHMsgAuth) LWHMsgAuth.clockedOut(st.driver);
     } else {
       // no signal: keep it on the phone with the time it was tapped
       const p=mem.profiles[st.driver];
@@ -213,6 +214,7 @@
       const q=mem.queue; q.push(item); mem.queue=q;
       const l=mem.last; l[st.driver]={type,at:item.device_at,stale:false,saved:Date.now()}; mem.last=l;
       done(type, item.device_at, null, true, !fix);
+      if(type==='out'&&window.LWHMsgAuth) LWHMsgAuth.clockedOut(st.driver);
     }
   }
 
