@@ -178,6 +178,8 @@
       const me=await rpc('drv_me',{p_token:token});
       if(me.ok){
         store.me={driver_id:me.driver_id,name:me.name,location:me.location,role:me.role};
+        // Managers get Manager Tools automatically (no shared code); turned back off when they sign out.
+        if(me.role==='Manager'&&LWHStorage.get('managerToolsOn',false)!==true){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); if(window.applyManagerTools) applyManagerTools(); }
         // Use the signed-in name for the greeting and usage tracking.
         LWHStorage.set('userName',me.name);
         if(window.heroGreeting&&window.getGreeting) heroGreeting.textContent=getGreeting();
@@ -235,6 +237,7 @@
     let keepServer=false;
     if(window.LWHPod){ try{ await LWHPod.flush(); keepServer=await LWHPod.hasPendingFor(t); await LWHPod.clearDraft(); }catch(e){} }
     signedOut(); LWHStorage.remove('userName'); LWHStorage.remove('tcDriver');
+    if(LWHStorage.get('mgrToolsAuto',false)===true){ LWHStorage.set('managerToolsOn',false); LWHStorage.remove('mgrToolsAuto'); if(window.applyManagerTools) applyManagerTools(); }
     if(window.showHeaderUser) showHeaderUser();
     if(window.heroGreeting&&window.getGreeting) heroGreeting.textContent=getGreeting();
     // If a POD from this driver is still waiting for signal, leave their server session alive so it
@@ -513,6 +516,8 @@
   });
   function wire(){
     if(!$('msgView')) return;
+    // Already signed in as a manager (from before this update)? Turn Manager Tools on now.
+    if(store.token&&store.me&&store.me.role==='Manager'&&LWHStorage.get('managerToolsOn',false)!==true){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); setTimeout(()=>{ if(window.applyManagerTools) applyManagerTools(); },0); }
     $('msgLoginBtn').onclick=doLogin;
     if($('msgSetupBtn')) $('msgSetupBtn').onclick=doSetup;
     $('msgPin').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
