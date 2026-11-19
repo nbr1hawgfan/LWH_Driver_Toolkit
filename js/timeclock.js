@@ -121,6 +121,7 @@
           if(!r.ok){ msg(r.error||'That did not work.','bad'); $('tcPin').value=''; return; }
           st.pin=pin; st.pinAt=Date.now(); st.status=r.status;
           await rememberGood(st.driver,pin,r.device,r.status);
+          if(window.LWHMsgAuth) LWHMsgAuth.fromTimeClock(st.driver,pin);   // same PIN signs them in to Messages
           renderPunch(); return;
         }catch(e){ /* fall through to offline */ }
       }

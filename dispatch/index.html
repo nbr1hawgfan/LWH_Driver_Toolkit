@@ -140,7 +140,7 @@ html.embed .login{margin:10px auto}
     <h2>Dispatch sign-in</h2>
     <p class="hint" style="margin:0 0 14px">Use your Driver ID and 6-digit PIN — the same sign-in drivers use in the Driver Toolkit. Only people set as <b>Manager</b> in the driver list can send messages.</p>
     <label>Driver ID<input type="text" id="lgId" autocomplete="username" autocapitalize="characters" spellcheck="false" /></label>
-    <div id="lgPinBox"><label>6-digit PIN<input type="password" id="lgPin" inputmode="numeric" maxlength="6" autocomplete="current-password" /></label>
+    <div id="lgPinBox"><label>PIN <small style="font-weight:400">(your PTO / time off PIN)</small><input type="password" id="lgPin" inputmode="numeric" maxlength="6" autocomplete="current-password" /></label>
       <button type="button" id="lgBtn">Sign in</button></div>
     <div id="lgSetupBox" hidden>
       <label>Setup code<input type="text" id="lgCode" autocapitalize="characters" autocomplete="off" /></label>
@@ -270,15 +270,22 @@ html.embed .login{margin:10px auto}
     <!-- PINS -->
     <div id="tab-pins" hidden>
       <div class="card">
-        <h2>Setup codes</h2>
-        <p class="hint" style="margin:0 0 10px">Each driver signs in once in the Driver Toolkit: <b>Messages → First time sign-in</b>, their Driver ID, this setup code, then a PIN they choose. A code disappears from this list once it is used. Hand codes out in person or by text — treat them like a key.</p>
+        <h2>How drivers sign in</h2>
+        <p class="hint" style="margin:0 0 10px">In the Driver Toolkit, drivers pick their <b>name</b> and type their <b>PTO PIN</b> — the same PIN as the time off app and the Time Clock. No setup codes. Clocking in on the Time Clock signs them in to Messages too, and they stay signed in on that phone or tablet. <b>Forgot PIN:</b> reset it in the PTO tracker; the new PIN works here after the next sync.</p>
         <div class="row no-print" style="margin:0 0 10px"><button type="button" class="ghost" id="pinsRefresh">Refresh</button><button type="button" class="ghost" id="pinsPrint">Print</button><span class="hint" id="pinsStatus"></span></div>
-        <div style="overflow:auto"><table><thead><tr><th>Driver</th><th>Driver ID</th><th>Location</th><th>Setup code</th></tr></thead><tbody id="pinsBody"></tbody></table></div>
+        <h3 style="margin:10px 0 6px">No PIN on file — set one in the PTO tracker</h3>
+        <div style="overflow:auto"><table><thead><tr><th>Driver</th><th>Driver ID</th><th>Location</th></tr></thead><tbody id="noPinBody"></tbody></table></div>
+        <h3 style="margin:16px 0 6px">Signed in on at least one device</h3>
+        <div id="signedInList" class="hint"></div>
+        <div id="mgrCodes" hidden>
+          <h3 style="margin:16px 0 6px">Manager setup codes <span class="hint">(only for managers with no PTO PIN)</span></h3>
+          <div style="overflow:auto"><table><thead><tr><th>Name</th><th>Driver ID</th><th>Location</th><th>Setup code</th></tr></thead><tbody id="pinsBody"></tbody></table></div>
+        </div>
       </div>
       <div class="card no-print">
-        <h2>Reset a PIN</h2>
-        <p class="hint" style="margin:0 0 10px">Forgot their PIN, or a new phone? Resetting signs them out everywhere and gives a new setup code.</p>
-        <div class="row"><select id="resetSel" style="max-width:420px;margin:0"></select><button type="button" id="resetBtn">Reset PIN</button></div>
+        <h2>Sign someone out of every device</h2>
+        <p class="hint" style="margin:0 0 10px">Lost phone, or a shared tablet changing hands? This signs them out everywhere. Drivers sign back in with their name and PTO PIN.</p>
+        <div class="row"><select id="resetSel" style="max-width:420px;margin:0"></select><button type="button" id="resetBtn">Sign out everywhere</button></div>
         <div id="resetOut"></div>
       </div>
     </div>
@@ -321,7 +328,7 @@ html.embed .login{margin:10px auto}
   }
   async function doLogin(){
     const id=$('lgId').value.trim().toUpperCase(), pin=$('lgPin').value.trim();
-    if(!id||!/^\d{6}$/.test(pin)) return lgErr('Enter your Driver ID and 6-digit PIN.');
+    if(!id||!/^\d{4,6}$/.test(pin)) return lgErr('Enter your Driver ID and your PIN (your PTO / time off PIN works).');
     $('lgBtn').disabled=true;
     try{ const r=await fetch(API+'drv_login',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({p_driver_id:id,p_pin:pin})}).then(r=>r.json());
       if(!r.ok){ lgErr(r.error); if(r.needs_setup) setSetup(true); return; }
@@ -626,20 +633,24 @@ html.embed .login{margin:10px auto}
   // ------------------------------------------------ pins
   async function loadPins(){
     $('pinsStatus').textContent='Loading…';
-    try{ const r=await rpc('drv_setup_list',{p_token:token}); const c=r.codes||[];
-      $('pinsBody').innerHTML=c.length?c.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.driver_id)}</td><td>${esc(x.location)}</td><td class="code">${esc(x.setup_code)}</td></tr>`).join(''):'<tr><td colspan="4" class="hint">Everyone active has a PIN. 👍</td></tr>';
-      $('pinsStatus').textContent=c.length?`${c.length} not signed up yet`:'';
+    try{ const r=await rpc('drv_setup_list',{p_token:token});
+      const np=r.no_pin||[], si=r.signed_in||[], c=r.codes||[];
+      $('noPinBody').innerHTML=np.length?np.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.driver_id)}</td><td>${esc(x.location)}</td></tr>`).join(''):'<tr><td colspan="3" class="hint">Every active driver has a PIN. 👍</td></tr>';
+      $('signedInList').innerHTML=si.length?`<b>${si.length}</b> — `+si.map(x=>esc(x.name)).join(', '):'Nobody yet.';
+      $('mgrCodes').hidden=!c.length;
+      $('pinsBody').innerHTML=c.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.driver_id)}</td><td>${esc(x.location)}</td><td class="code">${esc(x.setup_code)}</td></tr>`).join('');
+      $('pinsStatus').textContent=`${si.length} signed in · ${np.length} with no PIN`;
       const d=await rpc('msg_directory',{p_token:token}); dir=d.drivers||dir; renderResetSel();
     }catch(e){ if(e.message!=='stop') $('pinsStatus').textContent='Could not load.'; }
   }
-  function renderResetSel(){ $('resetSel').innerHTML='<option value="">Pick a driver…</option>'+dir.map(d=>`<option value="${esc(d.driver_id)}">${esc(d.name)} (${esc(d.driver_id)})${d.has_pin?'':' — no PIN yet'}</option>`).join(''); }
+  function renderResetSel(){ $('resetSel').innerHTML='<option value="">Pick a driver…</option>'+dir.map(d=>`<option value="${esc(d.driver_id)}">${esc(d.name)} (${esc(d.driver_id)})</option>`).join(''); }
   $('pinsRefresh').onclick=loadPins; $('pinsPrint').onclick=()=>window.print();
   $('resetBtn').onclick=async()=>{
-    const id=$('resetSel').value; if(!id) return toast('Pick a driver');
+    const id=$('resetSel').value; if(!id) return toast('Pick a name');
     const d=dir.find(x=>x.driver_id===id);
-    if(!confirm(`Reset the PIN for ${d?d.name:id}? They will be signed out and need a new setup code.`)) return;
+    if(!confirm(`Sign ${d?d.name:id} out of every phone and tablet?`)) return;
     try{ const r=await rpc('drv_reset_pin',{p_token:token,p_driver_id:id}); if(!r.ok) return toast(r.error);
-      $('resetOut').innerHTML=`<div class="ok">${esc(r.name)}'s new setup code: <span class="code">${esc(r.setup_code)}</span></div>`; loadPins();
+      $('resetOut').innerHTML=`<div class="ok">${esc(r.name)} is signed out everywhere. They sign back in with their name and PTO PIN.${d&&d.role==='Manager'?` If they have no PTO PIN, their setup code is <span class="code">${esc(r.setup_code)}</span>.`:''}</div>`; loadPins();
     }catch(e){}
   };
 

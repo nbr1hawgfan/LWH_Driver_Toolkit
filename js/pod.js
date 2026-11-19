@@ -192,7 +192,7 @@
     const sec=$(VIEW); if(!sec||built) return; built=true;
     sec.innerHTML=`<div class="card pod-wrap">
       <div class="pod-head"><h2>Proof of Delivery</h2><p class="hint">Photo the signed BOL → one PDF → dispatch has it in seconds. Works with no signal; it sends when you get signal.</p></div>
-      <div id="podSignIn" class="pod-note pod-warn" hidden>Sign in once with your Driver ID and PIN to send PODs. <button type="button" class="ghost" data-view="messages">Sign in</button></div>
+      <div id="podSignIn" class="pod-note pod-warn" hidden>Sign in once with your name and PTO PIN (same as time off) to send PODs. <button type="button" class="ghost" data-view="messages">Sign in</button></div>
       <div id="podOutbox" class="pod-note pod-warn" hidden></div>
 
       <h3 class="pod-step"><span class="pod-num">1</span> Load</h3>
