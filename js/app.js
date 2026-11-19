@@ -135,6 +135,7 @@ window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;if(window
 function showHeaderUser(){
   const n=(LWHStorage.get('userName','')||'').trim(), box=document.getElementById('hdrUser');
   if(!box) return; box.hidden=!n; document.getElementById('hdrUserName').textContent=n;
+  const sub=document.getElementById('hdrUserSub'); if(sub) sub.textContent=LWHStorage.get('msgToken','')?'Tap to sign out':'Transportation';
 }
 let renderManagersList=()=>{};
 // Deliberately self-contained and independent of inventory.js's master-sheet

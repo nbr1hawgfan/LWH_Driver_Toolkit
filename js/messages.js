@@ -219,18 +219,51 @@
     catch(e){ showLoginErr('No signal — try again in a minute.'); }
     finally{ b.disabled=false; b.textContent='Sign In'; }
   }
+
+  // Sign this device out of Messages (and POD / Site Notes). Used by the Sign Out button, the header
+  // name chip, a different driver's PIN on the Time Clock, and "sign me out when I clock out".
+  async function signOutDevice(opts){
+    opts=opts||{};
+    const t=store.token, who=(store.me&&store.me.name)||'';
+    if(!t) return true;
+    if(!opts.confirmed){
+      const pod=window.LWHPod?await LWHPod.draftInfo():{pages:0};
+      const extra=pod.pages?`\n\nThe POD you were working on (${pod.pages} page${pod.pages===1?'':'s'}, not sent yet) will be cleared.`:'';
+      if(!confirm(`Sign ${who||'this driver'} out of this device?\n\nThe next driver picks their name and types their PTO PIN.${extra}`)) return false;
+    }
+    // Send anything this driver still has waiting (PODs) while their sign-in still works.
+    let keepServer=false;
+    if(window.LWHPod){ try{ await LWHPod.flush(); keepServer=await LWHPod.hasPendingFor(t); await LWHPod.clearDraft(); }catch(e){} }
+    signedOut(); LWHStorage.remove('userName'); LWHStorage.remove('tcDriver');
+    if(window.showHeaderUser) showHeaderUser();
+    if(window.heroGreeting&&window.getGreeting) heroGreeting.textContent=getGreeting();
+    // If a POD from this driver is still waiting for signal, leave their server session alive so it
+    // can still be sent under their name; otherwise end it.
+    if(!keepServer){ try{ await rpc('drv_logout',{p_token:t}); }catch(e){} }
+    if(!opts.quiet) LWHUI.toast(who?`${who} signed out`:'Signed out');
+    return true;
+  }
+  async function doLogout(){ if(await signOutDevice()) LWHUI.show('messages'); }
   window.LWHMsgAuth={
     signedIn:()=>!!store.token,
-    // Time Clock calls this after a PIN checks out, so the driver is signed in to Messages too.
-    async fromTimeClock(id,pin){ if(store.token||!id||!pin) return; try{ await pinSignIn(id,pin,true); }catch(e){} }
+    who:()=>store.me,
+    signOut:o=>signOutDevice(o),
+    // Time Clock: a good PIN signs that driver in here. If someone else was signed in (shared truck),
+    // switch to the driver who just typed their PIN.
+    async fromTimeClock(id,pin){
+      if(!id||!pin) return;
+      try{
+        if(store.token&&store.me&&store.me.driver_id===id) return;
+        if(store.token){ await signOutDevice({confirmed:true,quiet:true}); }
+        if(await pinSignIn(id,pin,true)) LWHUI.toast(`Messages: signed in as ${(store.me&&store.me.name)||id}`);
+      }catch(e){}
+    },
+    // Time Clock: after a clock-OUT. On a shared truck/tablet, sign that driver out.
+    async clockedOut(id){
+      if(LWHStorage.get('msgShared',false)!==true||!store.token||!store.me||store.me.driver_id!==id) return;
+      const n=store.me.name; await signOutDevice({confirmed:true,quiet:true}); LWHUI.toast(`${n} clocked out and signed out of this tablet`);
+    }
   };
-  async function doLogout(){
-    if(!confirm('Sign out of messages on this device? The next driver can then sign in.')) return;
-    const t=store.token;
-    signedOut(); LWHStorage.remove('userName'); if(window.showHeaderUser) showHeaderUser();
-    if(window.heroGreeting&&window.getGreeting) heroGreeting.textContent=getGreeting();
-    try{ await rpc('drv_logout',{p_token:t}); }catch(e){}
-  }
 
   // ---------------------------------------------------------------- polling
   function startPoll(){ stopPoll(); if(store.token) pollTimer=setInterval(()=>{ if(document.visibilityState==='visible') refresh(); },POLL_MS); }
@@ -290,6 +323,7 @@
   }
   function render(){
     renderHomeCard();
+    const ns=$('navSwitch'); if(ns){ ns.hidden=!store.token; $('navSwitchName').textContent=(store.me&&store.me.name)||''; }
     const signed=!!store.token;
     if(!$('msgView')) return;
     $('msgLogin').hidden=signed; $('msgSigned').hidden=!signed;
@@ -472,6 +506,10 @@
     $('msgStop').onclick=stopSpeaking;
     $('msgAutoRead').onchange=e=>{ store.autoRead=e.target.checked; render(); };
     $('msgChime').onchange=e=>{ store.chime=e.target.checked; };
+    $('msgShared').checked=LWHStorage.get('msgShared',false)===true;
+    $('msgShared').onchange=e=>{ LWHStorage.set('msgShared',e.target.checked); LWHUI.toast(e.target.checked?'Shared tablet: you\'ll be signed out when you clock out':'This device stays signed in'); };
+    if($('navSwitch')) $('navSwitch').onclick=()=>{ document.querySelector('.nav').classList.remove('open'); doLogout(); };
+    if($('hdrUser')) $('hdrUser').onclick=()=>{ if(store.token) doLogout(); else LWHUI.show('messages'); };
     $('msgAudioOn').onclick=()=>{ // a tap unlocks speech for this session
       if(speechOk){ const u=new SpeechSynthesisUtterance('Spoken messages are on.'); if(voice) u.voice=voice; speechSynthesis.speak(u); }
       $('msgAudioBar').hidden=true;

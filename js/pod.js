@@ -138,7 +138,7 @@
     const item={client_id:(crypto.randomUUID?crypto.randomUUID():'c'+Date.now()+Math.random().toString(36).slice(2)),
       meta:{load_no:form.load,customer:form.customer,addr_id:form.addr_id,delivered_at:new Date(form.when||Date.now()).toISOString(),
             pallets:form.pallets,condition:form.cond,note:form.note,pages:pages.length,lat:spot&&spot.lat,lon:spot&&spot.lon,acc:spot&&spot.acc},
-      blob,queued_at:Date.now(),tries:0};
+      blob,queued_at:Date.now(),tries:0,token:token()};   // sent under the driver who made it, even if the tablet changes hands
     item.meta.client_id=item.client_id;
     await idb.put('outbox',item);
     // Clear the form now — the POD is safe in the outbox.
@@ -149,21 +149,23 @@
     await flush(true);
   }
   async function upload(item){
-    const res=await fetch(FN+'?action=upload',{method:'POST',headers:{apikey:KEY,'x-msg-token':token(),'x-pod-meta':encodeURIComponent(JSON.stringify(item.meta)),'Content-Type':'application/pdf'},body:item.blob});
+    const res=await fetch(FN+'?action=upload',{method:'POST',headers:{apikey:KEY,'x-msg-token':item.token||token(),'x-pod-meta':encodeURIComponent(JSON.stringify(item.meta)),'Content-Type':'application/pdf'},body:item.blob});
     let j={}; try{ j=await res.json(); }catch(e){}
     if(res.status===401) throw Object.assign(new Error('signed_out'),{stop:true});
     if(!j.ok) throw Object.assign(new Error(j.error||('HTTP '+res.status)),{stop:res.status>=400&&res.status<500});
     return j;
   }
   async function flush(loud){
-    if(flushing||!token()) return; flushing=true;
+    if(flushing) return; flushing=true;
     try{
       const box=await idb.all('outbox'); let sent=0;
       for(const it of box.sort((a,b)=>a.queued_at-b.queued_at)){
         if(navigator.onLine===false) break;
         try{ await upload(it); await idb.del('outbox',it.client_id); sent++; }
         catch(e){
-          if(e.message==='signed_out'){ toast('Your sign-in ran out. Sign in again in Messages — your POD is saved and will send after.'); break; }
+          if(e.message==='signed_out'){
+            if(token()&&it.token!==token()){ it.token=token(); await idb.put('outbox',it); continue; }   // old session gone — send under whoever is signed in now
+            if(loud) toast('Sign in again in Messages — your POD is saved and will send after.'); break; }
           it.tries=(it.tries||0)+1; it.last_error=e.message; await idb.put('outbox',it);
           if(e.stop&&loud) toast('POD not sent: '+e.message);
         }
@@ -317,5 +319,10 @@
     if(sec.classList.contains('active')) onShow();
     setTimeout(()=>flush(false),5000);
   });
-  window.LWHPod={flush};
+  window.LWHPod={
+    flush:()=>flush(false),
+    async hasPendingFor(t){ try{ return (await idb.all('outbox')).some(x=>x.token===t); }catch(e){ return false; } },
+    async draftInfo(){ try{ return {pages:(await idb.all('pages')).length}; }catch(e){ return {pages:0}; } },
+    async clearDraft(){ pages=[]; try{ await idb.clear('pages'); }catch(e){} form={load:'',customer:'',addr_id:'',when:nowLocal(),pallets:'',cond:'clean',note:''}; saveForm(); if(built) drawAll(); }
+  };
 })();
