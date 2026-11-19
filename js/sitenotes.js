@@ -29,7 +29,7 @@
     const sec=$(VIEW); if(!sec||built) return; built=true;
     sec.innerHTML=`<div class="card sn-wrap">
       <div class="sn-top"><h2>Customer Site Notes</h2><p class="hint">Hours, check-in, gate codes, parking, docks and watch-outs for each customer — from drivers who've been there.</p></div>
-      <div id="snSignIn" class="pod-note pod-warn" hidden>Sign in once with your Driver ID and PIN to see site notes. <button type="button" class="ghost" data-view="messages">Sign in</button></div>
+      <div id="snSignIn" class="pod-note pod-warn" hidden>Sign in once with your name and PTO PIN (same as time off) to see site notes. <button type="button" class="ghost" data-view="messages">Sign in</button></div>
       <div id="snList">
         <div class="sn-searchrow"><input type="search" id="snQ" placeholder="Search customer, city or address" autocomplete="off"><button type="button" id="snNear">📍 Near me</button></div>
         <div class="sn-tabs"><button type="button" data-sn-mode="near" class="on">Results</button><button type="button" data-sn-mode="noted">All with notes</button><button type="button" data-sn-mode="recent">Recent</button></div>

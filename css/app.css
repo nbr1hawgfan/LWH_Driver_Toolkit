@@ -1285,3 +1285,8 @@ a.sn-btn{display:inline-flex;align-items:center;min-height:46px;padding:6px 16px
 .sn-add h3{margin:0 0 8px}
 button.sn-send{width:100%;min-height:52px;margin-top:8px}
 @media (max-width:560px){ .pod-grid{grid-template-columns:1fr} .pod-snap{grid-template-columns:1fr} }
+
+/* Sign-in with name + PTO PIN (v1.44.0) — big and simple */
+select.msg-bigsel{font-size:19px;min-height:56px;font-weight:700}
+input.msg-bigpin{display:block;width:100%;margin-top:6px;font-size:28px;min-height:60px;letter-spacing:.35em;text-align:center}
+button.msg-bigbtn{width:100%;min-height:58px;font-size:19px}

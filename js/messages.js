@@ -1,5 +1,6 @@
 // Messages from dispatch (v1.39.0, files + Message Dispatch in v1.40.0)
-// - Each driver signs in once with their Driver ID + 6-digit PIN (first time: setup code from dispatch).
+// - Each driver signs in once: pick your name + your PTO PIN (same PIN as the time off app and the Time
+//   Clock — v1.44.0). Clocking in on the Time Clock signs you in here too. Sessions last 180 days and renew.
 // - Inbox is checked every 30 seconds while the app is open, and whenever it comes back on screen.
 // - New messages can be read out loud automatically; on a phone or tablet paired with the truck's
 //   Bluetooth (or a headset) the voice plays through that, like any other media audio.
@@ -183,40 +184,46 @@
         if(window.showHeaderUser) showHeaderUser();
       }
     }catch(e){}
-    ['msgPin','msgSetupCode','msgNewPin','msgNewPin2'].forEach(id=>{ if($(id)) $(id).value=''; });
+    if($('msgPin')) $('msgPin').value='';
     showLoginErr(''); render(); startPoll(); startGeo(); refresh({speakUnread:false});
   }
+  // Name list for the sign-in screen (cached so it shows with no signal).
+  async function loadRoster(){
+    const draw=list=>{
+      const sel=$('msgDriverSel'); if(!sel) return;
+      const keep=sel.value||LWHStorage.get('msgLastId','')||LWHStorage.get('tcDriver','');
+      const drv=list.filter(d=>d.role!=='Manager'), mgr=list.filter(d=>d.role==='Manager');
+      const opt=d=>`<option value="${safe(d.driver_id)}">${safe(d.name)}${d.has_pin===false?' (no PIN yet)':''}</option>`;
+      sel.innerHTML='<option value="">Pick your name…</option>'+drv.map(opt).join('')+(mgr.length?'<optgroup label="Dispatch / managers">'+mgr.map(opt).join('')+'</optgroup>':'');
+      if(keep&&list.some(d=>d.driver_id===keep)) sel.value=keep;
+    };
+    const cached=LWHStorage.get('msgRoster',null)||LWHStorage.get('tcRoster',[]);
+    if(cached&&cached.length) draw(cached);
+    try{ const r=await rpc('msg_roster',{}); if(Array.isArray(r)&&r.length){ LWHStorage.set('msgRoster',r); draw(r); } }catch(e){}
+  }
+  // Sign in with a driver + PIN. Used by the sign-in screen and, quietly, by the Time Clock after a good PIN.
+  async function pinSignIn(id,pin,quiet){
+    const r=await rpc('drv_login',{p_driver_id:id,p_pin:pin});
+    if(!r.ok){ if(!quiet) showLoginErr(r.error); return false; }
+    LWHStorage.set('msgLastId',id);
+    if(!LWHStorage.get('tcDriver','')) LWHStorage.set('tcDriver',id);   // Time Clock opens on their name
+    await afterSignIn(r.token);
+    return true;
+  }
   async function doLogin(){
-    const id=($('msgDriverId').value||'').trim().toUpperCase(), pin=($('msgPin').value||'').trim();
-    if(!id||!/^\d{6}$/.test(pin)) return showLoginErr('Enter your Driver ID and your 6-digit PIN.');
+    const id=($('msgDriverSel').value||'').trim(), pin=($('msgPin').value||'').replace(/\D/g,'');
+    if(!id) return showLoginErr('Pick your name from the list.');
+    if(pin.length<4) return showLoginErr('Type your PIN — the same one you use for time off (4 to 6 numbers).');
     const b=$('msgLoginBtn'); b.disabled=true; b.textContent='Signing in…';
-    try{
-      const r=await rpc('drv_login',{p_driver_id:id,p_pin:pin});
-      if(!r.ok){ showLoginErr(r.error); if(r.needs_setup) setSetupMode(true); return; }
-      LWHStorage.set('msgLastId',id); await afterSignIn(r.token);
-    }catch(e){ showLoginErr('No signal — try again in a minute.'); }
+    try{ if(!(await pinSignIn(id,pin,false))) $('msgPin').value=''; }
+    catch(e){ showLoginErr('No signal — try again in a minute.'); }
     finally{ b.disabled=false; b.textContent='Sign In'; }
   }
-  async function doSetup(){
-    const id=($('msgDriverId').value||'').trim().toUpperCase(), code=($('msgSetupCode').value||'').trim();
-    const p1=($('msgNewPin').value||'').trim(), p2=($('msgNewPin2').value||'').trim();
-    if(!id||!code) return showLoginErr('Enter your Driver ID and the setup code from dispatch.');
-    if(!/^\d{6}$/.test(p1)) return showLoginErr('Your new PIN must be exactly 6 digits.');
-    if(p1!==p2) return showLoginErr('The two PINs do not match.');
-    const b=$('msgSetupBtn'); b.disabled=true; b.textContent='Saving…';
-    try{
-      const r=await rpc('drv_create_pin',{p_driver_id:id,p_setup_code:code,p_pin:p1});
-      if(!r.ok) return showLoginErr(r.error);
-      LWHStorage.set('msgLastId',id); setSetupMode(false); await afterSignIn(r.token);
-      LWHUI.toast('PIN saved. You are signed in.');
-    }catch(e){ showLoginErr('No signal — try again in a minute.'); }
-    finally{ b.disabled=false; b.textContent='Create PIN & Sign In'; }
-  }
-  function setSetupMode(on){
-    $('msgSetupBox').hidden=!on; $('msgPinBox').hidden=on;
-    $('msgSetupToggle').textContent=on?'I already have a PIN':'First time sign-in';
-    showLoginErr('');
-  }
+  window.LWHMsgAuth={
+    signedIn:()=>!!store.token,
+    // Time Clock calls this after a PIN checks out, so the driver is signed in to Messages too.
+    async fromTimeClock(id,pin){ if(store.token||!id||!pin) return; try{ await pinSignIn(id,pin,true); }catch(e){} }
+  };
   async function doLogout(){
     if(!confirm('Sign out of messages on this device? The next driver can then sign in.')) return;
     const t=store.token;
@@ -250,7 +257,7 @@
     const title=$('msgHomeTitle'), sub=$('msgHomeSub'), badge=$('msgHomeBadge');
     c.classList.remove('msg-home-alert','msg-home-new');
     if(!store.token){
-      title.textContent='Messages from Dispatch'; sub.textContent='Sign in with your Driver ID to get messages here — read out loud over Bluetooth.'; badge.hidden=true; return;
+      title.textContent='Messages from Dispatch'; sub.textContent='Sign in with your name and PTO PIN to get messages here — read out loud over Bluetooth.'; badge.hidden=true; return;
     }
     const unread=messages.filter(m=>!m.read_at).length, act=messages.filter(needsAction).length;
     const n=Math.max(unread,act);
@@ -286,7 +293,7 @@
     const signed=!!store.token;
     if(!$('msgView')) return;
     $('msgLogin').hidden=signed; $('msgSigned').hidden=!signed;
-    if(!signed){ if($('msgDriverId')&&!$('msgDriverId').value) $('msgDriverId').value=LWHStorage.get('msgLastId',''); return; }
+    if(!signed){ loadRoster(); return; }
     const me=store.me||{};
     $('msgWho').textContent=me.name?`${me.name} (${me.driver_id})`:'';
     $('msgAutoRead').checked=store.autoRead; $('msgChime').checked=store.chime;
@@ -459,8 +466,6 @@
     if(!$('msgView')) return;
     $('msgLoginBtn').onclick=doLogin;
     $('msgPin').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-    $('msgSetupBtn').onclick=doSetup;
-    $('msgSetupToggle').onclick=()=>setSetupMode($('msgSetupBox').hidden);
     $('msgLogout').onclick=doLogout;
     $('msgRefresh').onclick=()=>refresh();
     $('msgSpeakAll').onclick=()=>{ const l=messages.filter(m=>!m.read_at||needsAction(m)).reverse(); speak(l.length?l:messages.slice(0,3).reverse()); };
