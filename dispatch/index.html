@@ -325,6 +325,7 @@ html.embed .login{margin:10px auto}
     $('loginView').hidden=true; $('appView').hidden=false; $('whoBox').hidden=false;
     renderAudience(); renderReply(); updatePreview(); renderResetSel();
     loadInbox(); loadSitePend(); rpc('pod_list',{p_token:token,p_days:1,p_unreviewed:true}).then(r=>{ const b=$('podBadge'); b.hidden=!r.unreviewed; b.textContent=r.unreviewed||0; }).catch(()=>{}); clearInterval(inbTimer); inbTimer=setInterval(()=>{ loadInbox(true); },30000);
+    if(wantTab){ openTab(wantTab); wantTab=''; }
   }
   async function doLogin(){
     const id=$('lgId').value.trim().toUpperCase(), pin=$('lgPin').value.trim();
@@ -351,6 +352,10 @@ html.embed .login{margin:10px auto}
   $('lgId').value=ls.get('lwhdispatch_id')||'';
 
   // ------------------------------------------------ tabs
+  // ?tab=pods|sites|pins|inbox|send|sent opens that tab (used by the Transportation Manager home panel).
+  let wantTab=(new URLSearchParams(location.search).get('tab')||'').toLowerCase();
+  function openTab(t){ const b=document.querySelector('.tab[data-tab="'+t+'"]'); if(!b) return; if($('appView').hidden){ wantTab=t; return; } b.click(); }
+  window.addEventListener('message',e=>{ if(e.origin===location.origin&&e.data&&e.data.lwhmc==='tab') openTab(String(e.data.tab||'')); });
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
     ['inbox','send','sent','pods','sites','pins'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
