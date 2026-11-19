@@ -204,7 +204,7 @@
   // Sign in with a driver + PIN. Used by the sign-in screen and, quietly, by the Time Clock after a good PIN.
   async function pinSignIn(id,pin,quiet){
     const r=await rpc('drv_login',{p_driver_id:id,p_pin:pin});
-    if(!r.ok){ if(!quiet) showLoginErr(r.error); return false; }
+    if(!r.ok){ if(!quiet){ showLoginErr(r.error); if(r.needs_setup&&$('msgSetupBox')){ $('msgSetupBox').hidden=false; $('msgSetupCode').focus(); } } return false; }
     LWHStorage.set('msgLastId',id);
     if(!LWHStorage.get('tcDriver','')) LWHStorage.set('tcDriver',id);   // Time Clock opens on their name
     await afterSignIn(r.token);
@@ -244,6 +244,21 @@
     return true;
   }
   async function doLogout(){ if(await signOutDevice()) LWHUI.show('messages'); }
+  // Setup code (only shown when the server says this person needs one — e.g. a manager with no PTO PIN).
+  async function doSetup(){
+    const id=($('msgDriverSel').value||'').trim(), code=($('msgSetupCode').value||'').trim(), pin=($('msgNewPin').value||'').trim();
+    if(!id) return showLoginErr('Pick your name from the list.');
+    if(!code) return showLoginErr('Type the setup code.');
+    if(!/^\d{6}$/.test(pin)) return showLoginErr('Your new PIN must be exactly 6 numbers.');
+    const b=$('msgSetupBtn'); b.disabled=true; b.textContent='Saving…';
+    try{
+      const r=await rpc('drv_create_pin',{p_driver_id:id,p_setup_code:code,p_pin:pin});
+      if(!r.ok) return showLoginErr(r.error);
+      LWHStorage.set('msgLastId',id); $('msgSetupBox').hidden=true; $('msgSetupCode').value=''; $('msgNewPin').value='';
+      await afterSignIn(r.token); LWHUI.toast('PIN saved. You are signed in.');
+    }catch(e){ showLoginErr('No signal — try again in a minute.'); }
+    finally{ b.disabled=false; b.textContent='Create PIN & Sign In'; }
+  }
   window.LWHMsgAuth={
     signedIn:()=>!!store.token,
     who:()=>store.me,
@@ -499,6 +514,7 @@
   function wire(){
     if(!$('msgView')) return;
     $('msgLoginBtn').onclick=doLogin;
+    if($('msgSetupBtn')) $('msgSetupBtn').onclick=doSetup;
     $('msgPin').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
     $('msgLogout').onclick=doLogout;
     $('msgRefresh').onclick=()=>refresh();
