@@ -50,6 +50,7 @@ textarea{min-height:120px;resize:vertical;font-size:17px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
 .chip{background:#fff;color:#111;border:1.5px solid #999;text-transform:none;font-family:inherit;font-weight:600;letter-spacing:0;min-height:38px;padding:6px 12px;font-size:14px}
 .chip.on{background:#111;color:#fff;border-color:#111}
+.chip:hover{background:#f0f0f0;color:#111}
 .chip small{font-weight:400;opacity:.75;margin-left:4px}
 .pick{max-height:300px;overflow:auto;border:1.5px solid #bbb;background:#fff}
 .pick label{display:flex;gap:10px;align-items:center;margin:0;padding:8px 12px;border-bottom:1px solid #eee;font-weight:500}
@@ -156,6 +157,8 @@ html.embed .login{margin:10px auto}
       <button type="button" class="tab active" data-tab="inbox">Driver Inbox<span class="badge" id="inbBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="send">Send</button>
       <button type="button" class="tab" data-tab="sent">Sent &amp; Read Receipts</button>
+      <button type="button" class="tab" data-tab="pods">PODs<span class="badge" id="podBadge" hidden>0</span></button>
+      <button type="button" class="tab" data-tab="sites">Site Notes<span class="badge" id="siteBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="pins">Driver Sign-in</button>
     </div>
 
@@ -233,6 +236,37 @@ html.embed .login{margin:10px auto}
       </div>
     </div>
 
+    <!-- PODS -->
+    <div id="tab-pods" hidden>
+      <div class="card">
+        <h2>Proof of delivery</h2>
+        <p class="hint" style="margin:0 0 10px">Signed BOLs drivers sent from the Driver Toolkit, as PDFs. Kept for good (not removed after 14 days). Search by load, customer or driver.</p>
+        <div class="row no-print" style="margin:0 0 10px">
+          <input type="search" id="podQ" placeholder="Load #, customer or driver" style="max-width:320px;margin:0">
+          <select id="podDays" style="width:auto;margin:0"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="365">Last year</option></select>
+          <label style="display:flex;gap:8px;align-items:center;margin:0;font-weight:500"><input type="checkbox" id="podUnrev" style="width:18px;height:18px;accent-color:var(--brand)"> Not reviewed only</label>
+          <button type="button" class="ghost" id="podRefresh">Refresh</button><button type="button" class="ghost" id="podCsv">CSV</button>
+          <span class="hint" id="podStatus"></span>
+        </div>
+        <div style="overflow:auto"><table><thead><tr><th>Delivered</th><th>Load / BOL</th><th>Customer</th><th>Driver</th><th>Pallets</th><th>Condition</th><th>Pages</th><th></th><th>Reviewed</th></tr></thead><tbody id="podBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- SITE NOTES -->
+    <div id="tab-sites" class="split" hidden>
+      <div class="card">
+        <h2>Waiting for approval</h2>
+        <p class="hint" style="margin:0 0 10px">Notes drivers suggested. Approve adds it to that customer's notes as written; or edit the box first — what's in the box replaces that section.</p>
+        <div id="sitePend"></div>
+      </div>
+      <div class="card sticky">
+        <h2>Edit a customer's notes</h2>
+        <div class="row" style="margin:0 0 8px"><input type="search" id="siteQ" placeholder="Search customer or city" style="margin:0"><button type="button" class="ghost" id="siteNoted">With notes</button></div>
+        <div id="siteList"></div>
+        <div id="siteEdit"></div>
+      </div>
+    </div>
+
     <!-- PINS -->
     <div id="tab-pins" hidden>
       <div class="card">
@@ -283,7 +317,7 @@ html.embed .login{margin:10px auto}
     catch(e){ return; }
     $('loginView').hidden=true; $('appView').hidden=false; $('whoBox').hidden=false;
     renderAudience(); renderReply(); updatePreview(); renderResetSel();
-    loadInbox(); clearInterval(inbTimer); inbTimer=setInterval(()=>{ loadInbox(true); },30000);
+    loadInbox(); loadSitePend(); rpc('pod_list',{p_token:token,p_days:1,p_unreviewed:true}).then(r=>{ const b=$('podBadge'); b.hidden=!r.unreviewed; b.textContent=r.unreviewed||0; }).catch(()=>{}); clearInterval(inbTimer); inbTimer=setInterval(()=>{ loadInbox(true); },30000);
   }
   async function doLogin(){
     const id=$('lgId').value.trim().toUpperCase(), pin=$('lgPin').value.trim();
@@ -312,7 +346,9 @@ html.embed .login{margin:10px auto}
   // ------------------------------------------------ tabs
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
-    ['inbox','send','sent','pins'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    ['inbox','send','sent','pods','sites','pins'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    if(b.dataset.tab==='pods') loadPods();
+    if(b.dataset.tab==='sites'){ loadSitePend(); if(!$('siteList').innerHTML) siteSearch(true); }
     if(b.dataset.tab==='inbox') loadInbox();
     clearInterval(sentTimer);
     if(b.dataset.tab==='sent'){ loadSent(); sentTimer=setInterval(()=>{ if(!document.hidden) loadSent(true); },30000); }
@@ -606,6 +642,99 @@ html.embed .login{margin:10px auto}
       $('resetOut').innerHTML=`<div class="ok">${esc(r.name)}'s new setup code: <span class="code">${esc(r.setup_code)}</span></div>`; loadPins();
     }catch(e){}
   };
+
+
+  // ------------------------------------------------ PODs (proof of delivery)
+  const POD_FN='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/pod-file';
+  const COND={clean:'All good',short:'SHORT',over:'OVER',damaged:'DAMAGED',refused:'REFUSED'};
+  let pods=[], podT=null;
+  async function loadPods(quiet){
+    if(!token) return;
+    if(!quiet) $('podStatus').textContent='Loading…';
+    try{
+      const r=await rpc('pod_list',{p_token:token,p_q:$('podQ').value.trim(),p_days:+$('podDays').value,p_unreviewed:$('podUnrev').checked});
+      pods=r.pods||[]; $('podStatus').textContent=`${pods.length} POD${pods.length===1?'':'s'}`;
+      const b=$('podBadge'); b.hidden=!r.unreviewed; b.textContent=r.unreviewed||0;
+      $('podBody').innerHTML=pods.length?pods.map(p=>`<tr>
+        <td>${esc(when(p.delivered_at))}</td><td><b>${esc(p.load_no)}</b></td><td>${esc(p.customer||'')}</td><td>${esc(p.driver_name||p.driver_id)}</td>
+        <td>${p.pallets==null?'':esc(p.pallets)}</td>
+        <td>${p.condition==='clean'?'All good':`<b style="color:var(--bad)">${COND[p.condition]||esc(p.condition)}</b>`}${p.note?`<div class="meta">${esc(p.note)}</div>`:''}</td>
+        <td>${esc(p.pages||'')}</td>
+        <td style="white-space:nowrap"><button type="button" class="flink" data-pod-open="${p.id}">📄 Open</button> <button type="button" class="flink" data-pod-dl="${p.id}">⬇</button>${p.lat!=null?` <a class="meta" href="https://maps.google.com/?q=${p.lat},${p.lon}" target="_blank" rel="noopener">map</a>`:''}</td>
+        <td><label style="display:flex;gap:6px;align-items:center;margin:0;font-weight:500"><input type="checkbox" data-pod-rev="${p.id}" ${p.reviewed_at?'checked':''} style="width:18px;height:18px;accent-color:var(--brand)">${p.reviewed_at?`<span class="meta">${esc(p.reviewed_by||'')}</span>`:''}</label></td></tr>`).join('')
+        :'<tr><td colspan="9" class="hint">No PODs for these filters.</td></tr>';
+    }catch(e){ if(e.message!=='stop') $('podStatus').textContent='Could not load.'; }
+  }
+  async function podUrl(id,download){
+    const r=await fetch(POD_FN+'?action=url',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({token,id,download:!!download})});
+    const j=await r.json().catch(()=>({ok:false})); if(!j.ok) throw new Error(j.error||'POD not available'); return j.url;
+  }
+  document.addEventListener('click',async e=>{
+    const o=e.target.closest('[data-pod-open],[data-pod-dl]'); if(!o) return;
+    try{ const u=await podUrl(o.dataset.podOpen||o.dataset.podDl,!!o.dataset.podDl); window.open(u,'_blank','noopener'); }catch(err){ toast(err.message); }
+  });
+  document.addEventListener('change',async e=>{
+    const c=e.target.closest('[data-pod-rev]'); if(!c) return;
+    try{ await rpc('pod_review',{p_token:token,p_id:c.dataset.podRev,p_reviewed:c.checked}); loadPods(true); }catch(err){}
+  });
+  $('podQ').addEventListener('input',()=>{ clearTimeout(podT); podT=setTimeout(()=>loadPods(),350); });
+  $('podDays').onchange=()=>loadPods(); $('podUnrev').onchange=()=>loadPods(); $('podRefresh').onclick=()=>loadPods();
+  $('podCsv').onclick=()=>{
+    const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+    const rows=[['Delivered','Load/BOL','Customer','Driver','Driver ID','Pallets','Condition','Note','Pages','Reviewed by','Reviewed at','Lat','Lon']]
+      .concat(pods.map(p=>[new Date(p.delivered_at).toLocaleString(),p.load_no,p.customer,p.driver_name,p.driver_id,p.pallets,p.condition,p.note,p.pages,p.reviewed_by,p.reviewed_at?new Date(p.reviewed_at).toLocaleString():'',p.lat,p.lon]));
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'})); a.download='PODs.csv'; a.click();
+  };
+
+  // ------------------------------------------------ Site notes
+  const SCATS=[['hours','Receiving hours'],['checkin','Check-in'],['gate','Gate / door code'],['parking','Parking / staging'],['docks','Docks'],['contact','Contacts'],['watch','Watch out'],['other','Other']];
+  const SCAT=Object.fromEntries(SCATS);
+  let pend=[], sites=[], siteT=null;
+  async function loadSitePend(){
+    try{
+      const r=await rpc('site_pending',{p_token:token}); pend=r.items||[];
+      const b=$('siteBadge'); b.hidden=!pend.length; b.textContent=pend.length;
+      $('sitePend').innerHTML=pend.length?pend.map(g=>`<div class="card" style="padding:12px;margin:0 0 10px">
+        <div><b>${esc(g.site_name)}</b> <span class="meta">${esc(g.site_addr||'')}</span></div>
+        <div class="meta">${esc(SCAT[g.cat]||g.cat)} · from ${esc(g.driver_name||'')} · ${esc(when(g.created_at))}</div>
+        ${g.current?`<div class="meta" style="margin-top:6px">Now says:</div><div class="preview" style="white-space:pre-wrap">${esc(g.current)}</div>`:''}
+        <div class="meta" style="margin-top:6px">Driver's note:</div><div class="preview" style="white-space:pre-wrap;background:var(--brand-tint)">${esc(g.body)}</div>
+        <label style="margin-top:8px">${g.current?'Final text for this section (edit, then Save edited)':'Edit before approving (optional)'}<textarea id="sp${g.id}" rows="3">${esc(g.current?g.current+'\n'+g.body:g.body)}</textarea></label>
+        <div class="row"><button type="button" data-sp-ok="${g.id}">Approve as written</button><button type="button" class="ghost" data-sp-edit="${g.id}">Save edited</button><button type="button" class="ghost" data-sp-no="${g.id}">Reject</button></div></div>`).join('')
+        :'<p class="hint">Nothing waiting.</p>';
+    }catch(e){}
+  }
+  document.addEventListener('click',async e=>{
+    const b=e.target.closest('[data-sp-ok],[data-sp-edit],[data-sp-no]'); if(!b) return;
+    const id=+(b.dataset.spOk||b.dataset.spEdit||b.dataset.spNo);
+    const action=b.dataset.spNo?'reject':'approve', text=b.dataset.spEdit?$('sp'+id).value:null;
+    try{ const r=await rpc('site_review',{p_token:token,p_id:id,p_action:action,p_text:text}); if(!r.ok) return toast(r.error); toast(action==='reject'?'Rejected':'Approved — drivers see it now'); loadSitePend(); if(selSite) siteSearch(); }catch(err){}
+  });
+  let selSite=null;
+  async function siteSearch(noted){
+    const q=$('siteQ').value.trim();
+    if(!q&&!noted){ $('siteList').innerHTML='<p class="hint">Search a customer to edit its notes.</p>'; return; }
+    try{
+      const r=await rpc('site_search',{p_token:token,p_q:noted?'':q,p_only_noted:!!noted}); sites=r.sites||[];
+      $('siteList').innerHTML=sites.length?'<div class="pick" style="max-height:260px;overflow:auto">'+sites.map(s=>`<button type="button" class="chip" style="display:block;width:100%;text-align:left;margin:0 0 4px" data-site="${esc(s.addr_id)}">${esc(s.name)} <small>${esc(s.address||'')}${Object.keys(s.notes||{}).length?' · '+Object.keys(s.notes).length+' notes':''}</small></button>`).join('')+'</div>':'<p class="hint">No match.</p>';
+      if(selSite){ const s=sites.find(x=>x.addr_id===selSite.addr_id); if(s) editSite(s); }
+    }catch(e){}
+  }
+  function editSite(s){
+    selSite=s; const n=s.notes||{};
+    $('siteEdit').innerHTML=`<h3>${esc(s.name)}</h3><div class="meta" style="margin:-4px 0 8px">${esc(s.address||'')}${s.updated_at?' · updated '+esc(when(s.updated_at))+' by '+esc(s.updated_by||''):''}</div>`
+      +SCATS.map(([k,l])=>`<label>${l}<textarea data-se="${k}" rows="${n[k]?3:1}">${esc(n[k]||'')}</textarea></label>`).join('')
+      +'<div class="row"><button type="button" id="siteSave">Save notes</button><span class="hint">Empty a box to remove that section.</span></div>';
+    $('siteSave').onclick=async()=>{
+      const notes={}; document.querySelectorAll('[data-se]').forEach(t=>{ notes[t.dataset.se]=t.value.trim(); });
+      try{ const r=await rpc('site_edit',{p_token:token,p_addr_id:s.addr_id,p_notes:notes}); if(!r.ok) return toast(r.error); toast('Saved'); siteSearch(); }catch(e){}
+    };
+  }
+  document.addEventListener('click',e=>{ const b=e.target.closest('[data-site]'); if(!b) return; const s=sites.find(x=>x.addr_id===b.dataset.site); if(s) editSite(s); });
+  $('siteQ').addEventListener('input',()=>{ clearTimeout(siteT); siteT=setTimeout(()=>siteSearch(),350); });
+  $('siteNoted').onclick=()=>{ $('siteQ').value=''; siteSearch(true); };
+  // keep the badges fresh while open
+  setInterval(()=>{ if(token&&!document.hidden){ loadSitePend(); if(!$('tab-pods').hidden) loadPods(true); else rpc('pod_list',{p_token:token,p_days:1,p_unreviewed:true}).then(r=>{ const b=$('podBadge'); b.hidden=!r.unreviewed; b.textContent=r.unreviewed||0; }).catch(()=>{}); } },60000);
 
   if(EMBED) $('appView').insertBefore($('whoBox'),$('appView').firstChild);
   if(token) start(); else $('loginView').hidden=false;
