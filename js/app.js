@@ -359,6 +359,7 @@ function retireModules(){
 const MANAGER_VIEWS=['yardBoard','spotterTimesheets','fuelboard','timeclockBoard'];
 const MANAGER_TOOLS_CODE='2468';
 function managerToolsOn(){ return LWHStorage.get('managerToolsOn',false)===true; }
+window.applyManagerTools=applyManagerTools;
 function applyManagerTools(){
   const on=managerToolsOn();
   document.body.classList.toggle('mgr-on',on);
@@ -372,10 +373,10 @@ applyManagerTools();
   const btn=document.getElementById('mgrToolsOn'), offBtn=document.getElementById('mgrToolsOffBtn'), code=document.getElementById('mgrToolsCode');
   if(btn) btn.onclick=()=>{
     if((code.value||'').trim()!==MANAGER_TOOLS_CODE){ LWHUI.toast('Wrong code'); return; }
-    code.value=''; LWHStorage.set('managerToolsOn',true); applyManagerTools(); LWHUI.toast('Manager tools turned on');
+    code.value=''; LWHStorage.set('managerToolsOn',true); LWHStorage.remove('mgrToolsAuto'); applyManagerTools(); LWHUI.toast('Manager tools turned on');
   };
   if(code) code.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); });
-  if(offBtn) offBtn.onclick=()=>{ LWHStorage.set('managerToolsOn',false); applyManagerTools(); LWHUI.toast('Manager tools hidden'); };
+  if(offBtn) offBtn.onclick=()=>{ LWHStorage.set('managerToolsOn',false); LWHStorage.remove('mgrToolsAuto'); applyManagerTools(); LWHUI.toast('Manager tools hidden'); };
 })();
 
 function applyIncomingUrlParams(){
