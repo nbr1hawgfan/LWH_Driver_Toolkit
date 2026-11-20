@@ -9,7 +9,8 @@
   const API='https://tjivcqxnkftujceumdtx.supabase.co/rest/v1/rpc/';
   const KEY='sb_publishable_PYlWSW6-Gi-QZl91IXUq0Q_W5mO3sDT';
   const $=id=>document.getElementById(id);
-  const safe=s=>LWHUI.safe(s);
+  // Runs in the Driver Toolkit and in the Driver Message Center (Transportation Manager), which passes window.TCBToken.
+  const safe=s=>window.LWHUI&&LWHUI.safe?LWHUI.safe(s):String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const pad=n=>String(n).padStart(2,'0');
   const isoDay=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
   const fmtT=iso=>new Date(iso).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
@@ -21,11 +22,11 @@
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
   }
-  const token=()=>LWHStorage.get('msgToken','');
+  const token=()=>window.TCBToken?TCBToken():LWHStorage.get('msgToken','');
   function status(t){ const s=$('tcbStatus'); if(s) s.textContent=t||''; }
   function signedOut(){
     $('tcbOut').innerHTML=`<div class="card"><b>Sign in first.</b><p class="hint">Open <b>Messages</b> and sign in with your Driver ID and PIN. Only people set as Manager in the driver list can see the time clock.</p><button type="button" data-view="messages">Open Messages</button></div>`;
-    $('tcbOut').querySelector('button').onclick=()=>LWHUI.show('messages');
+    const b=$('tcbOut').querySelector('button'); if(window.LWHUI&&LWHUI.show) b.onclick=()=>LWHUI.show('messages'); else b.remove();
   }
   function sunday(iso){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()-d.getDay()); return isoDay(d); }
 
