@@ -1305,3 +1305,23 @@ button.lw-user:hover{background:none;text-decoration:underline}
 .tc-or{display:flex;align-items:center;gap:10px;margin:16px 0 6px;color:var(--muted,#666);font-size:14px;font-weight:700}
 .tc-or::before,.tc-or::after{content:"";flex:1;height:1px;background:var(--line,#ddd)}
 .scanner-flip{margin-left:auto;margin-right:8px}
+
+/* Time Clock Board fixes (v1.47.0) */
+.tcb-edit{float:right;min-height:34px;padding:4px 12px;font-size:14px;background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.tcb-fixed{font-size:13px;color:#7a4b00;background:#fff6e0;padding:3px 7px;margin-top:4px;border-radius:6px;display:inline-block}
+.tcb-gone{margin-top:6px;font-size:14px} .tcb-gone summary{cursor:pointer;color:var(--muted);font-weight:700}
+.tcb-void{color:var(--muted)} .tcb-void span{font-size:13px}
+.tcb-add{margin-top:8px;min-height:40px;font-size:15px}
+.tcb-none{display:flex;flex-wrap:wrap;gap:6px} .tcb-none button{min-height:38px;font-size:14px;padding:4px 10px}
+.tcb-card.flash{box-shadow:0 0 0 3px var(--brand)}
+.tcb-week td.tcb-go{cursor:pointer} .tcb-week td.tcb-go:hover{outline:2px solid var(--brand)}
+.tcb-fix{margin-top:10px;border:2px solid var(--brand);border-radius:var(--radius-sm);padding:12px;background:var(--brand-tint)}
+.tcb-fix h4{margin:0 0 6px}
+.tcb-fix label{display:block;font-weight:700;font-size:14px;margin-top:8px}
+.tcb-fix input:not([type=checkbox]){display:block;width:100%;margin-top:4px;min-height:46px;font-size:17px}
+.tcb-fix-type{display:flex;gap:0;margin:6px 0} .tcb-fix-type button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:0;min-height:48px;font-size:17px}
+.tcb-fix-type button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tcb-fix-row{display:flex;gap:10px} .tcb-fix-row label{flex:1}
+.tcb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .tcb-chips button{min-height:34px;font-size:13px;padding:3px 9px}
+.tcb-fix label.tcb-check{display:flex;align-items:center;gap:8px;font-weight:600} .tcb-check input{width:22px;height:22px}
+.tcb-fix-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px} .tcb-fix-btns .danger{color:var(--bad);border-color:var(--bad)}
