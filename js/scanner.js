@@ -2,7 +2,10 @@
   // Ported from LWH_Master-Lookup, where this approach (html5-qrcode) was
   // confirmed working reliably on iPhone/Safari, replacing the previous
   // BarcodeDetector/ZXing implementation which was unreliable on iOS.
-  let html5QrCode=null, callback=null;
+  let html5QrCode=null, callback=null, opts={};
+  // Front or back camera, remembered per screen (opts.key) — a tablet mounted in a truck may only have the front one free.
+  const prefKey=()=> 'lwh_scanFacing_'+(opts.key||'default');
+  const facing=()=>{ try{ return localStorage.getItem(prefKey())==='user'?'user':'environment'; }catch(e){ return 'environment'; } };
 
   function el(id){ return document.getElementById(id); }
   function setStatus(msg){ const s=el('scannerStatus'); if(s) s.textContent=msg; }
@@ -20,7 +23,7 @@
       Html5QrcodeSupportedFormats.ITF,
       Html5QrcodeSupportedFormats.CODABAR
     ]:undefined;
-    return {fps:10,qrbox:{width:260,height:140},formatsToSupport:formats};
+    return {fps:10,qrbox:opts.key==='timeclock'?{width:240,height:240}:{width:260,height:140},formatsToSupport:formats};
   }
 
   function onScanSuccess(decodedText){
@@ -32,8 +35,9 @@
     if(cb) cb(value);
   }
 
-  async function start(cb){
-    callback=cb;
+  async function start(cb,o){
+    callback=cb; opts=o||{};
+    const head=document.querySelector('#scannerModal .scanner-head b'); if(head) head.textContent=opts.title||'Camera Barcode Scan';
     const modal=el('scannerModal');
     const readerEl=el('scannerReader');
     if(!modal||!readerEl){ alert('Scanner UI not available.'); return; }
@@ -49,13 +53,17 @@
     try{
       const devices=await Html5Qrcode.getCameras();
       if(!devices||!devices.length) throw new Error('No camera found');
-      const back=devices.find(d=>/back|rear|environment/i.test(d.label))||devices[devices.length-1];
-      setStatus('Point the camera at a barcode or QR code.');
-      await html5QrCode.start(back.id,config,onScanSuccess,()=>{});
+      const flip=el('scannerFlip'); if(flip) flip.hidden=devices.length<2;
+      const want=facing();
+      const cam=want==='user'
+        ? (devices.find(d=>/front|user|face/i.test(d.label))||devices[0])
+        : (devices.find(d=>/back|rear|environment/i.test(d.label))||devices[devices.length-1]);
+      setStatus(opts.key==='timeclock'?'Hold your card up to the camera.':'Point the camera at a barcode or QR code.');
+      await html5QrCode.start(cam.id,config,onScanSuccess,()=>{});
     }catch(err){
       try{
         setStatus('Point the camera at a barcode or QR code.');
-        await html5QrCode.start({facingMode:'environment'},config,onScanSuccess,()=>{});
+        await html5QrCode.start({facingMode:facing()},config,onScanSuccess,()=>{});
       }catch(err2){
         setStatus('Camera/scanner error: '+err2.message);
         alert('Camera scan failed: '+err2.message+'\n\nMake sure the page is served over HTTPS and camera permission is allowed. You can still use a USB/Bluetooth scanner or type into Search.');
@@ -73,6 +81,15 @@
     if(hide&&modal) modal.hidden=true;
   }
 
-  window.addEventListener('load',()=>{ const close=el('scannerClose'); if(close) close.onclick=()=>stop(true); });
+  async function flipCamera(){
+    try{ localStorage.setItem(prefKey(), facing()==='user'?'environment':'user'); }catch(e){}
+    const cb=callback, o=opts;
+    if(html5QrCode){ const inst=html5QrCode; html5QrCode=null; try{ await inst.stop(); inst.clear(); }catch(e){} }
+    start(cb,o);
+  }
+  window.addEventListener('load',()=>{
+    const close=el('scannerClose'); if(close) close.onclick=()=>stop(true);
+    const flip=el('scannerFlip'); if(flip) flip.onclick=flipCamera;
+  });
   window.LWHScanner={start,stop};
 })();

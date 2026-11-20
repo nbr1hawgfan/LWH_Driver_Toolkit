@@ -160,6 +160,7 @@ html.embed .login{margin:10px auto}
       <button type="button" class="tab" data-tab="pods">PODs<span class="badge" id="podBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="sites">Site Notes<span class="badge" id="siteBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="pins">Driver Sign-in</button>
+      <button type="button" class="tab" data-tab="cards">Time Clock Cards</button>
     </div>
 
     <!-- INBOX -->
@@ -289,6 +290,21 @@ html.embed .login{margin:10px auto}
         <div id="resetOut"></div>
       </div>
     </div>
+    <div id="tab-cards" hidden>
+      <div class="card">
+        <h2>Time Clock cards</h2>
+        <p class="hint" style="margin:0 0 10px">A wallet-size card with a QR code. On the Driver Toolkit <b>Time Clock</b>, the driver taps <b>Scan my card</b>, holds it to the camera, and taps Clock In or Clock Out. No name list, no PIN. The QR holds a random card code, not their PIN. <b>Printing a new card turns that driver's old card off</b>, so a lost card is handled by printing a new one (or by <b>Turn off</b>).</p>
+        <div class="row no-print" style="margin:0 0 10px;flex-wrap:wrap;gap:6px">
+          <input id="cardQ" type="search" placeholder="Search name, ID, location" style="max-width:260px;margin:0">
+          <button type="button" class="ghost" data-csel="spot">Pick spotters</button>
+          <button type="button" class="ghost" data-csel="none_card">Pick everyone with no card</button>
+          <button type="button" class="ghost" data-csel="clear">Clear</button>
+          <button type="button" id="cardPrint">Print cards for 0 drivers</button>
+          <span class="hint" id="cardStatus"></span>
+        </div>
+        <div style="overflow:auto"><table><thead><tr><th style="width:34px"></th><th>Driver</th><th>Driver ID</th><th>Location</th><th>Card</th><th>Last scanned</th><th></th></tr></thead><tbody id="cardBody"></tbody></table></div>
+      </div>
+    </div>
   </section>
 </main>
 <div id="toast" class="toast" hidden></div>
@@ -358,13 +374,14 @@ html.embed .login{margin:10px auto}
   window.addEventListener('message',e=>{ if(e.origin===location.origin&&e.data&&e.data.lwhmc==='tab') openTab(String(e.data.tab||'')); });
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
-    ['inbox','send','sent','pods','sites','pins'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    ['inbox','send','sent','pods','sites','pins','cards'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
     if(b.dataset.tab==='pods') loadPods();
     if(b.dataset.tab==='sites'){ loadSitePend(); if(!$('siteList').innerHTML) siteSearch(true); }
     if(b.dataset.tab==='inbox') loadInbox();
     clearInterval(sentTimer);
     if(b.dataset.tab==='sent'){ loadSent(); sentTimer=setInterval(()=>{ if(!document.hidden) loadSent(true); },30000); }
     if(b.dataset.tab==='pins') loadPins();
+    if(b.dataset.tab==='cards') loadCards();
   });
 
   // ------------------------------------------------ audience
@@ -659,6 +676,99 @@ html.embed .login{margin:10px auto}
     }catch(e){}
   };
 
+
+  // ------------------------------------------------ Time Clock cards
+  let cards=[], cardSel=new Set();
+  function day(iso){ return iso?new Date(iso).toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'}):''; }
+  async function loadCards(){
+    $('cardStatus').textContent='Loading…';
+    try{ const r=await rpc('tc_badge_list',{p_token:token}); cards=r.drivers||[]; renderCards();
+      const n=cards.filter(c=>c.issued_at).length; $('cardStatus').textContent=`${n} of ${cards.length} have a card`;
+    }catch(e){ if(e.message!=='stop') $('cardStatus').textContent='Could not load.'; }
+  }
+  function renderCards(){
+    const q=$('cardQ').value.trim().toLowerCase();
+    const list=cards.filter(c=>!q||(c.name+' '+c.driver_id+' '+c.location+' '+c.truck_type).toLowerCase().includes(q));
+    $('cardBody').innerHTML=list.length?list.map(c=>`<tr>
+      <td><input type="checkbox" data-card="${esc(c.driver_id)}" ${cardSel.has(c.driver_id)?'checked':''} style="width:20px;height:20px;accent-color:var(--brand)"></td>
+      <td><b>${esc(c.name)}</b>${c.truck_type?` <span class="meta">${esc(c.truck_type)}</span>`:''}</td><td>${esc(c.driver_id)}</td><td>${esc(c.location)}</td>
+      <td>${c.issued_at?`Printed ${esc(day(c.issued_at))}${c.issued_by?` <span class="meta">by ${esc(c.issued_by)}</span>`:''}`:'<span class="hint">No card</span>'}</td>
+      <td>${c.last_used?esc(when(c.last_used)):'<span class="hint">—</span>'}</td>
+      <td>${c.issued_at?`<button type="button" class="flink" data-card-off="${esc(c.driver_id)}">Turn off</button>`:''}</td></tr>`).join('')
+      :'<tr><td colspan="7" class="hint">No drivers match.</td></tr>';
+    $('cardPrint').textContent=`Print cards for ${cardSel.size} driver${cardSel.size===1?'':'s'}`;
+    $('cardPrint').disabled=!cardSel.size;
+  }
+  $('cardQ').oninput=renderCards;
+  document.addEventListener('change',e=>{ const c=e.target.closest('[data-card]'); if(!c) return; c.checked?cardSel.add(c.dataset.card):cardSel.delete(c.dataset.card); renderCards(); });
+  document.addEventListener('click',async e=>{
+    const s=e.target.closest('[data-csel]');
+    if(s){ const k=s.dataset.csel;
+      if(k==='clear') cardSel.clear();
+      if(k==='spot') cards.filter(c=>/spot/i.test(c.truck_type)).forEach(c=>cardSel.add(c.driver_id));
+      if(k==='none_card') cards.filter(c=>!c.issued_at).forEach(c=>cardSel.add(c.driver_id));
+      renderCards(); return; }
+    const off=e.target.closest('[data-card-off]'); if(!off) return;
+    const c=cards.find(x=>x.driver_id===off.dataset.cardOff);
+    if(!confirm(`Turn off ${c?c.name:off.dataset.cardOff}'s time clock card? It stops working right away. They can still use their name and PIN.`)) return;
+    try{ const r=await rpc('tc_badge_revoke',{p_token:token,p_driver_id:off.dataset.cardOff}); if(!r.ok) return toast(r.error); toast('Card turned off'); loadCards(); }catch(err){}
+  });
+  $('cardPrint').onclick=async()=>{
+    const ids=[...cardSel]; if(!ids.length) return;
+    const had=cards.filter(c=>cardSel.has(c.driver_id)&&c.issued_at).length;
+    if(!confirm(`Print ${ids.length} card${ids.length===1?'':'s'}?`+(had?`\n\n${had} of them already have a card. Their old card will stop working.`:''))) return;
+    const w=window.open('','_blank');   // open now (before the wait) so the browser doesn't block it
+    if(w) w.document.write('<p style="font:16px system-ui;padding:20px">Making cards…</p>');
+    try{
+      const r=await rpc('tc_badge_issue',{p_token:token,p_driver_ids:ids});
+      if(!r.ok){ if(w) w.close(); return toast(r.error); }
+      cardSel.clear(); loadCards();
+      await printCards(w,r.cards||[]);
+    }catch(err){ if(w) w.close(); toast(err.message==='stop'?'Sign in again':'Could not make the cards. '+(err.message||'')); }
+  };
+  // QR images are drawn here, then handed to the print window as pictures (no outside script in that window).
+  function loadQRLib(){
+    if(window.QRCode) return Promise.resolve();
+    return new Promise((ok,bad)=>{ const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+      sc.onload=ok; sc.onerror=()=>bad(new Error('QR maker did not load. Check the connection.')); document.head.appendChild(sc); });
+  }
+  async function qrData(text){
+    const d=document.createElement('div'); d.style.cssText='position:fixed;left:-9999px;top:0'; document.body.appendChild(d);
+    new QRCode(d,{text,width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
+    await new Promise(r=>setTimeout(r,30));
+    const c=d.querySelector('canvas'), i=d.querySelector('img');
+    const url=c?c.toDataURL('image/png'):(i?i.src:''); d.remove(); return url;
+  }
+  async function printCards(w,list){
+    await loadQRLib();
+    const imgs=[]; for(const c of list) imgs.push(await qrData(c.code));
+    const html=`<!doctype html><html><head><meta charset="utf-8"><title>Time Clock cards</title>
+<style>
+@page{size:letter;margin:.5in .6in}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#111}
+.bar{display:flex;gap:10px;align-items:center;padding:10px 14px;background:#f4f4f4;border-bottom:1px solid #ddd;font-size:14px}
+.bar button{font:inherit;font-weight:700;padding:8px 16px;background:#c8102e;color:#fff;border:0;cursor:pointer}
+.sheet{display:grid;grid-template-columns:repeat(2,3.375in);gap:.25in .3in;justify-content:center;padding:.2in 0}
+.card{width:3.375in;height:2.125in;border:1px dashed #999;display:flex;flex-direction:column;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+.top{background:#111;color:#fff;padding:.07in .14in;font-size:8.5pt;font-weight:800;letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;border-bottom:.05in solid #c8102e}
+.mid{flex:1;display:flex;gap:.12in;padding:.1in .14in;align-items:center}
+.who{flex:1;min-width:0}
+.name{font-size:15pt;font-weight:900;line-height:1.05;text-transform:uppercase;word-break:break-word}
+.meta{font-size:8.5pt;color:#444;margin-top:.04in}
+.how{font-size:7pt;color:#444;margin-top:.1in;line-height:1.3}
+.qr{width:1.35in;height:1.35in;flex:0 0 auto}
+.qr img{width:1.35in;height:1.35in;display:block}
+@media print{.bar{display:none}.sheet{padding:0}}
+</style></head><body>
+<div class="bar"><button onclick="print()">Print</button><span>${list.length} card${list.length===1?'':'s'} · cut on the dashed lines · a laminated card lasts longest</span></div>
+<div class="sheet">${list.map((c,i)=>`<div class="card"><div class="top"><span>Logistics Warehouse</span><span>Time Clock</span></div>
+<div class="mid"><div class="who"><div class="name">${esc(c.name)}</div><div class="meta">${esc(c.driver_id)}${c.location?' · '+esc(c.location):''}</div>
+<div class="how">Driver Toolkit → Time Clock → <b>Scan my card</b>.<br>Lost it? Tell your manager right away.</div></div>
+<div class="qr"><img alt="" src="${imgs[i]}"></div></div></div>`).join('')}</div>
+<script>window.onload=function(){ setTimeout(function(){ print(); },400); };<\/script></body></html>`;
+    if(!w){ toast('Allow pop-ups to print cards'); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  }
 
   // ------------------------------------------------ PODs (proof of delivery)
   const POD_FN='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/pod-file';

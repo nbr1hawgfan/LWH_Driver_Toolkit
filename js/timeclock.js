@@ -1,6 +1,6 @@
 // Time Clock (v1.42.0)
 // Drivers clock in / out on their own phone (or a shared tablet): pick your name, type the same
-// PIN as the PTO / time off app, tap the big button. Lunch = Clock Out, then Clock In again.
+// PIN as the PTO / time off app (or scan your time clock card), tap the big button. Lunch = Clock Out, then Clock In again.
 // - Each punch sends the phone's GPS position (if allowed); the server notes the nearest LWH site.
 // - No signal: the PIN is checked on the phone (against the last good sign-in on this phone) and the
 //   punch is saved here with the time it was tapped, then sent as soon as there is signal.
@@ -13,7 +13,7 @@
   const PIN_HOLD_MS=120000, RESET_AFTER_MS=25000;
   const $=id=>document.getElementById(id);
   const safe=s=>LWHUI.safe(s);
-  const st={ roster:[], driver:'', pin:'', pinAt:0, status:null, busy:false, resetTimer:null, tick:null };
+  const st={ roster:[], driver:'', pin:'', device:'', pinAt:0, status:null, busy:false, resetTimer:null, tick:null };
 
   async function rpc(name,args,timeoutMs){
     const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeoutMs||15000);
@@ -31,7 +31,9 @@
     get driver(){ return LWHStorage.get('tcDriver',''); }, set driver(v){ v?LWHStorage.set('tcDriver',v):LWHStorage.remove('tcDriver'); },
     get profiles(){ return LWHStorage.get('tcProfiles',{}); }, set profiles(v){ LWHStorage.set('tcProfiles',v); },
     get queue(){ return LWHStorage.get('tcQueue',[]); }, set queue(v){ LWHStorage.set('tcQueue',v); },
-    get last(){ return LWHStorage.get('tcLast',{}); }, set last(v){ LWHStorage.set('tcLast',v); }
+    get last(){ return LWHStorage.get('tcLast',{}); }, set last(v){ LWHStorage.set('tcLast',v); },
+    // badges[hash of card code] = driver_id  (cards that have worked on this phone — lets a card work with no signal)
+    get badges(){ return LWHStorage.get('tcBadges',{}); }, set badges(v){ LWHStorage.set('tcBadges',v); }
   };
   async function sha(s){
     const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
@@ -77,7 +79,8 @@
 
   // ------------------------------------------------------------ screens
   function msg(text,kind){ const m=$('tcMsg'); if(!m) return; m.textContent=text||''; m.className='tc-msg'+(kind?' '+kind:''); m.hidden=!text; }
-  function showStep(step){ ['tcStepName','tcStepPin','tcStepPunch','tcStepDone'].forEach(id=>{ const e=$(id); if(e) e.hidden=(id!==step); }); }
+  function showStep(step){ ['tcStepName','tcStepPin','tcStepPunch','tcStepDone'].forEach(id=>{ const e=$(id); if(e) e.hidden=(id!==step); });
+    const sc=$('tcScanBox'); if(sc) sc.hidden=!(step==='tcStepName'||step==='tcStepPin'); }
 
   function renderNames(){
     const sel=$('tcName'); if(!sel) return;
@@ -88,7 +91,7 @@
 
   function startOver(keepName){
     clearTimeout(st.resetTimer);
-    st.pin=''; st.pinAt=0; st.status=null;
+    st.pin=''; st.device=''; st.pinAt=0; st.status=null;
     if($('tcPin')) $('tcPin').value='';
     msg('');
     const id=keepName?(st.driver||mem.driver):'';
@@ -130,16 +133,50 @@
       if(!p||!p.device){ msg('No signal, and this phone has not been used to clock in yet. Try again when you have signal, or tell Chris the time.','bad'); return; }
       if(await sha(p.salt+'|'+pin)!==p.hash){ msg('That PIN is not right.','bad'); $('tcPin').value=''; return; }
       st.pin=pin; st.pinAt=Date.now();
-      const l=mem.last[st.driver]||{};
-      const q=mem.queue.filter(x=>x.driver_id===st.driver);
-      const lastQ=q[q.length-1];
-      st.status={ offline:true, name:nameOf(st.driver),
-        last_type: lastQ?lastQ.type:l.type, last_at: lastQ?lastQ.device_at:l.at,
-        on_clock: (lastQ?lastQ.type:l.type)==='in' && (Date.now()-new Date(lastQ?lastQ.device_at:l.at).getTime())<16*3600e3,
-        stale_in: (lastQ?lastQ.type:l.type)==='in' && (Date.now()-new Date(lastQ?lastQ.device_at:l.at).getTime())>=16*3600e3,
-        today:[], week:[] };
+      st.status=offlineStatus(st.driver);
       renderPunch();
     } finally { st.busy=false; $('tcPinGo').disabled=false; }
+  }
+
+  function offlineStatus(id){
+    const l=mem.last[id]||{};
+    const q=mem.queue.filter(x=>x.driver_id===id);
+    const lastQ=q[q.length-1];
+    const t=lastQ?lastQ.type:l.type, at=lastQ?lastQ.device_at:l.at, age=Date.now()-new Date(at).getTime();
+    return { offline:true, name:nameOf(id), last_type:t, last_at:at,
+      on_clock: t==='in' && age<16*3600e3, stale_in: t==='in' && age>=16*3600e3, today:[], week:[] };
+  }
+
+  // ------------------------------------------------------------ time clock card (QR)
+  // The card's QR holds a random card code (LWHTC-…), never the PIN. A good scan = signed in, same as the PIN.
+  function scanCard(){
+    if(!window.LWHScanner){ msg('The camera scanner did not load. Use your name and PIN.','bad'); return; }
+    LWHScanner.start(code=>badgeIn(code),{ key:'timeclock', title:'Scan your time clock card' });
+  }
+  async function badgeIn(raw){
+    if(st.busy) return;
+    const code=String(raw||'').replace(/\s/g,'').toUpperCase();
+    if(!/^LWHTC-[A-Z0-9]{16,40}$/.test(code)){ msg('That is not a time clock card. Scan the QR code on your LWH time clock card.','bad'); return; }
+    const bh=await sha('B|'+code);
+    st.busy=true; msg('Checking your card…');
+    try{
+      const known=mem.badges[bh], prev=known&&mem.profiles[known];
+      if(navigator.onLine){
+        try{
+          const r=await rpc('tc_badge_check',{p_badge:code,p_device:(prev&&prev.device)||null});
+          if(!r.ok){ const b=mem.badges; delete b[bh]; mem.badges=b; msg(r.error||'That card did not work.','bad'); return; }
+          st.driver=r.driver_id; mem.driver=r.driver_id; st.pin=''; st.device=r.device; st.pinAt=Date.now(); st.status=r.status;
+          const p=mem.profiles; p[r.driver_id]=Object.assign({},p[r.driver_id]||{},{ device:r.device, name:r.name||'' }); mem.profiles=p;
+          const b=mem.badges; b[bh]=r.driver_id; mem.badges=b;
+          if(r.status) saveLast(r.driver_id,r.status);
+          renderPunch(); return;
+        }catch(e){ /* fall through to offline */ }
+      }
+      if(!known||!prev||!prev.device){ msg('No signal, and this card has not been used on this phone yet. Try again when you have signal, or use your name and PIN.','bad'); return; }
+      st.driver=known; mem.driver=known; st.pin=''; st.device=prev.device; st.pinAt=Date.now();
+      st.status=offlineStatus(known);
+      renderPunch();
+    } finally { st.busy=false; }
   }
 
   function renderPunch(){
@@ -187,7 +224,7 @@
 
   async function punch(type){
     if(st.busy) return;
-    if(!st.pin||Date.now()-st.pinAt>PIN_HOLD_MS){ startOver(true); msg('Type your PIN again.','bad'); return; }
+    if((!st.pin&&!st.device)||Date.now()-st.pinAt>PIN_HOLD_MS){ startOver(true); msg('Scan your card or type your PIN again.','bad'); return; }
     if(type!==$('tcBig').dataset.type && !confirm(type==='in'?'Clock IN now?':'Clock OUT now?')) return;
     st.busy=true; $('tcBig').disabled=true; $('tcAlt').disabled=true;
     msg('Getting your location…');
@@ -197,7 +234,7 @@
     msg('Sending…');
     let r=null;
     if(navigator.onLine){
-      try{ r=await rpc('tc_punch',{p_driver_id:st.driver,p_type:type,p_pin:st.pin,p_client_id:item.client_id,p_device_at:item.device_at,
+      try{ r=await rpc('tc_punch',{p_driver_id:st.driver,p_type:type,p_pin:st.pin||null,p_device:st.pin?null:st.device,p_client_id:item.client_id,p_device_at:item.device_at,
                                    p_lat:item.lat??null,p_lon:item.lon??null,p_accuracy:item.acc??null}); }
       catch(e){ r=null; }
     }
@@ -219,7 +256,7 @@
   }
 
   function done(type, at, site, queued, noGps){
-    st.pin=''; st.pinAt=0; $('tcPin').value='';
+    st.pin=''; st.device=''; st.pinAt=0; $('tcPin').value='';
     const d=$('tcDoneBox');
     d.className='tc-done '+(type==='in'?'in':'out');
     d.innerHTML=`<div class="tc-check">✓</div><b>${type==='in'?'CLOCKED IN':'CLOCKED OUT'}</b><span class="tc-done-time">${fmtT(at)}</span>
@@ -285,11 +322,12 @@
     tick(); clearInterval(st.tick); st.tick=setInterval(tick,10000);
     loadRoster(); flush(); startOver(true);
   }
-  function onHide(){ updateHome(); clearInterval(st.tick); clearTimeout(st.resetTimer); st.pin=''; st.pinAt=0; if($('tcPin')) $('tcPin').value=''; }
+  function onHide(){ updateHome(); clearInterval(st.tick); clearTimeout(st.resetTimer); st.pin=''; st.device=''; st.pinAt=0; if($('tcPin')) $('tcPin').value=''; }
 
   window.addEventListener('load',()=>{
     const root=$('timeclock'); if(!root) return;
     $('tcNameGo').onclick=pickName;
+    if($('tcScan')) $('tcScan').onclick=scanCard;
     $('tcName').onchange=()=>{ if($('tcName').value) pickName(); };
     $('tcPinGo').onclick=submitPin;
     $('tcPin').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submitPin(); } });
@@ -309,5 +347,5 @@
     updateHome(); setInterval(updateHome,60000);
   });
 
-  window.LWHTimeClock={ flush, queue:()=>mem.queue };
+  window.LWHTimeClock={ flush, queue:()=>mem.queue, badgeIn };
 })();
