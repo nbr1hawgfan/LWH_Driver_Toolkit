@@ -112,6 +112,52 @@ th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:12.5px
 .lightbox img{max-width:100%;max-height:100%;background:#fff}
 @media(max-width:820px){.tabs{overflow-x:auto;scrollbar-width:none}.tab{flex:0 0 auto;padding:8px 12px;font-size:14px}.split,.grid2{grid-template-columns:1fr}.sticky{position:static}header .sub{display:none}}
 @media print{header,.tabs,.no-print{display:none!important}body{background:#fff}.card{border:0;padding:0}th{background:#fff;color:#000;border-bottom:2px solid #000}}
+
+/* Time Clock Board (same rules as the Driver Toolkit's css/app.css) */
+:root{--radius-sm:6px}
+#timeclockBoard h3{font-size:15px;text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px}
+#timeclockBoard input[type=date],#timeclockBoard input[type=time]{min-height:44px;font-size:16px}
+.tc-msg{margin:0 0 12px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--bg);font-size:16px;font-weight:600}
+.tc-msg.bad{background:#fdeaea;color:var(--bad);border-left:5px solid var(--bad)}
+.tc-list{list-style:none;margin:6px 0 0;padding:0}
+.tc-list li{padding:8px 0;border-bottom:1px solid var(--line);font-size:17px}
+.tc-list b{display:inline-block;min-width:42px}
+.tc-list b.in{color:var(--good)} .tc-list b.out{color:var(--bad)}
+.tc-week-wrap{overflow-x:auto;max-width:100%}
+.tcb-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.tcb-bar input{width:auto;flex:1 1 140px;max-width:200px;margin:0;min-height:44px;font-size:16px;padding:6px 8px;border:1.5px solid var(--line);border-radius:var(--radius-sm)}
+.tcb-tabs{display:flex}
+.tcb-tabs button{background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:0}
+.tcb-tabs button.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tcb-card{border:1px solid var(--line);border-left:6px solid #999;border-radius:var(--radius-sm);padding:10px 12px;margin:0 0 10px;background:#fff}
+.tcb-card.on{border-left-color:var(--good)}
+.tcb-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.tcb-head b{font-size:17px}
+.tcb-hrs{margin-left:auto;font-weight:800}
+.tcb-flag{display:inline-block;background:#fdeaea;color:var(--bad);font-size:12.5px;font-weight:700;padding:2px 7px;border-radius:10px;margin:4px 4px 0 0}
+.tcb-week{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+.tcb-week th,.tcb-week td{border:1px solid var(--line);padding:6px;text-align:center}
+.tcb-week tbody th{text-align:left;white-space:nowrap}
+.tcb-week td.rev{background:#fdeaea;color:var(--bad);font-weight:800}
+.tcb-week td.tot{font-weight:800;background:var(--brand-tint)}
+.tcb-edit{float:right;min-height:34px;padding:4px 12px;font-size:14px;background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.tcb-fixed{font-size:13px;color:#7a4b00;background:#fff6e0;padding:3px 7px;margin-top:4px;border-radius:6px;display:inline-block}
+.tcb-gone{margin-top:6px;font-size:14px} .tcb-gone summary{cursor:pointer;color:var(--muted);font-weight:700}
+.tcb-void{color:var(--muted)} .tcb-void span{font-size:13px}
+.tcb-add{margin-top:8px;min-height:40px;font-size:15px}
+.tcb-none{display:flex;flex-wrap:wrap;gap:6px} .tcb-none button{min-height:38px;font-size:14px;padding:4px 10px}
+.tcb-card.flash{box-shadow:0 0 0 3px var(--brand)}
+.tcb-week td.tcb-go{cursor:pointer} .tcb-week td.tcb-go:hover{outline:2px solid var(--brand)}
+.tcb-fix{margin-top:10px;border:2px solid var(--brand);border-radius:var(--radius-sm);padding:12px;background:var(--brand-tint)}
+.tcb-fix h4{margin:0 0 6px}
+.tcb-fix label{display:block;font-weight:700;font-size:14px;margin-top:8px}
+.tcb-fix input:not([type=checkbox]){display:block;width:100%;margin-top:4px;min-height:46px;font-size:17px}
+.tcb-fix-type{display:flex;gap:0;margin:6px 0} .tcb-fix-type button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:0;min-height:48px;font-size:17px}
+.tcb-fix-type button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tcb-fix-row{display:flex;gap:10px} .tcb-fix-row label{flex:1}
+.tcb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .tcb-chips button{min-height:34px;font-size:13px;padding:3px 9px}
+.tcb-fix label.tcb-check{display:flex;align-items:center;gap:8px;font-weight:600} .tcb-check input{width:22px;height:22px}
+.tcb-fix-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px} .tcb-fix-btns .danger{color:var(--bad);border-color:var(--bad)}
 </style>
 <script>
 /* Opened inside the Transportation Manager app (?embed=1) → no header. Opened on its own → go there instead. */
@@ -160,6 +206,7 @@ html.embed .login{margin:10px auto}
       <button type="button" class="tab" data-tab="pods">PODs<span class="badge" id="podBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="sites">Site Notes<span class="badge" id="siteBadge" hidden>0</span></button>
       <button type="button" class="tab" data-tab="pins">Driver Sign-in</button>
+      <button type="button" class="tab" data-tab="clock">Time Clock</button>
       <button type="button" class="tab" data-tab="cards">Time Clock Cards</button>
     </div>
 
@@ -290,6 +337,21 @@ html.embed .login{margin:10px auto}
         <div id="resetOut"></div>
       </div>
     </div>
+    <div id="tab-clock" hidden>
+      <!-- Same Time Clock Board as the Driver Toolkit (../js/timeclockboard.js): who's on the clock, fix punches. -->
+      <section id="timeclockBoard" class="card">
+        <h2 style="margin-top:0">Time Clock Board</h2>
+        <div class="tcb-bar">
+          <div class="tcb-tabs"><button type="button" id="tcbTab_day" class="on">Day</button><button type="button" id="tcbTab_week">Week</button></div>
+          <button type="button" id="tcbPrev" class="ghost" aria-label="Back">&lsaquo;</button>
+          <input type="date" id="tcbDate" aria-label="Date">
+          <button type="button" id="tcbNext" class="ghost" aria-label="Forward">&rsaquo;</button>
+          <button type="button" id="tcbReload" class="ghost">Refresh</button>
+        </div>
+        <p id="tcbStatus" class="hint"></p>
+        <div id="tcbOut"></div>
+      </section>
+    </div>
     <div id="tab-cards" hidden>
       <div class="card">
         <h2>Time Clock cards</h2>
@@ -320,6 +382,7 @@ html.embed .login{margin:10px auto}
   const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
   const FILE_API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/msg-file';
   let sendFiles=[], inb=[], inbView='open', inbSel=null, inbTimer=null, lastUnread=-1, replyFiles=[];
+  window.TCBToken=()=>token;   // the Time Clock Board uses this sign-in
   let token=ls.get(TK)||'', dir=[], aud='all', type='notice', locSel=new Set(), drvSel=new Set(), opts=['',''], sent=[], selId=null, sentTimer=null;
 
   function toast(m){const t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2800)}
@@ -374,7 +437,8 @@ html.embed .login{margin:10px auto}
   window.addEventListener('message',e=>{ if(e.origin===location.origin&&e.data&&e.data.lwhmc==='tab') openTab(String(e.data.tab||'')); });
   document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
-    ['inbox','send','sent','pods','sites','pins','cards'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    ['inbox','send','sent','pods','sites','pins','clock','cards'].forEach(t=>$('tab-'+t).hidden=t!==b.dataset.tab);
+    $('timeclockBoard').classList.toggle('active',b.dataset.tab==='clock');
     if(b.dataset.tab==='pods') loadPods();
     if(b.dataset.tab==='sites'){ loadSitePend(); if(!$('siteList').innerHTML) siteSearch(true); }
     if(b.dataset.tab==='inbox') loadInbox();
@@ -866,5 +930,6 @@ html.embed .login{margin:10px auto}
   if(token) start(); else $('loginView').hidden=false;
 })();
 </script>
+<script src="../js/timeclockboard.js?v=1.48.0"></script>
 </body>
 </html>
