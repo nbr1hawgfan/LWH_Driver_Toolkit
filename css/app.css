@@ -1298,3 +1298,10 @@ button.lw-user:hover{background:none;text-decoration:underline}
 .nav-btn.nav-switch>span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
 .nav-btn.nav-switch small{font-size:12px;font-weight:600;opacity:.8}
 .msg-setup{border:2px solid var(--brand);background:var(--brand-tint);padding:12px;margin-top:12px}
+
+/* Time Clock card scan (v1.46.0) */
+.tc-scan{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:78px;font-size:24px;font-weight:900;letter-spacing:.02em;background:var(--ink,#111);color:#fff;border:0;margin-top:6px}
+.tc-scan .icon{width:34px;height:34px;stroke:#fff}
+.tc-or{display:flex;align-items:center;gap:10px;margin:16px 0 6px;color:var(--muted,#666);font-size:14px;font-weight:700}
+.tc-or::before,.tc-or::after{content:"";flex:1;height:1px;background:var(--line,#ddd)}
+.scanner-flip{margin-left:auto;margin-right:8px}
