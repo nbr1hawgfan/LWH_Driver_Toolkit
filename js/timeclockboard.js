@@ -113,6 +113,11 @@
     const reason=$('tcfReason').value.trim(), date=$('tcfDate').value, time=$('tcfTime').value;
     if(reason.length<3) return err('Type a reason, or tap one of the buttons.');
     if(!o.remove&&(!date||!time)) return err('Pick the date and time.');
+    // Payroll (Sync-DriverClock on APP02) re-pulls only the last 14 days, and never changes approved weeks
+    // or hours typed in Driver Hours. Warn when a fix is outside that window.
+    const fixDay=o.remove?isoDay(new Date(((st.rows.find(r=>r.driver_id===f.drv)||{}).punches||[]).concat([]).find(p=>p.id===f.id)?.at||Date.now())):date;
+    const age=Math.round((new Date(isoDay(new Date())+'T00:00:00')-new Date(fixDay+'T00:00:00'))/864e5);
+    if(age>14&&!confirm('This day is more than 14 days ago, so payroll will NOT pick this up on its own.\n\nSave it here anyway, and also fix the hours in Driver Hours?')) return;
     $('tcfSave').disabled=true; err('');
     try{
       const r=await rpc('tc_fix',{p_token:token(),p_driver_id:f.drv,p_type:o.remove?null:o.type,p_local:o.remove?null:(date+' '+time),
@@ -120,7 +125,7 @@
       if(!r.ok){ if(r.error==='not_manager') return err('Only managers can fix punches. Sign in to Messages as a manager.'); return err(r.error||'Could not save.'); }
       closeFix(); st.focus=f.drv;
       if(date&&date!==st.day&&!o.remove){ st.day=date; $('tcbDate').value=date; }
-      status('Saved. '+(r.message||'')); await load();
+      status('Saved. '+(r.message||'')+' Driver Hours picks it up within 15 minutes (5 AM–8 PM) unless the week is approved or the day was typed in by hand.'); await load();
     }catch(e){ err('Could not save: '+e.message+'. Check the connection and try again.'); }
     finally{ const b=$('tcfSave'); if(b) b.disabled=false; }
   }
