@@ -1454,3 +1454,10 @@ body.ts-big .lw-header .lw-title{font-size:17px} body.ts-big .lw-header .lw-sub{
 .btn-link{display:inline-block;background:var(--brand,#c8102e);color:#fff;font-weight:800;padding:10px 16px;text-decoration:none}
 @media(max-width:640px){ .to-row{flex-direction:column;align-items:stretch} .to-askrec{grid-template-columns:1fr} }
 @media(max-width:640px){ .to-bal>div{flex:1;min-width:0;padding:10px} .to-bal>div b{font-size:22px} .to-bal .to-bal-big b{font-size:28px} }
+/* v1.99.2: live day count on Time Off */
+.to-count{background:#eef5ff;border-left:4px solid #1f5fa8;padding:9px 12px;margin:2px 0 10px;font-size:15px;line-height:1.4}
+.to-count b{font-size:17px}
+.to-count span{color:#444;font-size:13.5px}
+.to-count.bad{background:#fde8eb;border-left-color:#a50d24;color:#7a0c1e}
+.to-count[hidden]{display:none}
+.to-count-bal{font-size:13.5px;color:#333;margin-top:2px}

@@ -32,6 +32,32 @@
   const nice=s=>{ const i=mdy2iso(s); const m=i.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return esc(s); return new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric',year:'numeric'}); };
   const range=(a,b)=>{ const A=mdy2iso(a), B=mdy2iso(b); return !B||A===B?nice(A):nice(A)+' – '+nice(B); };
 
+  // ---------------------------------------------------------------- day count (same rule as the PTO server)
+  // Business days, first and last day included; weekends and the 6 company holidays don't count.
+  function holidayName(d){
+    const m=d.getMonth()+1, day=d.getDate(), dow=d.getDay();
+    if(m===1&&day===1) return "New Year's Day";
+    if(m===5&&dow===1&&day>=25) return 'Memorial Day';
+    if(m===7&&day===4) return 'Independence Day';
+    if(m===9&&dow===1&&day<=7) return 'Labor Day';
+    if(m===11&&dow===4&&day>=22&&day<=28) return 'Thanksgiving';
+    if(m===12&&day===25) return 'Christmas';
+    return '';
+  }
+  const isoD=s=>{ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
+  const short=d=>d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});
+  function countDays(a,b){
+    const s=isoD(a), e=isoD(b||a); if(!s||!e||e<s) return null;
+    let n=0, wk=0; const hol=[]; const c=new Date(s);
+    while(c<=e&&n+wk+hol.length<400){
+      const dow=c.getDay(), h=holidayName(c);
+      if(dow===0||dow===6) wk++; else if(h) hol.push(h+' ('+short(c)+')'); else n++;
+      c.setDate(c.getDate()+1);
+    }
+    return {days:n, weekend:wk, holidays:hol, cal:Math.round((e-s)/864e5)+1};
+  }
+  const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+
   let tab='mine', emp=null, mgr=null, isPtoMgr=false, busy=false, setupNeeded=false, notLinked='';
 
   // ---------------------------------------------------------------- PTO sessions (one per Toolkit person)
@@ -125,6 +151,7 @@
           <h3>Request PTO</h3>
           <div class="to-seg" role="radiogroup"><label><input type="radio" name="toType" value="Full Day PTO" checked> Full day(s)</label><label><input type="radio" name="toType" value="Half Day PTO"> Half day</label></div>
           <div class="to-2"><label>First day<input type="date" id="toStart" min="${t}" required></label><label id="toEndWrap">Last day<input type="date" id="toEnd" min="${t}"></label></div>
+          <div id="toCount" class="to-count" hidden></div>
           <label>Note for your manager (optional)<input id="toNotes" maxlength="500" placeholder="e.g. family trip"></label>
           <div id="toDup" class="to-warn" hidden></div>
           <button type="submit" id="toReqGo">Send PTO request</button>
@@ -134,6 +161,7 @@
           <h3>Ask for time off <span class="mh-sub">(not PTO)</span></h3>
           <div class="mh-sub" style="margin-bottom:8px">Leave early, come in late, or a day you need off without using PTO. Your manager decides; an ask is not approval.</div>
           <div class="to-2"><label>Date<input type="date" id="toAskStart" min="${t}" required></label><label>Through (optional)<input type="date" id="toAskEnd" min="${t}"></label></div>
+          <div id="toAskCount" class="to-count" hidden></div>
           <label>What you need<select id="toAskTiming"><option value="allday">All day</option><option value="leave">Leave early</option><option value="arrive">Come in late</option><option value="custom">Part of the day</option></select></label>
           <div class="to-2" id="toAskTimes" hidden><label id="toAskT1L">Time<input type="time" id="toAskT1"></label><label id="toAskT2L" hidden>Until<input type="time" id="toAskT2"></label></div>
           <label>Why<input id="toAskWhy" maxlength="500" required placeholder="e.g. kid's ballgame"></label>
@@ -150,10 +178,40 @@
       <p class="mh-sub" style="margin-top:14px">Everything here is the PTO tracker itself — you'll get the same emails as the PTO app. <a href="${PTO_APP}" target="_blank" rel="noopener">Open the PTO app</a></p>`;
   }
   function onChange(e){
-    if(e.target.name==='toType'){ const half=e.target.value==='Half Day PTO'; $('toEndWrap').hidden=half; dupCheck(); }
-    if(e.target.id==='toStart'||e.target.id==='toEnd'){ if(e.target.id==='toStart'&&$('toEnd')&&(!$('toEnd').value||$('toEnd').value<$('toStart').value)) $('toEnd').value=$('toStart').value; dupCheck(); }
+    if(e.target.name==='toType'){ const half=e.target.value==='Half Day PTO'; $('toEndWrap').hidden=half; showCount(); dupCheck(); }
+    if(e.target.id==='toStart'||e.target.id==='toEnd'){ if(e.target.id==='toStart'&&$('toEnd')&&(!$('toEnd').value||$('toEnd').value<$('toStart').value)) $('toEnd').value=$('toStart').value; showCount(); dupCheck(); }
+    if(e.target.id==='toAskStart'||e.target.id==='toAskEnd'){ if(e.target.id==='toAskStart'&&$('toAskEnd').value&&$('toAskEnd').value<$('toAskStart').value) $('toAskEnd').value=$('toAskStart').value; showAskCount(); }
     if(e.target.id==='toAskTiming'){ const v=e.target.value; $('toAskTimes').hidden=v==='allday'; $('toAskT2L').hidden=v!=='custom';
       $('toAskT1L').firstChild.textContent=v==='leave'?'Leave at':v==='arrive'?'Come in at':'From'; }
+  }
+  // "You are asking for 2 PTO days" — live, so nobody wonders if Wed–Fri is 2 or 3.
+  function reqInfo(){
+    const s=$('toStart')&&$('toStart').value; if(!s) return null;
+    const half=document.querySelector('input[name=toType]:checked').value==='Half Day PTO', e=half?s:($('toEnd').value||s);
+    const c=countDays(s,e); if(!c) return {s,e,half,bad:'The last day is before the first day.'};
+    const days=half?(c.days?0.5:0):c.days;
+    return {s,e,half,c,days};
+  }
+  function showCount(){
+    const box=$('toCount'); if(!box) return; const r=reqInfo();
+    if(!r){ box.hidden=true; return; }
+    box.hidden=false;
+    if(r.bad){ box.className='to-count bad'; box.innerHTML=esc(r.bad); return; }
+    const left=num(emp&&emp.balance&&emp.balance.remaining), after=Math.round((left-r.days)*100)/100;
+    if(!r.days){ box.className='to-count bad'; box.innerHTML=r.half?'That day is a '+(r.c.holidays.length?'company holiday':'weekend')+' — pick a workday.':'Those dates are all weekend or holiday — nothing to request.'; return; }
+    const skip=[]; if(!r.half&&r.c.weekend) skip.push(plural(r.c.weekend,'weekend day')); if(!r.half&&r.c.holidays.length) skip.push(r.c.holidays.join(', '));
+    box.className='to-count'+(after<0?' bad':'');
+    box.innerHTML=`You are asking for <b>${r.half?'½ PTO day':plural(r.days,'PTO day')}</b>`+
+      (!r.half&&r.c.cal>1?` <span>(${range(r.s,r.e)}${skip.length?' — not counted: '+esc(skip.join('; ')):''})</span>`:'')+
+      `<div class="to-count-bal">${after<0?'That is more than your '+left+' days left.':'Balance after approval: <b>'+after+'</b> of '+left+' days'}</div>`;
+  }
+  function showAskCount(){
+    const box=$('toAskCount'); if(!box) return; const s=$('toAskStart').value, e=$('toAskEnd').value||s;
+    if(!s){ box.hidden=true; return; }
+    const c=countDays(s,e); box.hidden=false;
+    if(!c){ box.className='to-count bad'; box.innerHTML='The last date is before the first date.'; return; }
+    box.className='to-count';
+    box.innerHTML=c.cal===1?`<b>1 day</b> — ${esc(nice(s))}`:`<b>${plural(c.cal,'day')}</b> on the calendar (${plural(c.days,'workday')}${c.holidays.length?', '+esc(c.holidays.join(', '))+' is a holiday':''})`;
   }
   async function dupCheck(){
     const s=$('toStart')&&$('toStart').value; if(!s) return;
@@ -165,7 +223,9 @@
     const type=document.querySelector('input[name=toType]:checked').value, s=$('toStart').value, half=type==='Half Day PTO', e=half?s:($('toEnd').value||s);
     if(!s){ toast('Pick the first day.'); return; }
     if(e<s){ toast('The last day is before the first day.'); return; }
-    if(!confirm(`Send a ${type} request for ${range(s,e)}?`)) return;
+    const ri=reqInfo(); if(ri&&!ri.days){ toast('Those dates have no workdays to request.'); return; }
+    const dtxt=ri?(ri.half?'½ PTO day':plural(ri.days,'PTO day')):'';
+    if(!confirm(`Send a request for ${dtxt}?\n\n${type}: ${range(s,e).replace(/&amp;/g,'&')}`)) return;
     const b=$('toReqGo'); b.disabled=true; b.textContent='Sending…';
     try{ const r=await call('employee','emp.submit',{absenceType:type,startDate:s,endDate:e,notes:$('toNotes').value.trim()});
       toast(r&&r.message?r.message:'Request sent'); await load(false); }
