@@ -1,0 +1,12 @@
+-- Push notifications (Driver Toolkit v1.53.0 + Transportation Manager v2.6.0). Already applied.
+-- Full text is in the Supabase migration history: lwh_push_notifications, push_long_due, push_cron_long.
+-- The VAPID private key and hook token live only in public.push_config (RLS on, no policies) — never in this repo.
+--
+-- push_config(key,value)      vapid_public / vapid_private / vapid_subject / hook_token / fn_url
+-- push_subs(endpoint pk, sub, app 'dt'|'tm', driver_id, is_manager, fails, last_ok)
+-- push_log(key pk)            "send once" keys: m:<msg>:<driver>, d:<msg>, long:<punch id>
+-- push_subscribe(p_token, p_sub, p_app, p_ua)   app signs a device up for whoever is signed in ('tm' needs a manager)
+-- push_unsubscribe(p_endpoint)                  sign out / turn off
+-- Triggers: msg_recipients (driver rows) -> {kind:'to_driver', ids}; msg_messages to_dispatch from a driver -> {kind:'to_dispatch', id}
+-- pg_cron 'lwh-push-long' every 10 min -> {kind:'long'}  (push_long_due: still clocked in 12-72 h, once per clock-in)
+-- Sender: Edge Function lwh-push (supabase/functions/lwh-push/index.ts), verify_jwt off, checks x-lwh-hook.
