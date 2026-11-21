@@ -351,13 +351,10 @@ function retireModules(){
 }
 
 // ---- Manager tools ----
-// "Managers stay managers and drivers stay drivers": Dispatch Board, All
-// Fuel Price Board and Time Clock Board are hidden unless a manager turns them on
-// for their own phone in Settings → Manager Tools. This only hides screens to
-// keep the app clean for drivers; it is not a security lock.
-// To change the code, edit MANAGER_TOOLS_CODE below.
+// "Managers stay managers and drivers stay drivers": Dispatch Board, Fuel Price Board and Time Clock
+// Board show only when someone on the manager list signs in (name + PTO PIN). v1.54: the shared code
+// is gone — it turned on automatically for managers anyway (js/messages.js), and turns off at sign-out.
 const MANAGER_VIEWS=['yardBoard','fuelboard','timeclockBoard'];
-const MANAGER_TOOLS_CODE='2468';
 function managerToolsOn(){ return LWHStorage.get('managerToolsOn',false)===true; }
 window.applyManagerTools=applyManagerTools;
 function applyManagerTools(){
@@ -370,13 +367,11 @@ function applyManagerTools(){
 retireModules();
 applyManagerTools();
 (function wireManagerTools(){
-  const btn=document.getElementById('mgrToolsOn'), offBtn=document.getElementById('mgrToolsOffBtn'), code=document.getElementById('mgrToolsCode');
-  if(btn) btn.onclick=()=>{
-    if((code.value||'').trim()!==MANAGER_TOOLS_CODE){ LWHUI.toast('Wrong code'); return; }
-    code.value=''; LWHStorage.set('managerToolsOn',true); LWHStorage.remove('mgrToolsAuto'); applyManagerTools(); LWHUI.toast('Manager tools turned on');
-  };
-  if(code) code.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); });
+  const offBtn=document.getElementById('mgrToolsOffBtn');
   if(offBtn) offBtn.onclick=()=>{ LWHStorage.set('managerToolsOn',false); LWHStorage.remove('mgrToolsAuto'); applyManagerTools(); LWHUI.toast('Manager tools hidden'); };
+  // A phone that had them on from the old shared code (not a signed-in manager): turn them off.
+  try{ const me=window.LWHMsgAuth&&LWHMsgAuth.who&&LWHMsgAuth.who();
+       if(managerToolsOn()&&LWHStorage.get('mgrToolsAuto',false)!==true&&!(me&&me.role==='Manager')){ setTimeout(()=>{ const m=window.LWHMsgAuth&&LWHMsgAuth.who&&LWHMsgAuth.who(); if(!(m&&m.role==='Manager')){ LWHStorage.set('managerToolsOn',false); applyManagerTools(); } },4000); } }catch(e){}
 })();
 
 function applyIncomingUrlParams(){

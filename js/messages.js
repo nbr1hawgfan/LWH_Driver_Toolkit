@@ -181,7 +181,7 @@
       if(me.ok){
         store.me={driver_id:me.driver_id,name:me.name,location:me.location,role:me.role};
         // Managers get Manager Tools automatically (no shared code); turned back off when they sign out.
-        if(me.role==='Manager'&&LWHStorage.get('managerToolsOn',false)!==true){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); if(window.applyManagerTools) applyManagerTools(); }
+        if(me.role==='Manager'){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); if(window.applyManagerTools) applyManagerTools(); }
         // Use the signed-in name for the greeting and usage tracking.
         LWHStorage.set('userName',me.name);
         if(window.heroGreeting&&window.getGreeting) heroGreeting.textContent=getGreeting();
@@ -541,7 +541,7 @@
   function wire(){
     if(!$('msgView')) return;
     // Already signed in as a manager (from before this update)? Turn Manager Tools on now.
-    if(store.token&&store.me&&store.me.role==='Manager'&&LWHStorage.get('managerToolsOn',false)!==true){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); setTimeout(()=>{ if(window.applyManagerTools) applyManagerTools(); },0); }
+    if(store.token&&store.me&&store.me.role==='Manager'&&LWHStorage.get('mgrToolsAuto',false)!==true){ LWHStorage.set('managerToolsOn',true); LWHStorage.set('mgrToolsAuto',true); setTimeout(()=>{ if(window.applyManagerTools) applyManagerTools(); },0); }
     $('msgLoginBtn').onclick=doLogin;
     if($('msgSetupBtn')) $('msgSetupBtn').onclick=doSetup;
     $('msgPin').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
