@@ -170,6 +170,7 @@
     store.token=''; store.me=null; messages=[]; sentMsgs=[]; stopPoll(); stopGeo(); stopSpeaking(); closeCompose(); closeViewer();
     try{ if(window.caches) caches.delete(FILE_CACHE); }catch(e){}
     render(); if(msg) showLoginErr(msg);
+    if(window.LWHGate) setTimeout(()=>LWHGate.check(),0);   // front door comes back
   }
   function showLoginErr(msg){ const e=$('msgLoginErr'); if(e){ e.textContent=msg||''; e.hidden=!msg; } }
   async function afterSignIn(token){
@@ -264,6 +265,23 @@
   }
   window.LWHMsgAuth={
     signedIn:()=>!!store.token,
+    token:()=>store.token,
+    // Front door (js/gate.js): name + PTO PIN. Returns the server's answer ({ok, error, needs_setup}).
+    async signIn(id,pin){
+      const r=await rpc('drv_login',{p_driver_id:id,p_pin:pin});
+      if(r.ok){ LWHStorage.set('msgLastId',id); LWHStorage.set('tcDriver',id); await afterSignIn(r.token); }
+      return r;
+    },
+    // Front door: first-time setup code -> new PIN -> signed in.
+    async setup(id,code,pin){
+      const r=await rpc('drv_create_pin',{p_driver_id:id,p_setup_code:code,p_pin:pin});
+      if(r.ok){ LWHStorage.set('msgLastId',id); LWHStorage.set('tcDriver',id); await afterSignIn(r.token); }
+      return r;
+    },
+    // Front door: a time clock card scan already made a sign-in.
+    async useToken(token,id){ if(id){ LWHStorage.set('msgLastId',id); LWHStorage.set('tcDriver',id); } await afterSignIn(token); },
+    roster:()=>LWHStorage.get('msgRoster',null)||LWHStorage.get('tcRoster',[]),
+    async loadRoster(){ try{ const r=await rpc('msg_roster',{}); if(Array.isArray(r)&&r.length){ LWHStorage.set('msgRoster',r); return r; } }catch(e){} return LWHStorage.get('msgRoster',null)||LWHStorage.get('tcRoster',[]); },
     who:()=>store.me,
     signOut:o=>signOutDevice(o),
     // Time Clock: a good PIN signs that driver in here. If someone else was signed in (shared truck),

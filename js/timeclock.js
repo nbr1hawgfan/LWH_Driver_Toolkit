@@ -94,10 +94,58 @@
     st.pin=''; st.device=''; st.pinAt=0; st.status=null;
     if($('tcPin')) $('tcPin').value='';
     msg('');
+    // Signed in on the front door: straight to this driver's Clock In / Clock Out (no second PIN).
+    if(window.LWHMsgAuth&&LWHMsgAuth.signedIn()&&LWHMsgAuth.who()){ mine(LWHMsgAuth.who()); renderQueueNote(); return; }
     const id=keepName?(st.driver||mem.driver):'';
     if(id){ st.driver=id; $('tcWho').textContent=nameOf(id); showStep('tcStepPin'); setTimeout(()=>{ try{$('tcPin').focus();}catch(e){} },50); }
     else { st.driver=''; showStep('tcStepName'); }
     renderQueueNote();
+  }
+
+  async function mine(me){
+    const id=me.driver_id; st.driver=id; mem.driver=id;
+    $('tcWho').textContent=me.name||nameOf(id);
+    const prev=mem.profiles[id]||{};
+    let dev=prev.device||'', status=null;
+    showStep('tcStepPunch'); $('tcWho2').textContent=me.name||nameOf(id);
+    $('tcState').className='tc-state'; $('tcState').innerHTML='<b>Checking…</b>'; $('tcBig').disabled=true; $('tcAlt').disabled=true;
+    if(navigator.onLine){
+      try{
+        if(dev){ const r=await rpc('tc_device_status',{p_device:dev}); if(r.ok) status=r.status; else dev=''; }
+        if(!dev){
+          const r=await rpc('drv_tc_device',{p_token:LWHMsgAuth.token(),p_device:null});
+          if(r.ok){ dev=r.device; status=r.status; const p=mem.profiles; p[id]=Object.assign({},p[id]||{},{device:dev,name:r.name||me.name||''}); mem.profiles=p; }
+        }
+      }catch(e){}
+    }
+    if(!dev){ startOverPlain(); msg('No signal, and this phone is not set up for the time clock yet. Try again when you have signal.','bad'); return; }
+    st.device=dev; st.pin=''; st.pinAt=Date.now();
+    if(status) saveLast(id,status);
+    st.status=status||offlineStatus(id);
+    renderPunch();
+  }
+  // the old name / PIN screen (only when nobody is signed in)
+  function startOverPlain(){ st.driver=''; showStep('tcStepName'); }
+
+  // Front door card scan (js/gate.js). Online: signs the driver in everywhere and sets up the Time Clock.
+  // No signal: a card that worked on this phone before still clocks in/out (Time Clock only).
+  async function badgeLogin(raw){
+    const code=String(raw||'').replace(/\s/g,'').toUpperCase();
+    if(!/^LWHTC-[A-Z0-9]{16,40}$/.test(code)) return {ok:false,error:'That is not a time clock card. Scan the QR code on your LWH time clock card.'};
+    const bh=await sha('B|'+code), known=mem.badges[bh], prev=known&&mem.profiles[known];
+    if(navigator.onLine){
+      try{
+        const r=await rpc('drv_badge_login',{p_badge:code,p_device:(prev&&prev.device)||null});
+        if(!r.ok){ const b=mem.badges; delete b[bh]; mem.badges=b; return {ok:false,error:r.error||'That card did not work.'}; }
+        const p=mem.profiles; p[r.driver_id]=Object.assign({},p[r.driver_id]||{},{device:r.device,name:r.name||''}); mem.profiles=p;
+        const b=mem.badges; b[bh]=r.driver_id; mem.badges=b;
+        mem.driver=r.driver_id; if(r.status) saveLast(r.driver_id,r.status);
+        if(window.LWHMsgAuth) await LWHMsgAuth.useToken(r.token,r.driver_id);
+        return {ok:true,driver_id:r.driver_id,name:r.name};
+      }catch(e){ /* no real signal: fall through */ }
+    }
+    if(known&&prev&&prev.device) return {ok:true,offline:true,code};
+    return {ok:false,error:'No signal, and this card has not been used on this phone yet. Try again when you have signal.'};
   }
 
   async function pickName(){
@@ -202,6 +250,7 @@
     alt.textContent=next==='in'?'I need to Clock Out instead':'I need to Clock In instead';
     big.disabled=false; alt.disabled=false;
     $('tcOffNote').hidden=!s.offline;
+    if($('tcSwitch')) $('tcSwitch').hidden=!(window.LWHMsgAuth&&LWHMsgAuth.signedIn());
     renderToday(s);
     msg('');
     showStep('tcStepPunch');
@@ -268,7 +317,7 @@
     showStep('tcStepDone');
     renderQueueNote(); updateHome();
     if(queued) flushSoon();
-    clearTimeout(st.resetTimer); st.resetTimer=setTimeout(()=>startOver(true),RESET_AFTER_MS);
+    clearTimeout(st.resetTimer); st.resetTimer=setTimeout(()=>{ startOver(true); if(window.LWHGate) LWHGate.check(); },RESET_AFTER_MS);
   }
 
   // ------------------------------------------------------------ offline queue
@@ -311,7 +360,7 @@
   function updateHome(){
     const sub=$('tcHomeSub'); if(!sub) return;
     const id=mem.driver, l=id&&mem.last[id], n=mem.queue.length;
-    let t='Clock in and out with your PTO PIN.';
+    let t='Clock in or out with one tap.';
     if(l&&l.type==='in'&&l.at&&Date.now()-new Date(l.at).getTime()<16*3600e3) t='On the clock since '+fmtDT(l.at)+'. Tap to clock out.';
     else if(l&&l.type==='out'&&l.at&&Date.now()-new Date(l.at).getTime()<16*3600e3) t='Clocked out '+fmtDT(l.at)+'.';
     if(n) t+=' '+(n===1?'1 punch':n+' punches')+' waiting for signal.';
@@ -332,6 +381,7 @@
     $('tcPinGo').onclick=submitPin;
     $('tcPin').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); submitPin(); } });
     $('tcNotMe').onclick=()=>{ mem.driver=''; st.driver=''; $('tcName').value=''; startOver(false); };
+    if($('tcSwitch')) $('tcSwitch').onclick=async()=>{ if(window.LWHMsgAuth&&LWHMsgAuth.signedIn()) await LWHMsgAuth.signOut(); };
     $('tcBig').onclick=()=>punch($('tcBig').dataset.type);
     $('tcAlt').onclick=()=>punch($('tcAlt').dataset.type);
     $('tcCancel').onclick=()=>startOver(true);
@@ -347,5 +397,5 @@
     updateHome(); setInterval(updateHome,60000);
   });
 
-  window.LWHTimeClock={ flush, queue:()=>mem.queue, badgeIn };
+  window.LWHTimeClock={ flush, queue:()=>mem.queue, badgeIn, badgeLogin };
 })();

@@ -1325,3 +1325,45 @@ button.lw-user:hover{background:none;text-decoration:underline}
 .tcb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .tcb-chips button{min-height:34px;font-size:13px;padding:3px 9px}
 .tcb-fix label.tcb-check{display:flex;align-items:center;gap:8px;font-weight:600} .tcb-check input{width:22px;height:22px}
 .tcb-fix-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px} .tcb-fix-btns .danger{color:var(--bad);border-color:var(--bad)}
+
+/* =========================================================================
+   Front door (v1.51.0) — js/gate.js. Under the camera scanner (z 100).
+   ========================================================================= */
+.dt-gate{position:fixed;inset:0;z-index:90;background:#f2f2f4;overflow-y:auto;display:flex;flex-direction:column;align-items:center}
+.dt-gate[hidden]{display:none}
+body.gated{overflow:hidden}
+.dt-gate .g-head{width:100%;display:flex;align-items:center;gap:14px;background:var(--brand,#c8102e);color:#fff;padding:14px 18px;border-bottom:6px solid #111}
+.dt-gate .g-logo{width:52px;height:52px;border-radius:50%;background:#fff url(../icons/company-logo.png) center/78% no-repeat;border:3px solid #fff;flex:0 0 auto}
+.dt-gate .g-brand{display:flex;flex-direction:column}
+.dt-gate .g-brand b{font-size:22px;line-height:1.1}
+.dt-gate .g-brand span{font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.dt-gate .g-card{width:min(520px,calc(100% - 24px));background:#fff;border:1px solid var(--line,#ddd);border-top:5px solid var(--brand,#c8102e);padding:20px;margin:22px 12px 40px}
+.g-scan{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:88px;background:#111;color:#fff;border:0;font-size:26px;font-weight:900;letter-spacing:.02em;cursor:pointer}
+.g-scan .icon{width:38px;height:38px;stroke:#fff}
+.g-or{display:flex;align-items:center;gap:10px;margin:18px 0 6px;color:var(--muted,#666);font-weight:800;text-transform:uppercase;font-size:13px}
+.g-or::before,.g-or::after{content:"";flex:1;height:1px;background:var(--line,#ddd)}
+.g-lbl{display:block;font-weight:800;font-size:15px;margin:12px 0 6px}
+.g-lbl small{font-weight:600;color:var(--muted,#666)}
+.g-input{width:100%;min-height:58px;font-size:20px;border:2px solid var(--line,#ddd);padding:8px 12px;background:#fff}
+.g-input:focus{border-color:var(--brand,#c8102e);outline:none}
+.g-pin{text-align:center;letter-spacing:.3em;font-size:28px}
+.g-go{width:100%;margin-top:14px;min-height:62px;background:var(--brand,#c8102e);color:#fff;border:0;font-size:22px;font-weight:900;cursor:pointer}
+.g-go:disabled{opacity:.6}
+.g-link{display:block;margin:14px auto 0;background:none;border:0;color:var(--brand,#c8102e);font-weight:700;font-size:15px;text-decoration:underline;cursor:pointer;min-height:0;padding:6px}
+.g-setup{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line,#ddd)}
+.g-msg{margin:12px 0 0;font-weight:800;color:#111}
+.g-msg.bad{color:var(--brand,#c8102e)}
+.g-note{margin:16px 0 0;color:var(--muted,#666);font-size:14px;text-align:center}
+.tc-switch{display:block;margin:10px auto 0;min-height:44px}
+
+/* Home: the three Chris wants first (v1.51.0) */
+.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+.top3-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:118px;padding:14px 8px;background:#fff;border:1px solid var(--line,#ddd);border-top:5px solid var(--brand,#c8102e);color:var(--ink,#111);text-decoration:none;text-align:center;cursor:pointer;font:inherit}
+.top3-tile:hover{background:var(--brand-tint,#fdeef0)}
+.top3-tile .icon-badge{width:52px;height:52px}
+.top3-tile b{font-size:17px;line-height:1.2}
+@media (max-width:420px){.top3-tile{min-height:104px;padding:10px 4px}.top3-tile b{font-size:15px}}
+.top3-tile,.top3-tile b{text-transform:none;letter-spacing:0;font-weight:800}
+.top3-tile .icon-badge{display:grid;place-items:center;width:56px;height:56px;background:var(--brand,#c8102e);border-radius:var(--radius-sm,8px)}
+.top3-tile .icon-badge .icon{width:30px;height:30px;stroke:#fff}
+.top3-tile:hover{background:#fff;border-color:var(--brand,#c8102e)}
