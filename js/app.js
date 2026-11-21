@@ -341,7 +341,7 @@ if(window.saveUsageSettings) saveUsageSettings.onclick=()=>{
 // for drivers (Samsara covers logs, HOS and inspections). The code and screens are left in
 // place: delete a name from this list to bring that module back.
 // v1.31.0: Fuel Surcharge moved to the Transportation Manager app.
-const RETIRED_VIEWS=['timesheet','spotterTimesheets','paperlog','dvir','trailerinspect','hos','statusupdate','detention','contact','generate','scancode','fsc'];
+const RETIRED_VIEWS=['timeoff','timesheet','spotterTimesheets','paperlog','dvir','trailerinspect','hos','statusupdate','detention','contact','generate','scancode','fsc'];
 function retireModules(){
   RETIRED_VIEWS.forEach(v=>{
     document.querySelectorAll(`.nav-btn[data-view="${v}"],.module-card[data-view="${v}"]`).forEach(el=>el.remove());
