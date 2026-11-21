@@ -1414,3 +1414,43 @@ body.ts-big .lw-header .lw-title{font-size:17px} body.ts-big .lw-header .lw-sub{
 .push-b-btns{display:flex;gap:8px}
 [data-push-status][data-state="on"]{color:#1d6b2a}
 [data-push-status][data-state="blocked"],[data-push-status][data-state="ios_home"]{color:#8a5200}
+/* v1.55: Time Off (shared with the Warehouse Toolkit) */
+.to.mh-wrap{max-width:1100px;margin:0 auto}
+.to .mh-top{margin-bottom:8px} .to .mh-top h2{margin:0}
+.to .mh-sub{font-size:13.5px;color:#666}
+.to .mh-h{margin:22px 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;border-bottom:2px solid #111;padding-bottom:4px}
+#timeOff .card{margin-bottom:0}
+#timeOff label{display:flex;flex-direction:column;gap:4px;font-weight:700;margin-bottom:8px}
+.to .mh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.to-tabs{display:flex;gap:6px;margin:4px 0 14px;border-bottom:2px solid var(--line,#ddd)}
+.to-tabs button{background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 14px;font-weight:800;color:#555;cursor:pointer;box-shadow:none}
+.to-tabs button.on{color:var(--ink,#111);border-bottom-color:var(--brand,#c8102e)}
+.to-tabs button b{background:var(--brand,#c8102e);color:#fff;border-radius:999px;padding:1px 7px;font-size:12px;margin-left:4px}
+.to-tabs button b:empty{display:none}
+.to-bal{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.to-bal>div{background:#fff;border:1px solid var(--line,#ddd);padding:12px 16px;min-width:110px;display:flex;flex-direction:column}
+.to-bal>div b{font-size:26px;line-height:1.1}
+.to-bal>div span{font-size:12.5px;color:#666;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.to-bal .to-bal-big{border-top:4px solid var(--brand,#c8102e)}
+.to-bal .to-bal-big b{font-size:34px;color:var(--brand,#c8102e)}
+.to-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:6px}
+.to-grid .card h3{margin-top:0}
+.to-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.to-2[hidden],#toEndWrap[hidden],#toAskT2L[hidden]{display:none}
+.to-seg{display:flex;gap:16px;margin:4px 0 10px}
+.to-seg label{display:flex!important;flex-direction:row!important;align-items:center;gap:6px;font-weight:700}
+.to-seg input{width:18px!important;height:18px}
+.to-warn{background:#fff7e6;border-left:4px solid #d98200;padding:8px 10px;margin:6px 0;font-size:14px}
+.to-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.to-row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line,#ddd);padding:10px 12px}
+.to-row.to-pend{border-left:5px solid #d98200}
+.to-act{display:flex;gap:8px;flex-wrap:wrap;flex:none}
+.to-chip{display:inline-block;font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:6px;background:#eee;color:#444}
+.to-chip.to-approved,.to-chip.to-recorded{background:#e3f3e3;color:#1d6b2a}
+.to-chip.to-pending,.to-chip.to-waiting{background:#fff1d6;color:#8a5200}
+.to-chip.to-denied,.to-chip.to-declined{background:#fde8eb;color:#a50d24}
+.to-askrec{margin-top:8px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.to-askrec[hidden]{display:none}
+.btn-link{display:inline-block;background:var(--brand,#c8102e);color:#fff;font-weight:800;padding:10px 16px;text-decoration:none}
+@media(max-width:640px){ .to-row{flex-direction:column;align-items:stretch} .to-askrec{grid-template-columns:1fr} }
+@media(max-width:640px){ .to-bal>div{flex:1;min-width:0;padding:10px} .to-bal>div b{font-size:22px} .to-bal .to-bal-big b{font-size:28px} }
