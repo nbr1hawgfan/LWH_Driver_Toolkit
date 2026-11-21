@@ -1,10 +1,10 @@
 // Front door (v1.51.0) — one sign-in for the whole Driver Toolkit.
 // Scan your time clock card, or pick your name and type your PTO / time off PIN.
 // That one sign-in covers Messages, Proof of Delivery, Site Notes and the Time Clock, and stays on this
-// phone or tablet until the driver signs out (tap their name at the top, or "Not you?" on the Time Clock).
+// phone or tablet until the driver signs out (Sign out at the top, or "Not you?" on the Time Clock).
 // Shared trucks/tablets: with "Shared truck or tablet" on (Settings), clocking out signs the driver out,
 // so the front door is ready for the next card.
-// A card scan goes straight to the Time Clock (that's what spotters scan for).
+// A card scan opens the Time Clock for spotters (anyone who used the clock in the last 60 days); Home for everyone else.
 // No signal + a card that has worked on this device before: opens the Time Clock to punch (saved and
 // sent later), the same as before; the front door comes back after the punch.
 (function(){
@@ -19,6 +19,21 @@
     fillNames(); msg('');
   }
   function hide(){ const g=$('dtGate'); if(!g) return; g.hidden=true; document.body.classList.remove('gated'); }
+  // Shared truck/tablet (box on the Messages screen): also signs the driver out after 4 hours of no use,
+  // so the next driver never lands in someone else's sign-in.
+  const IDLE_MS=4*3600e3;
+  let idleBusy=false;
+  async function idleCheck(){
+    if(idleBusy||!signedIn()||LWHStorage.get('msgShared',false)!==true) return false;
+    const last=+LWHStorage.get('lastActive',0)||0;
+    if(!last||Date.now()-last<IDLE_MS) return false;
+    idleBusy=true;
+    try{ await LWHMsgAuth.signOut({confirmed:true,quiet:true}); }catch(e){}
+    idleBusy=false; show(); msg('Signed out after 4 hours with no use (shared truck or tablet). Scan your card or sign in.');
+    return true;
+  }
+  let lastMark=0;
+  function mark(){ const n=Date.now(); if(n-lastMark>60e3&&signedIn()){ lastMark=n; LWHStorage.set('lastActive',n); } }
   function check(){ if(signedIn()||bypass){ hide(); return; } show(); }
   function msg(t,kind){ const m=$('gErr'); if(!m) return; m.textContent=t||''; m.className='g-msg'+(kind?' '+kind:''); m.hidden=!t; }
 
@@ -51,7 +66,8 @@
         setTimeout(async()=>{ await LWHTimeClock.badgeIn(r.code); bypass=false; },300);
         return;
       }
-      hide(); LWHUI.show('timeclock');
+      // Spotters (people who use the time clock) go straight to it; everyone else lands on Home.
+      hide(); LWHUI.show(r.uses_clock?'timeclock':'home');
       LWHUI.toast(`Hi ${(r.name||'').split(' ')[0]} — you're signed in`);
     } finally { busy=false; }
   }
@@ -99,8 +115,19 @@
     $('gName').onchange=()=>{ if($('gName').value) setTimeout(()=>$('gPin').focus(),50); };
     $('gSetupLink').onclick=()=>{ $('gSetupBox').hidden=!$('gSetupBox').hidden; };
     $('gSetupGo').onclick=setupIn;
-    check();
-    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) check(); });
+    idleCheck().then(gone=>{ if(!gone) check(); });
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) idleCheck().then(gone=>{ if(!gone) check(); }); });
+    ['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,mark,{passive:true,capture:true}));
+    setInterval(()=>{ if(!document.hidden) idleCheck(); },5*60e3);
+    textSize(LWHStorage.get('textSize','normal'));
+    document.querySelectorAll('[data-textsize]').forEach(b=>b.onclick=()=>{ textSize(b.dataset.textsize); LWHUI.toast('Text size saved on this phone'); });
   });
-  window.LWHGate={ check, show, hide, cardIn };
+  // Bigger text (Settings): scales the whole app on this phone.
+  function textSize(v){
+    const z={normal:1,large:1.15,xl:1.3}[v]||1;
+    LWHStorage.set('textSize',z===1?'normal':v);
+    document.body.style.zoom=z===1?'':String(z); document.body.classList.toggle('ts-big',z>1);
+    document.querySelectorAll('[data-textsize]').forEach(b=>b.classList.toggle('on',b.dataset.textsize===(z===1?'normal':v)));
+  }
+  window.LWHGate={ check, show, hide, cardIn, textSize };
 })();

@@ -137,14 +137,17 @@
       try{
         const r=await rpc('drv_badge_login',{p_badge:code,p_device:(prev&&prev.device)||null});
         if(!r.ok){ const b=mem.badges; delete b[bh]; mem.badges=b; return {ok:false,error:r.error||'That card did not work.'}; }
-        const p=mem.profiles; p[r.driver_id]=Object.assign({},p[r.driver_id]||{},{device:r.device,name:r.name||''}); mem.profiles=p;
+        const p=mem.profiles; p[r.driver_id]=Object.assign({},p[r.driver_id]||{},{device:r.device,name:r.name||'',clock:!!r.uses_clock}); mem.profiles=p;
         const b=mem.badges; b[bh]=r.driver_id; mem.badges=b;
         mem.driver=r.driver_id; if(r.status) saveLast(r.driver_id,r.status);
         if(window.LWHMsgAuth) await LWHMsgAuth.useToken(r.token,r.driver_id);
-        return {ok:true,driver_id:r.driver_id,name:r.name};
+        return {ok:true,driver_id:r.driver_id,name:r.name,uses_clock:!!r.uses_clock};
       }catch(e){ /* no real signal: fall through */ }
     }
-    if(known&&prev&&prev.device) return {ok:true,offline:true,code};
+    if(known&&prev&&prev.device){
+      if(prev.clock===false) return {ok:false,error:'No signal right now. Try your card again when you have signal.'};
+      return {ok:true,offline:true,code};
+    }
     return {ok:false,error:'No signal, and this card has not been used on this phone yet. Try again when you have signal.'};
   }
 
@@ -234,8 +237,11 @@
     let next='in';
     if(s.on_clock){
       next='out';
-      box.className='tc-state on';
-      box.innerHTML=`<b>ON THE CLOCK</b><span>since ${fmtDT(s.last_at)}</span>`;
+      const long=s.last_at&&Date.now()-new Date(s.last_at).getTime()>=12*3600e3;
+      box.className='tc-state '+(long?'warn':'on');
+      box.innerHTML=long
+        ? `<b>Still on the clock?</b><span>Clocked in ${fmtDT(s.last_at)}, 12+ hours ago. If you forgot to clock out, clock out now and tell Chris what time you really left.</span>`
+        : `<b>ON THE CLOCK</b><span>since ${fmtDT(s.last_at)}</span>`;
     } else if(s.stale_in){
       box.className='tc-state warn';
       box.innerHTML=`<b>You did not clock out last time</b><span>Clocked in ${fmtDT(s.last_at)}. Tell Chris what time you left.</span>`;
@@ -361,7 +367,10 @@
     const sub=$('tcHomeSub'); if(!sub) return;
     const id=mem.driver, l=id&&mem.last[id], n=mem.queue.length;
     let t='Clock in or out with one tap.';
-    if(l&&l.type==='in'&&l.at&&Date.now()-new Date(l.at).getTime()<16*3600e3) t='On the clock since '+fmtDT(l.at)+'. Tap to clock out.';
+    const age=l&&l.at?Date.now()-new Date(l.at).getTime():0, card=sub.closest('.module-card,.card,button');
+    if(card) card.classList.toggle('tc-home-warn',!!(l&&l.type==='in'&&age>=12*3600e3));
+    if(l&&l.type==='in'&&l.at&&age>=12*3600e3&&age<72*3600e3) t='Still clocked in since '+fmtDT(l.at)+' (12+ hours). Forgot to clock out? Tap here.';
+    else if(l&&l.type==='in'&&l.at&&age<16*3600e3) t='On the clock since '+fmtDT(l.at)+'. Tap to clock out.';
     else if(l&&l.type==='out'&&l.at&&Date.now()-new Date(l.at).getTime()<16*3600e3) t='Clocked out '+fmtDT(l.at)+'.';
     if(n) t+=' '+(n===1?'1 punch':n+' punches')+' waiting for signal.';
     sub.textContent=t;
