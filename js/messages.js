@@ -191,6 +191,7 @@
     if($('msgPin')) $('msgPin').value='';
     showLoginErr(''); render(); startPoll(); startGeo(); refresh({speakUnread:false});
     if(window.LWHMyHours) LWHMyHours.load();
+    if(window.LWHPush) LWHPush.sync();
     LWHStorage.set('lastActive',Date.now());
   }
   // Name list for the sign-in screen (cached so it shows with no signal).
@@ -240,6 +241,7 @@
     // Send anything this driver still has waiting (PODs) while their sign-in still works.
     let keepServer=false;
     if(window.LWHPod){ try{ await LWHPod.flush(); keepServer=await LWHPod.hasPendingFor(t); await LWHPod.clearDraft(); }catch(e){} }
+    if(window.LWHPush){ try{ await LWHPush.signedOut(); }catch(e){} }
     signedOut(); LWHStorage.remove('userName'); LWHStorage.remove('tcDriver');
     if(LWHStorage.get('mgrToolsAuto',false)===true){ LWHStorage.set('managerToolsOn',false); LWHStorage.remove('mgrToolsAuto'); if(window.applyManagerTools) applyManagerTools(); }
     if(window.showHeaderUser) showHeaderUser();

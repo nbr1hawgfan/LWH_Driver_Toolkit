@@ -1406,3 +1406,11 @@ body.gated{overflow:hidden}
 #whoBar #whoBarOut{background:#fff;color:var(--brand,#c8102e);border:2px solid var(--brand,#c8102e);box-shadow:none;text-shadow:none}
 #whoBar #whoBarOut:active{background:var(--brand,#c8102e);color:#fff}
 body.ts-big .lw-header .lw-title{font-size:17px} body.ts-big .lw-header .lw-sub{font-size:9.5px}
+/* v1.53: notifications */
+.push-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-left:4px solid var(--brand,#c8102e)}
+.push-banner[hidden]{display:none}
+.push-b-txt{display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1}
+.push-b-txt span{font-size:14px;color:#555}
+.push-b-btns{display:flex;gap:8px}
+[data-push-status][data-state="on"]{color:#1d6b2a}
+[data-push-status][data-state="blocked"],[data-push-status][data-state="ios_home"]{color:#8a5200}
