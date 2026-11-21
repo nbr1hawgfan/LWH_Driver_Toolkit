@@ -170,6 +170,7 @@
     store.token=''; store.me=null; messages=[]; sentMsgs=[]; stopPoll(); stopGeo(); stopSpeaking(); closeCompose(); closeViewer();
     try{ if(window.caches) caches.delete(FILE_CACHE); }catch(e){}
     render(); if(msg) showLoginErr(msg);
+    if(window.LWHMyHours) LWHMyHours.load();
     if(window.LWHGate) setTimeout(()=>LWHGate.check(),0);   // front door comes back
   }
   function showLoginErr(msg){ const e=$('msgLoginErr'); if(e){ e.textContent=msg||''; e.hidden=!msg; } }
@@ -189,6 +190,8 @@
     }catch(e){}
     if($('msgPin')) $('msgPin').value='';
     showLoginErr(''); render(); startPoll(); startGeo(); refresh({speakUnread:false});
+    if(window.LWHMyHours) LWHMyHours.load();
+    LWHStorage.set('lastActive',Date.now());
   }
   // Name list for the sign-in screen (cached so it shows with no signal).
   async function loadRoster(){
@@ -360,6 +363,7 @@
   function render(){
     renderHomeCard();
     const ns=$('navSwitch'); if(ns){ ns.hidden=!store.token; $('navSwitchName').textContent=(store.me&&store.me.name)||''; }
+    const wb=$('whoBar'); if(wb){ wb.hidden=!store.token; $('whoBarName').textContent=(store.me&&store.me.name)||''; }
     const signed=!!store.token;
     if(!$('msgView')) return;
     $('msgLogin').hidden=signed; $('msgSigned').hidden=!signed;
@@ -548,6 +552,7 @@
     $('msgShared').checked=LWHStorage.get('msgShared',false)===true;
     $('msgShared').onchange=e=>{ LWHStorage.set('msgShared',e.target.checked); LWHUI.toast(e.target.checked?'Shared tablet: you\'ll be signed out when you clock out':'This device stays signed in'); };
     if($('navSwitch')) $('navSwitch').onclick=()=>{ document.querySelector('.nav').classList.remove('open'); doLogout(); };
+    if($('whoBarOut')) $('whoBarOut').onclick=()=>doLogout();
     if($('hdrUser')) $('hdrUser').onclick=()=>{ if(store.token) doLogout(); else LWHUI.show('messages'); };
     $('msgAudioOn').onclick=()=>{ // a tap unlocks speech for this session
       if(speechOk){ const u=new SpeechSynthesisUtterance('Spoken messages are on.'); if(voice) u.voice=voice; speechSynthesis.speak(u); }

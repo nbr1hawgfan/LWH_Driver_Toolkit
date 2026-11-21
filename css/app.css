@@ -1367,3 +1367,42 @@ body.gated{overflow:hidden}
 .top3-tile .icon-badge{display:grid;place-items:center;width:56px;height:56px;background:var(--brand,#c8102e);border-radius:var(--radius-sm,8px)}
 .top3-tile .icon-badge .icon{width:30px;height:30px;stroke:#fff}
 .top3-tile:hover{background:#fff;border-color:var(--brand,#c8102e)}
+/* v1.52: who's signed in + Sign out, always visible on phones (the header name is hidden there) */
+.who-bar{display:none}
+@media(max-width:640px){
+  .who-bar:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border-bottom:1px solid var(--line,#ddd);padding:8px 12px;font-size:15px}
+  .who-txt{display:flex;align-items:center;gap:8px;min-width:0}
+  .who-txt>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who-txt svg{width:20px;height:20px;flex:none;fill:none;stroke:var(--brand,#c8102e);stroke-width:2}
+  .who-out{flex:none;min-height:40px;padding:0 16px;border:2px solid var(--brand,#c8102e);background:#fff;color:var(--brand,#c8102e);font-weight:800;font-size:15px;border-radius:var(--radius-sm,8px);cursor:pointer}
+}
+/* v1.52: My Hours card */
+.my-hours{padding:0;border-left:4px solid #1f5fa8}
+.my-hours-head{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:14px 16px;text-align:left;cursor:pointer;color:inherit;font:inherit;min-height:0}
+@media(hover:hover){.my-hours-head:hover{background:#f7f7f7}}
+.my-hours-head .icon-badge{display:grid;place-items:center;width:40px;height:40px;flex:none}
+.my-hours-head .icon{width:24px;height:24px;stroke:#1f5fa8}
+#myHoursBox{padding:0 16px 14px}
+.mh-table{width:100%;border-collapse:collapse;font-size:15px}
+.mh-table th,.mh-table td{padding:7px 6px;border-bottom:1px solid var(--line,#e3e3e3);text-align:left}
+.mh-table .r{text-align:right;font-weight:800;width:70px}
+.mh-table tr.tot td{border-top:2px solid #222;font-weight:800}
+.mh-note{margin:8px 0}
+.mh-nav{display:flex;gap:8px;flex-wrap:wrap}
+/* v1.52: Trailer Inspection tile badge */
+.top3-tile{position:relative}
+.tile-badge{display:inline-block;margin-top:4px;font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;line-height:1.2;white-space:nowrap}
+.tile-badge[hidden]{display:none}
+.tile-badge.warn{background:#c8102e;color:#fff}
+.tile-badge.ok{background:#e3f3e3;color:#1d6b2a}
+/* v1.52: still clocked in 12+ hours */
+.tc-home.tc-home-warn{border-left-color:#d98200;background:#fff7e6}
+.tc-home.tc-home-warn #tcHomeSub{color:#8a5200;font-weight:700}
+/* v1.52: text size */
+.ts-row{display:flex;gap:8px;flex-wrap:wrap}
+.ts-row button.on{background:var(--brand,#c8102e);color:#fff;border-color:var(--brand,#c8102e)}
+.ts-row [data-textsize="large"]{font-size:17px}.ts-row [data-textsize="xl"]{font-size:19px}
+
+#whoBar #whoBarOut{background:#fff;color:var(--brand,#c8102e);border:2px solid var(--brand,#c8102e);box-shadow:none;text-shadow:none}
+#whoBar #whoBarOut:active{background:var(--brand,#c8102e);color:#fff}
+body.ts-big .lw-header .lw-title{font-size:17px} body.ts-big .lw-header .lw-sub{font-size:9.5px}

@@ -116,6 +116,13 @@
     if(type==='driver'){
       // a remembered name that's no longer on the list (renamed / left) is dropped
       if(st.driver&&st.drivers.length&&!st.drivers.includes(st.driver)){ st.driver=''; LWHStorage.set('tdLastDriver',''); }
+      // v1.52: signed in at the front door → your name is already picked (if it is on the inspection list)
+      const me=window.LWHMsgAuth&&LWHMsgAuth.who&&LWHMsgAuth.who();
+      if(me&&me.name&&st.drivers.length){
+        const norm=x=>String(x||'').toLowerCase().replace(/[^a-z]/g,'');
+        const hit=st.drivers.find(n=>norm(n)===norm(me.name)||(me.goes_by&&norm(n)===norm(me.goes_by)));
+        if(hit&&st.driver!==hit&&st.step<=2){ st.driver=hit; LWHStorage.set('tdLastDriver',hit); }
+      }
       renderDriverChips(); showPicked('driver'); return;
     }
     const items=st.locations;
@@ -279,6 +286,8 @@
       $('tdDoneSummary').textContent=`${payload.driverName} — Trailer ${payload.trailerNumber} (${payload.trailerLocation}). `+(n?`${n} defect${n===1?'':'s'} reported.`:'No defects — trailer is clear.');
       $('tdDonePhoto').hidden=!(st.photo&&j.photoSaved===false);
       $('tdForm').hidden=true; $('tdDone').hidden=false; window.scrollTo(0,0);
+      LWHStorage.set('tdLastSent',{driver:payload.driverName,trailer:payload.trailerNumber,at:new Date().toISOString()});
+      st.sent=true; tileBadge();
     }catch(e){
       busy(false);
       $('tdSubmitErrMsg').textContent=e.message; $('tdSubmitErr').hidden=false;
@@ -289,7 +298,18 @@
     st.selected=[]; st.location=''; setClear(false); clearPhoto(); filterDefects(''); syncDefects(); showPicked('location');
     $('tdDate').value=today(); $('tdSubmitErr').hidden=true;
     $('tdDone').hidden=true; $('tdForm').hidden=false;
-    go(1);
+    st.sent=false; go(1); tileBadge();
+  }
+  // v1.52: Home tile badge — "Not sent yet" for an inspection that was started and left; "Sent today" after a send.
+  function started(){ return !st.sent&&st.step>=3&&!!($('tdTrailer')&&$('tdTrailer').value.trim()); }
+  function tileBadge(){
+    document.querySelectorAll('.top3-tile[data-view="trailerdefect"]').forEach(t=>{
+      let b=t.querySelector('.tile-badge'); if(!b){ b=document.createElement('span'); b.className='tile-badge'; t.appendChild(b); }
+      const last=LWHStorage.get('tdLastSent',null), sentToday=last&&last.at&&new Date(last.at).toDateString()===new Date().toDateString();
+      if(started()){ b.textContent='Not sent yet'; b.className='tile-badge warn'; b.hidden=false; }
+      else if(sentToday){ b.textContent='Sent '+new Date(last.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); b.className='tile-badge ok'; b.hidden=false; }
+      else b.hidden=true;
+    });
   }
   function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
@@ -339,10 +359,10 @@
     $('tdLocNewInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('tdLocNewOk').click(); });
 
     // Load lists the first time the screen is opened (and refresh on later opens)
-    const obs=new MutationObserver(()=>{ if(root.classList.contains('active')) loadLists(); });
+    const obs=new MutationObserver(()=>{ if(root.classList.contains('active')) loadLists(); else tileBadge(); });
     obs.observe(root,{attributes:true,attributeFilter:['class']});
     if(root.classList.contains('active')) loadLists();
-    go(1);
+    go(1); tileBadge();
   }
   window.addEventListener('load',init);
 })();
