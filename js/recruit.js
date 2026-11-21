@@ -1,7 +1,7 @@
 // Recruiter — each driver gets a personal QR code / link to the driver
 // application. Scans are counted automatically (people reached); points come
 // when the office confirms a referred applicant applied (+10) or was hired
-// (+50) on the Dispatch Board's Recruiting tab (manager passcode required).
+// (+50) on the Dispatch Board's Recruiting tab (manager's own sign-in, no shared passcode).
 (function(){
   const API='https://tjivcqxnkftujceumdtx.supabase.co/functions/v1/';
   const RECRUIT_URL=API+'recruit', GO_URL=API+'recruit-go';
@@ -113,7 +113,6 @@
         <div class="segmented" id="rcAwKind"><button type="button" class="seg active" data-kind="Applied">Applied · +${stats.points.Applied}</button><button type="button" class="seg" data-kind="Hired">Hired · +${stats.points.Hired}</button></div>
         <div class="grid-2">
           <label>Note (optional)<input id="rcAwNote" autocomplete="off" placeholder="e.g. OTR, starts Monday" /></label>
-          <label>Manager passcode<input id="rcAwPass" type="password" autocomplete="off" value="${S(sessionStorage.getItem(PASS_KEY)||'')}" /></label>
         </div>
         <div class="actions"><button type="button" id="rcAwGo">Credit points</button></div>
       </div>
@@ -131,23 +130,22 @@
   }
   async function award(){
     const code=el('rcAwDriver').value, kind=document.querySelector('#rcAwKind .seg.active').dataset.kind;
-    const pass=el('rcAwPass').value.trim();
+    const token=(window.LWHMsgAuth&&LWHMsgAuth.token())||'';
     if(!code){ LWHUI.toast('Pick a driver'); return; }
     if(!el('rcAwApplicant').value.trim()){ LWHUI.toast('Enter the applicant\'s name'); return; }
-    if(!pass){ LWHUI.toast('Enter the manager passcode'); return; }
+    if(!token){ LWHUI.toast('Sign in as a manager first (your name + PTO PIN).'); return; }
     const btn=el('rcAwGo'); btn.disabled=true; btn.textContent='Saving…';
     try{
-      await post({action:'award',passcode:pass,code,kind,applicant:el('rcAwApplicant').value,note:el('rcAwNote').value,by:myName()});
-      sessionStorage.setItem(PASS_KEY,pass);
+      await post({action:'award',token,code,kind,applicant:el('rcAwApplicant').value,note:el('rcAwNote').value});
       LWHUI.toast(`Credited ${kind} to ${el('rcAwDriver').selectedOptions[0].textContent}`);
       await loadStats(); renderDispatch();
     }catch(e){ LWHUI.toast(e.message); btn.disabled=false; btn.textContent='Credit points'; }
   }
   async function unaward(id){
-    const pass=(el('rcAwPass')&&el('rcAwPass').value.trim())||sessionStorage.getItem(PASS_KEY)||'';
-    if(!pass){ LWHUI.toast('Enter the manager passcode above first'); return; }
+    const token=(window.LWHMsgAuth&&LWHMsgAuth.token())||'';
+    if(!token){ LWHUI.toast('Sign in as a manager first.'); return; }
     if(!confirm('Remove this credit?')) return;
-    try{ await post({action:'unaward',passcode:pass,id:+id}); await loadStats(); renderDispatch(); LWHUI.toast('Credit removed'); }
+    try{ await post({action:'unaward',token,id:+id}); await loadStats(); renderDispatch(); LWHUI.toast('Credit removed'); }
     catch(e){ LWHUI.toast(e.message); }
   }
 

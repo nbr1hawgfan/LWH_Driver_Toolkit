@@ -2,8 +2,10 @@
 // POST JSON { action, ... }:
 //   register { driver_name, code? }        → { code }   (creates or renames a driver's code)
 //   stats    { code? }                      → { me, board, recent }
-//   award    { passcode, code, kind, applicant, note, by } → credit points (manager passcode)
-//   unaward  { passcode, id }               → remove a mistaken credit
+//   award    { token, code, kind, applicant, note } → credit points (signed-in Transportation manager)
+//   unaward  { token, id }                  → remove a mistaken credit
+// v4: no shared passcode. "token" is the manager's own sign-in (Transportation Manager or Driver Toolkit,
+// name + PTO PIN); the server checks they're a manager and records their name on the credit.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
@@ -84,9 +86,11 @@ Deno.serve(async (req) => {
   }
 
   if (action === "award" || action === "unaward") {
-    const { data: v, error: ve } = await db.rpc("toolkit_outbound_verify", { p_passcode: str(b.passcode, 60) });
-    if (ve) return json({ error: ve.message }, 500);
-    if (!v || v.ok !== true) return json({ error: (v && v.error) || "Wrong passcode" }, 403);
+    const token = str(b.token, 200);
+    if (!token) return json({ error: "Sign in as a manager first (your name + PTO PIN)." }, 401);
+    const { data: who } = await db.rpc("drv_me", { p_token: token });
+    if (!who || who.ok !== true) return json({ error: "Your sign-in ran out. Sign in again." }, 401);
+    if (who.role !== "Manager") return json({ error: "Only Transportation managers can credit referrals." }, 403);
     if (action === "unaward") {
       const id = Number(b.id); if (!Number.isInteger(id)) return json({ error: "Bad id" }, 400);
       const { error } = await db.from("recruit_awards").delete().eq("id", id);
@@ -97,7 +101,7 @@ Deno.serve(async (req) => {
     const { data: c } = await db.from("recruit_codes").select("code").eq("code", code).maybeSingle();
     if (!c) return json({ error: "Unknown driver code" }, 400);
     const { data, error } = await db.from("recruit_awards").insert({
-      code, kind, points: POINTS[kind], applicant: str(b.applicant, 80), note: str(b.note, 200), awarded_by: str(b.by, 60),
+      code, kind, points: POINTS[kind], applicant: str(b.applicant, 80), note: str(b.note, 200), awarded_by: str(who.name, 60),
     }).select("id").single();
     return error ? json({ error: error.message }, 500) : json({ ok: true, id: data.id });
   }
