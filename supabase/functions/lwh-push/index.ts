@@ -120,12 +120,13 @@ Deno.serve(async (req) => {
       if (!["wt", "dt", "tm"].includes(t.app)) continue;
       (byApp[t.app] ||= []).push(String(t.id));
     }
-    const all: Sub[] = [];
+    const sent: Record<string, unknown> = {};
     for (const app of Object.keys(byApp)) {
       const { data } = await db.from("push_subs").select("endpoint,sub,app,driver_id,fails").eq("app", app).in("driver_id", byApp[app]).lt("fails", 8);
-      all.push(...((data || []) as Sub[]));
+      // Transportation Manager uses #hash screens: its PTO Approvals screen is #pto
+      sent[app] = await send((data || []) as Sub[], app === "tm" ? { ...note, path: "#pto" } : note);
     }
-    out.sent = await send(all, note);
+    out.sent = sent;
   }
 
   if (body.kind === "long") {
