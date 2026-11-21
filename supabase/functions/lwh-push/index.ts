@@ -3,6 +3,7 @@
 //   {kind:"to_driver", ids:[message ids]}  -> each driver the message went to (Driver Toolkit phones)
 //   {kind:"to_dispatch", id}               -> managers (Transportation Manager phones/PCs)
 //   {kind:"to_emp", ids}  -> warehouse employees (Warehouse Toolkit)   {kind:"to_whmgr", id} -> warehouse managers
+//   {kind:"direct", targets:[{app,id}], note}  -> PTO server notes (pto_notify): request sent / decided
 //   {kind:"long"}                          -> managers: drivers still clocked in 12+ hours (pg_cron, every 10 min)
 // From the apps (no hook header): {action:"test", endpoint} sends a test to that one phone/PC.
 import webpush from "npm:web-push@3.6.7";
@@ -109,6 +110,22 @@ Deno.serve(async (req) => {
         body: clip(m.body, 150) || (m.topic || "New message"), tag: "whmsg-" + m.id, path: "?view=msgCenter", urgent: !!m.urgent,
       });
     }
+  }
+
+  if (body.kind === "direct") {
+    const n = body.note || {};
+    const note: Note = { title: clip(n.title, 120) || "Time Off", body: clip(n.body, 200), tag: clip(n.tag, 80) || undefined, path: String(n.path || "").startsWith("?") ? String(n.path) : "?view=timeOff" };
+    const byApp: Record<string, string[]> = {};
+    for (const t of (body.targets || []).slice(0, 60)) {
+      if (!["wt", "dt", "tm"].includes(t.app)) continue;
+      (byApp[t.app] ||= []).push(String(t.id));
+    }
+    const all: Sub[] = [];
+    for (const app of Object.keys(byApp)) {
+      const { data } = await db.from("push_subs").select("endpoint,sub,app,driver_id,fails").eq("app", app).in("driver_id", byApp[app]).lt("fails", 8);
+      all.push(...((data || []) as Sub[]));
+    }
+    out.sent = await send(all, note);
   }
 
   if (body.kind === "long") {
