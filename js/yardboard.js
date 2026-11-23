@@ -260,15 +260,19 @@
   function setTab(t){
     tab=t;
     document.querySelectorAll('#ybTabs [data-ybtab]').forEach(b=>b.classList.toggle('active',b.dataset.ybtab===t));
-    el('ybDayCtl').hidden=t!=='day'; el('ybYardCtl').hidden=t!=='yards';
+    try{ localStorage.setItem('tm_yb_tab',t); }catch(e){}
+    el('ybDayCtl').hidden=t!=='day'; el('ybYardCtl').hidden=t!=='yards'; el('ybPlanCtl').hidden=t!=='plan';
+    el('dpBox').hidden=t!=='plan'; el('ybResults').hidden=t==='plan';
     el('ybResults').innerHTML='';
+    if(t==='plan'){ status(''); window.LWHRecruit.closeBoard(); window.TMDispatchPlan.open(); return; }
     if(t==='recruit'){ status(''); window.LWHRecruit.openBoard(); return; }
     window.LWHRecruit.closeBoard();
     if(t==='day'){ day.loaded?(renderDay(),status('Updated '+tm(Date.now()))):loadDay(); }
     else{ yardsLoaded?renderYards():loadYards(); }
   }
-  function refresh(){ tab==='day'?loadDay():tab==='yards'?loadYards():window.LWHRecruit.openBoard(); }
+  function refresh(){ tab==='plan'?window.TMDispatchPlan.refresh():tab==='day'?loadDay():tab==='yards'?loadYards():window.LWHRecruit.openBoard(); }
 
+  let opened=false;
   function init(){
     if(!el('yardBoard')) return;
     el('ybDate').value=ymd(new Date());
@@ -279,17 +283,22 @@
     el('ybToday').onclick=()=>{ el('ybDate').value=ymd(new Date()); loadDay(); };
     el('ybDriver').addEventListener('change',renderDay);
     el('ybLoad').onclick=refresh;
-    el('ybCsv').onclick=csv;
+    el('ybCsv').onclick=()=>tab==='plan'?window.TMDispatchPlan.csv():csv();
+    try{ const saved=localStorage.getItem('tm_yb_tab'); if(['plan','day','yards','recruit'].includes(saved)) tab=saved; }catch(e){}
     el('ybSearch').addEventListener('input',renderYards);
     el('ybMinDays').addEventListener('change',renderYards);
-    el('ybFindForm').addEventListener('submit',e=>{ e.preventDefault(); findTrailer(el('ybFindInput').value); el('ybFindInput').blur(); });
+    el('ybFindForm').addEventListener('submit',e=>{ e.preventDefault(); const v=el('ybFindInput').value.trim();
+      // a load # (7 digits starting with 0, or "load 116936") looks on the Weekly Plan; anything else is a trailer
+      if(/^0\d{6}$/.test(v)||/^(load|ld)\s*#?\s*\d{4,7}$/i.test(v)){ el('ybResults').hidden=true; window.TMDispatchPlan.findLoad(v, el('ybFind')); }
+      else findTrailer(v);
+      el('ybFindInput').blur(); });
     el('yardBoard').addEventListener('click',e=>{
       if(e.target.closest('[data-findclear]')){ clearFind(); return; }
       const f=e.target.closest('[data-find]');
       if(f){ el('ybFindInput').value=f.dataset.find; findTrailer(f.dataset.find); el('yardBoard').scrollIntoView({behavior:'smooth',block:'start'}); }
     });
     // Load the first time the board is opened.
-    new MutationObserver(()=>{ if(el('yardBoard').classList.contains('active')&&!day.loaded&&!yardsLoaded) setTab(tab); })
+    new MutationObserver(()=>{ if(el('yardBoard').classList.contains('active')&&!day.loaded&&!yardsLoaded&&!opened){ opened=true; setTab(tab); } })
       .observe(el('yardBoard'),{attributes:true,attributeFilter:['class']});
   }
   window.addEventListener('load',init);

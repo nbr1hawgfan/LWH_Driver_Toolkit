@@ -27,3 +27,7 @@ A driver-facing companion to the LWH Warehouse Toolkit, built for Logistics Ware
 Branding matches the Logistics Warehouse company site (red/black/white) rather than the maroon internal or teal driver-doc-scan palettes.
 
 See CHANGELOG (to be started) for version history.
+
+## Dispatch Board > Weekly Plan (v1.56.0)
+The manager Dispatch Board now has the same **Weekly Plan** as Transportation Manager: the dispatch sheet as a week calendar (day view on phones), absence check against the PTO & Absence Tracker, spotters, bullpen, and load # lookup in the find box. `js/dispatchplan.js` and `js/yardboard.js` are the same files as in LWH_Transportation_Manager, and the Weekly Plan styles at the end of `css/app.css` are copied from its `manager.css`. Change them there and copy them here so both apps stay the same. Uses the manager's own sign-in (the same Supabase session as Messages).
+
