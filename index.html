@@ -1486,7 +1486,7 @@
     q.forEach(function (row) { send(row).catch(function () { var r = queue(); r.push(row); set('lwhUsageQ', JSON.stringify(r.slice(-50))); }); });
   }
   function track(event) {
-    var row = { p_app: APP, p_event: event || 'open', p_device: dev, p_path: location.pathname, p_standalone: standalone, p_at: new Date().toISOString() };
+    var row = { p_app: APP, p_event: event || 'open', p_device: dev, p_path: location.pathname, p_standalone: standalone, p_at: new Date().toISOString(), p_user: (function(){ try{ var m=window.LWHStorage&&LWHStorage.get('msgToken','')&&LWHStorage.get('msgMe',null); return m&&m.name||null; }catch(e){ return null; } })() };   // v2: signed-in name (IP is added by the server)
     send(row).then(flush).catch(function () { var q = queue(); q.push(row); set('lwhUsageQ', JSON.stringify(q.slice(-50))); });
   }
   window.lwhTrack = track; // optional: lwhTrack('bol_created') to count a feature
